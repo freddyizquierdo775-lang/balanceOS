@@ -55,7 +55,8 @@ export default function CFDI({ usuario }) {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">CFDI / Timbrado</h1>
         <p className="text-sm text-slate-500 mt-1">Generación de CFDI 4.0 de nómina (PAC mock)</p>
@@ -205,6 +206,7 @@ export default function CFDI({ usuario }) {
 
       <div className="mt-6 text-[11px] text-slate-400 text-center">
         CFDI 4.0 · Nómina · PAC mock (desarrollo) · Conectar PAC real para timbrado oficial
+      </div>
       </div>
     </div>
   );

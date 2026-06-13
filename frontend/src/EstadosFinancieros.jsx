@@ -454,7 +454,8 @@ export default function EstadosFinancieros({ usuario }) {
 
   // ─── Main Render ─────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Estados Financieros</h1>
         <p className="text-sm text-slate-500 mt-1">Balance General, Estado de Resultados y Flujo de Efectivo</p>
@@ -496,6 +497,7 @@ export default function EstadosFinancieros({ usuario }) {
       {tab === 'balance-general' && renderBalanceGeneral()}
       {tab === 'estado-resultados' && renderEstadoResultados()}
       {tab === 'flujo-efectivo' && renderFlujoEfectivo()}
+      </div>
     </div>
   );
 }

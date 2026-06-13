@@ -415,7 +415,8 @@ export default function AlertasEfos({ usuario }) {
 
   // ─── Main Render ─────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Alertas EFOS</h1>
         <p className="text-sm text-slate-500 mt-1">Monitoreo de listas EFOS del SAT y alertas de clientes</p>
@@ -444,6 +445,7 @@ export default function AlertasEfos({ usuario }) {
       {tab === 'listas' && renderListas()}
       {tab === 'verificar' && renderVerificar()}
       {tab === 'alertas' && renderAlertas()}
+      </div>
     </div>
   );
 }

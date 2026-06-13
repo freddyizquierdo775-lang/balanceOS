@@ -329,7 +329,8 @@ export default function NOMINA({ usuario }) {
 
   // ─── Main Render ─────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Nómina</h1>
         <p className="text-sm text-slate-500 mt-1">Gestión de períodos, cálculo y recibos</p>
@@ -349,6 +350,7 @@ export default function NOMINA({ usuario }) {
         ISR calculado con tarifa LISR Art. 96 + subsidio al empleo (transitorio).
         IMSS con motor de cuotas obrero-patronales 2026. UMA $117.31/día.
         Cálculos orientativos — validar contra SUA.
+      </div>
       </div>
     </div>
   );

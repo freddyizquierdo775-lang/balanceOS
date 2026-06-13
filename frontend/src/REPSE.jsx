@@ -334,7 +334,8 @@ export default function REPSE({ usuario }) {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">REPSE</h1>
         <p className="text-sm text-slate-500 mt-1">Registro de Prestadoras de Servicios Especializados</p>
@@ -397,6 +398,7 @@ export default function REPSE({ usuario }) {
 
       <div className="mt-6 text-[11px] text-slate-400 text-center">
         REPSE · STPS · % mínimo especializado: 30% · Avisos trimestrales obligatorios
+      </div>
       </div>
     </div>
   );

@@ -182,7 +182,8 @@ export default function Impuestos({ usuario }) {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Logo />
@@ -697,6 +698,7 @@ export default function Impuestos({ usuario }) {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -85,7 +85,8 @@ export default function FINIQUITOS({ usuario }) {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Finiquitos / Liquidaciones</h1>
         <p className="text-sm text-slate-500 mt-1">Cálculo basado en LFT (Art. 48-50, 87, 162)</p>
@@ -229,6 +230,7 @@ export default function FINIQUITOS({ usuario }) {
 
       <div className="mt-6 text-[11px] text-slate-400 text-center">
         Basado en LFT Art. 48-50, 87, 162 · ISR LISR Art. 110 · Prima antigüedad tope 2 UMAs
+      </div>
       </div>
     </div>
   );

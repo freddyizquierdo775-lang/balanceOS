@@ -546,7 +546,8 @@ export default function Tesoreria({ usuario }) {
 
   // ─── Main Render ─────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Tesorería</h1>
         <p className="text-sm text-slate-500 mt-1">Gestión de cuentas, movimientos y conciliación</p>
@@ -575,6 +576,7 @@ export default function Tesoreria({ usuario }) {
       {tab === 'movimientos' && renderMovimientos()}
       {tab === 'conciliacion' && renderConciliacion()}
       {tab === 'estado-cuenta' && renderEstadoCuenta()}
+      </div>
     </div>
   );
 }

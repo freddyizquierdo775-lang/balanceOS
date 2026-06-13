@@ -98,7 +98,8 @@ export default function ApiPublica({ usuario }) {
 
   // ─── Render ───────────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">API Pública</h1>
         <p className="text-sm text-slate-500 mt-1">Documentación y pruebas de la API pública de Balance OS</p>
@@ -233,6 +234,7 @@ export default function ApiPublica({ usuario }) {
       <div className="mt-6 text-[11px] text-slate-400 text-center leading-relaxed">
         La API pública permite integración con sistemas externos. Los endpoints requieren autenticación via API Key.
         Consulta la documentación completa para más detalles sobre los formatos de respuesta y límites de tasa.
+      </div>
       </div>
     </div>
   );

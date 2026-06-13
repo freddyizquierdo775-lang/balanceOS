@@ -62,7 +62,8 @@ export default function IMSS({ usuario }) {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">IMSS Engine</h1>
         <p className="text-sm text-slate-500 mt-1">Cálculo de SBC y cuotas obrero-patronales</p>
@@ -254,6 +255,7 @@ export default function IMSS({ usuario }) {
       <div className="mt-6 text-[11px] text-slate-400 text-center leading-relaxed">
         Basado en LSS, LFT y DOF 2026. UMA $117.31/día (INEGI). Tope 25 UMAs.
         Cálculos orientativos — validar contra SUA oficial.
+      </div>
       </div>
     </div>
   );

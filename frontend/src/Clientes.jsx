@@ -161,9 +161,10 @@ export default function Clientes({ usuario }) {
   // ─── Renderizado ──────────────────────────────────
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Clientes</h1>
           <p className="text-sm text-slate-500 mt-1">{lista.length} registros</p>
@@ -400,6 +401,7 @@ export default function Clientes({ usuario }) {
       {docModalCliente && (
         <DocumentosModal cliente={docModalCliente} onClose={() => setDocModalCliente(null)} />
       )}
+      </div>
     </div>
   );
 }

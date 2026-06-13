@@ -123,7 +123,8 @@ export default function Empleados({ usuario }) {
   if (loading) return <div className="p-8 text-sm text-slate-400">Cargando...</div>;
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-8">
+    <main className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -233,6 +234,7 @@ export default function Empleados({ usuario }) {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </main>
   );

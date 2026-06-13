@@ -220,7 +220,8 @@ export default function PLD({ usuario }) {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">PLD</h1>
         <p className="text-sm text-slate-500 mt-1">Prevención de Lavado de Dinero</p>
@@ -259,6 +260,7 @@ export default function PLD({ usuario }) {
 
       <div className="mt-6 text-[11px] text-slate-400 text-center">
         Basado en metodología CNBV · Factores: ingresos, volumen, PEP, internacional, antigüedad, sector
+      </div>
       </div>
     </div>
   );

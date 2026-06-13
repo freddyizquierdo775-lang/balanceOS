@@ -308,9 +308,10 @@ export default function Contabilidad({ usuario }) {
 
   // ─── Render ──────────────────────────────────
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Logo />
           <div>
@@ -694,6 +695,7 @@ export default function Contabilidad({ usuario }) {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

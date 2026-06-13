@@ -312,9 +312,10 @@ export default function Facturacion({ usuario }) {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mobile-scroll overflow-y-auto h-full">
+      <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Logo />
         <div>
           <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Facturación</h1>
@@ -683,6 +684,7 @@ export default function Facturacion({ usuario }) {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
