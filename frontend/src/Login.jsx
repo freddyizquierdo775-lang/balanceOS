@@ -63,28 +63,28 @@ export default function Login({ onLogin }) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-slate-900">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
               <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
               <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
             </svg>
-            <span className="text-xl font-bold tracking-tighter text-slate-900">Balance OS</span>
+            <span className="text-xl font-bold tracking-tighter text-white">Balance OS</span>
           </div>
-          <p className="text-sm text-slate-500">CRM interno — Balance Consultores</p>
+          <p className="text-sm text-[#A1A1AA]">CRM interno — Balance Consultores</p>
           {modoRegistro && (
-            <p className="text-xs text-amber-600 mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2">
+            <p className="text-xs text-amber-400 mt-2 bg-amber-500/10 border border-amber-200 rounded-lg p-2">
               No hay usuarios registrados. Crea el primer usuario (admin).
             </p>
           )}
         </div>
 
-        <form onSubmit={modoRegistro ? handleRegistro : handleSubmit} className="bg-white rounded-2xl p-6 shadow-[0_12px_32px_rgba(0,0,0,0.04)] border border-slate-900/5">
-          <h2 className="text-lg font-semibold text-slate-900 mb-5">
+        <form onSubmit={modoRegistro ? handleRegistro : handleSubmit} className="bg-[#141414] rounded-2xl p-6 shadow-[0_12px_32px_rgba(0,0,0,0.04)] border border-[#262626]">
+          <h2 className="text-lg font-semibold text-white mb-5">
             {modoRegistro ? 'Crear primer usuario' : 'Iniciar sesión'}
           </h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>
+            <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>
           )}
 
           <div className="space-y-4">
@@ -93,25 +93,25 @@ export default function Login({ onLogin }) {
                 type="text" placeholder="Nombre completo" value={regNombre}
                 onChange={(e) => setRegNombre(e.target.value)}
                 required
-                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-400"
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3.5 text-sm text-white outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#A1A1AA]"
               />
             )}
             <input
               type="email" placeholder="Correo electrónico" value={modoRegistro ? regEmail : email}
               onChange={(e) => modoRegistro ? setRegEmail(e.target.value) : setEmail(e.target.value)}
               required
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-400"
+              className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3.5 text-sm text-white outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#A1A1AA]"
             />
             <input
               type="password" placeholder="Contraseña" value={modoRegistro ? regPassword : password}
               onChange={(e) => modoRegistro ? setRegPassword(e.target.value) : setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-400"
+              className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3.5 text-sm text-white outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#A1A1AA]"
             />
             <button
               type="submit" disabled={loading}
-              className="w-full bg-slate-900 text-white text-sm font-semibold rounded-xl py-3.5 transition-all duration-200 hover:bg-slate-800 disabled:opacity-50"
+              className="w-full bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl py-3.5 transition-all duration-200 hover:bg-slate-800 disabled:opacity-50"
             >
               {loading ? 'Procesando...' : modoRegistro ? 'Crear y entrar' : 'Entrar'}
             </button>
@@ -122,7 +122,7 @@ export default function Login({ onLogin }) {
               <button
                 type="button"
                 onClick={() => { setModoRegistro(!modoRegistro); setError(''); }}
-                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-xs text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors"
               >
                 {modoRegistro ? '← Volver al inicio de sesión' : 'Registrar nuevo usuario'}
               </button>

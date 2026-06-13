@@ -18,7 +18,7 @@ export default function ModuleSettings({ className = '' }) {
 
         <div className="mb-8">
           <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Módulos</h1>
-          <p className="text-sm text-slate-500 mt-1">Gestiona los módulos activos de tu cuenta</p>
+          <p className="text-sm text-[#A1A1AA] mt-1">Gestiona los módulos activos de tu cuenta</p>
         </div>
 
         {/* Toggle section */}
@@ -29,7 +29,7 @@ export default function ModuleSettings({ className = '' }) {
         {/* Pricing cards para módulos no comprados */}
         <div>
           <h2 className="text-base font-semibold text-slate-900 mb-1">Módulos disponibles</h2>
-          <p className="text-xs text-slate-500 mb-4">Explora todos los módulos de Balance OS</p>
+          <p className="text-xs text-[#A1A1AA] mb-4">Explora todos los módulos de Balance OS</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {['contabilidad', 'facturacion', 'nomina', 'repse', 'pld', 'tesoreria', 'estados-financieros', 'alertas-efos'].map(id => (

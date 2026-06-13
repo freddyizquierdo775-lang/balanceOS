@@ -115,7 +115,7 @@ export default function NavRail({ usuario, page, setPage, cerrarSesion, alertCou
             w-[42px] h-[42px] rounded-xl flex flex-col items-center justify-center gap-0.5
             transition-all duration-150 ease-out cursor-pointer border-0 outline-none
             ${isActive
-              ? 'bg-white/15 text-white'
+              ? 'bg-white/[0.06] text-white'
               : 'text-white/45 hover:bg-white/[0.06] hover:text-white/75'
             }
           `}
@@ -145,14 +145,14 @@ export default function NavRail({ usuario, page, setPage, cerrarSesion, alertCou
         {isHovered && !isActive && (
           <div className="
             absolute left-full ml-3 top-1/2 -translate-y-1/2
-            bg-slate-800 text-white text-[11px] font-medium
+            bg-[#1A1A1A] text-white text-[11px] font-medium
             px-2.5 py-1.5 rounded-lg whitespace-nowrap
             shadow-lg z-[200] pointer-events-none
             animate-slideInLeft
           ">
             {item.label}
             {/* Arrow */}
-            <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[5px] border-t-transparent border-r-[5px] border-r-slate-800 border-b-[5px] border-b-transparent" />
+            <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[5px] border-t-transparent border-r-[5px] border-r-[#1A1A1A] border-b-[5px] border-b-transparent" />
           </div>
         )}
       </div>
@@ -164,12 +164,12 @@ export default function NavRail({ usuario, page, setPage, cerrarSesion, alertCou
       w-14 min-w-[56px] h-screen
       flex flex-col items-center justify-between
       py-3
-      bg-slate-900/90 backdrop-blur-xl
+      bg-[#0A0A0A]/90 backdrop-blur-xl
       border-r border-white/[0.06]
       z-[100]
     ">
       {/* Logo */}
-      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+      <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-5">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -184,7 +184,7 @@ export default function NavRail({ usuario, page, setPage, cerrarSesion, alertCou
       </div>
 
       {/* Subtle separator */}
-      <div className="w-6 h-px bg-white/10 my-2" />
+      <div className="w-6 h-px bg-white/[0.04] my-2" />
 
       {/* Bottom items */}
       <div className="flex flex-col items-center gap-1">

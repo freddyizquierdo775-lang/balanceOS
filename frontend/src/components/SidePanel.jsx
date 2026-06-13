@@ -29,7 +29,7 @@ const modulos = [
 const statusDot = {
   activo: 'bg-emerald-500',
   pendiente: 'bg-amber-500',
-  revision: 'bg-slate-400',
+  revision: 'bg-[#52525B]',
 };
 
 // ─── Type icons ─────────────────────────────────────
@@ -81,9 +81,9 @@ const docIcons = {
 function SectionTitle({ title, badge }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.08em]">{title}</h3>
+      <h3 className="text-[11px] font-bold text-[#A1A1AA] uppercase tracking-[0.08em]">{title}</h3>
       {badge != null && (
-        <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-semibold text-[#A1A1AA] bg-[#262626] px-2 py-0.5 rounded-full">
           {badge}
         </span>
       )}
@@ -103,8 +103,8 @@ export default function SidePanel({ usuario, page, setPage }) {
     <aside className="
       w-[260px] min-w-[260px] h-screen
       flex flex-col
-      bg-white/60 backdrop-blur-xl
-      border-r border-slate-900/5
+      bg-[#141414]/80 backdrop-blur-xl
+      border-r border-[#262626]
       overflow-hidden
       z-[50]
     ">
@@ -113,18 +113,18 @@ export default function SidePanel({ usuario, page, setPage }) {
 
         {/* ─── Profile compact ─────────────────── */}
         <div className="flex items-center gap-2.5 px-1">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#333333] flex items-center justify-center text-xs font-semibold text-[#D4D4D8] flex-shrink-0">
             {usuario?.nombre?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-900 truncate">{usuario?.nombre || 'Usuario'}</p>
-            <p className="text-[10px] text-slate-400 truncate">{usuario?.email || usuario?.rol || ''}</p>
+            <p className="text-xs font-semibold text-white truncate">{usuario?.nombre || 'Usuario'}</p>
+            <p className="text-[10px] text-[#A1A1AA] truncate">{usuario?.email || usuario?.rol || ''}</p>
           </div>
         </div>
 
         {/* ─── Global search ────────────────────── */}
         <div className="relative">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A1A1AA] pointer-events-none"
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -135,10 +135,10 @@ export default function SidePanel({ usuario, page, setPage }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="
-              w-full bg-slate-50 border border-slate-100
+              w-full bg-[#1A1A1A] border border-[#262626]
               rounded-lg py-1.5 pl-8 pr-3
-              text-xs text-slate-900 placeholder:text-slate-400
-              outline-none focus:border-slate-300 focus:bg-white
+              text-xs text-white placeholder:text-[#71717A]
+              outline-none focus:border-[#404040] focus:bg-[#1A1A1A]
               transition-colors duration-150
             "
           />
@@ -155,18 +155,18 @@ export default function SidePanel({ usuario, page, setPage }) {
                 className={`
                   flex items-center gap-2.5 px-2 py-1.5 rounded-lg
                   text-left transition-all duration-150 cursor-pointer
-                  hover:bg-slate-50
-                  ${page === 'clientes' && i === 0 ? 'bg-slate-50' : ''}
+                  hover:bg-[#1A1A1A]
+                  ${page === 'clientes' && i === 0 ? 'bg-[#1A1A1A]' : ''}
                 `}
               >
-                <div className="text-slate-400 flex-shrink-0">
+                <div className="text-[#A1A1AA] flex-shrink-0">
                   {typeIcons[client.type] || typeIcons.empresa}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-medium text-slate-900 truncate">{client.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{client.rfc}</p>
+                  <p className="text-[12px] font-medium text-white truncate">{client.name}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{client.rfc}</p>
                 </div>
-                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot[client.status] || 'bg-slate-300'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot[client.status] || 'bg-[#71717A]'}`} />
               </button>
             ))}
           </div>
@@ -179,15 +179,15 @@ export default function SidePanel({ usuario, page, setPage }) {
             {recentDocs.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all duration-150"
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
               >
-                <div className="text-slate-400 flex-shrink-0">
+                <div className="text-[#A1A1AA] flex-shrink-0">
                   {docIcons[doc.type] || docIcons.declaracion}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-medium text-slate-900 truncate">{doc.name}</p>
+                  <p className="text-[12px] font-medium text-white truncate">{doc.name}</p>
                 </div>
-                <span className="text-[10px] text-slate-400 flex-shrink-0">{doc.date}</span>
+                <span className="text-[10px] text-[#A1A1AA] flex-shrink-0">{doc.date}</span>
               </div>
             ))}
           </div>
@@ -196,10 +196,10 @@ export default function SidePanel({ usuario, page, setPage }) {
         {/* ─── Active modules ───────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.08em]">Módulos</h3>
+            <h3 className="text-[11px] font-bold text-[#A1A1AA] uppercase tracking-[0.08em]">Módulos</h3>
             <button
               onClick={() => setPage?.('module-settings')}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-all duration-150"
+              className="w-5 h-5 rounded-md flex items-center justify-center text-[#71717A] hover:text-[#A1A1AA] hover:bg-[#262626] transition-all duration-150"
               title="Configurar módulos"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -217,8 +217,8 @@ export default function SidePanel({ usuario, page, setPage }) {
                   px-2.5 py-1 rounded-full text-[11px] font-medium
                   transition-all duration-150 cursor-pointer
                   ${mod.active
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-400'
+                    ? 'bg-[#0A0A0A] text-white'
+                    : 'bg-[#262626] text-[#A1A1AA]'
                   }
                 `}
               >

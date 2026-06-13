@@ -79,21 +79,21 @@ export default function DocumentosModal({ cliente, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl border border-slate-900/5 max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#141414] rounded-2xl p-6 max-w-2xl w-full shadow-2xl border border-[#262626] max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Documentos</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{cliente.razon_social}</p>
+            <h2 className="text-lg font-semibold text-white">Documentos</h2>
+            <p className="text-xs text-[#A1A1AA] mt-0.5">{cliente.razon_social}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg leading-none p-1">&times;</button>
+          <button onClick={onClose} className="text-[#A1A1AA] hover:text-[#D4D4D8] text-lg leading-none p-1">&times;</button>
         </div>
 
         {/* Upload area */}
-        <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-dashed border-slate-200">
+        <div className="bg-[#1A1A1A] rounded-xl p-4 mb-4 border border-dashed border-[#333333]">
           <div className="flex items-center gap-3 flex-wrap">
             <select value={uploadTipo} onChange={e => setUploadTipo(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 outline-none focus:border-[#2E8B57]">
+              className="bg-[#141414] border border-[#333333] rounded-lg px-3 py-2 text-xs font-medium text-[#D4D4D8] outline-none focus:border-[#10B981]">
               {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
             <input
@@ -101,21 +101,21 @@ export default function DocumentosModal({ cliente, onClose }) {
               type="file"
               onChange={handleUpload}
               disabled={subiendo}
-              className="flex-1 text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer file:transition-all"
+              className="flex-1 text-xs text-[#A1A1AA] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0A0A0A] file:text-white hover:file:bg-slate-800 file:cursor-pointer file:transition-all"
             />
-            {subiendo && <span className="text-xs text-slate-400">Subiendo...</span>}
+            {subiendo && <span className="text-xs text-[#A1A1AA]">Subiendo...</span>}
           </div>
         </div>
 
         {/* Filter */}
         <div className="flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setFiltro('')}
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${!filtro ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${!filtro ? 'bg-[#0A0A0A] text-white' : 'bg-[#262626] text-[#A1A1AA] hover:bg-[#333333]'}`}>
             Todos
           </button>
           {TIPOS.map(t => (
             <button key={t.value} onClick={() => setFiltro(t.value)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${filtro === t.value ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${filtro === t.value ? 'bg-[#0A0A0A] text-white' : 'bg-[#262626] text-[#A1A1AA] hover:bg-[#333333]'}`}>
               {getIcon(t.value)} {t.label}
             </button>
           ))}
@@ -124,38 +124,38 @@ export default function DocumentosModal({ cliente, onClose }) {
         {/* List */}
         <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
           {loading ? (
-            <div className="text-center py-8 text-sm text-slate-400">Cargando...</div>
+            <div className="text-center py-8 text-sm text-[#A1A1AA]">Cargando...</div>
           ) : lista.length === 0 ? (
-            <div className="text-center py-8 text-sm text-slate-400">
+            <div className="text-center py-8 text-sm text-[#A1A1AA]">
               {filtro ? 'Sin documentos de este tipo' : 'Sin documentos. Arrastra o selecciona archivos arriba.'}
             </div>
           ) : (
             lista.map(doc => (
-              <div key={doc.id} className="group flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
+              <div key={doc.id} className="group flex items-center justify-between bg-[#1A1A1A] rounded-xl px-4 py-3 hover:bg-[#262626] transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-lg shrink-0">{getIcon(doc.tipo)}</span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-900 truncate">{doc.nombre}</span>
-                      <span className="text-[10px] text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-200 shrink-0">
+                      <span className="text-sm font-medium text-white truncate">{doc.nombre}</span>
+                      <span className="text-[10px] text-[#A1A1AA] bg-[#141414] px-2 py-0.5 rounded-full border border-[#333333] shrink-0">
                         {getTipoLabel(doc.tipo)}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
+                    <div className="text-xs text-[#A1A1AA] mt-0.5">
                       {formatDate(doc.created_at)}
-                      {doc.notas && <span className="ml-2 text-slate-300">· {doc.notas}</span>}
+                      {doc.notas && <span className="ml-2 text-[#71717A]">· {doc.notas}</span>}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 ml-3">
                   <a href={documentos.descargarUrl(doc.id)}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-slate-300 hover:text-[#2E8B57] transition-colors text-sm px-2 py-1 rounded-lg hover:bg-white"
+                    className="text-[#71717A] hover:text-[#2E8B57] transition-colors text-sm px-2 py-1 rounded-lg hover:bg-[#141414]"
                     title="Descargar">
                     ↓
                   </a>
                   <button onClick={() => eliminar(doc)}
-                    className="text-slate-300 hover:text-red-500 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-white"
+                    className="text-[#71717A] hover:text-red-400 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-[#141414]"
                     title="Eliminar">
                     ✕
                   </button>

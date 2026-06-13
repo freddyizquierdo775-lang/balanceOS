@@ -11,8 +11,8 @@ export default function Dashboard({ usuario }) {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-extrabold tracking-tighter text-white">Dashboard</h1>
+          <p className="text-sm text-[#A1A1AA] mt-1">
             Resumen del período actual{usuario && ` · ${usuario.rol === 'admin' ? 'Todos los asesores' : 'Mis clientes'}`}
           </p>
         </div>

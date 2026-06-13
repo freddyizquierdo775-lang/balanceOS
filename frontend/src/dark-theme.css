@@ -1,0 +1,251 @@
+/* ═══════════════════════════════════════════════════════════
+   Balance OS — Dark Theme (DeFi Premium)
+   Whale Loans-inspired: deep blacks, emerald accents, clean typography
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Color System ─────────────────────────────────── */
+:root {
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1A1A1A;
+  --bg-elevated: #262626;
+  --bg-hover: #333333;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #71717A;
+  --text-dim: #52525B;
+
+  --border-primary: #262626;
+  --border-subtle: #1F1F1F;
+
+  --accent-green: #10B981;
+  --accent-green-dim: rgba(16, 185, 129, 0.10);
+  --accent-amber: #F59E0B;
+  --accent-red: #EF4444;
+  --accent-red-dim: rgba(239, 68, 68, 0.10);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Base ─────────────────────────────────────────── */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar dark ───────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
+
+/* ─── Selection ────────────────────────────────────── */
+::selection {
+  background: rgba(16, 185, 129, 0.25);
+  color: #fff;
+}
+
+/* ─── Typography helpers ───────────────────────────── */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.tracking-tighter { letter-spacing: -0.02em; }
+
+/* ─── Dark card (replaces bg-white) ───────────────── */
+.dark-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* ─── Dark input ───────────────────────────────────── */
+.dark-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.dark-input::placeholder { color: var(--text-tertiary); }
+.dark-input:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--accent-green-dim);
+}
+
+/* ─── Dark button ──────────────────────────────────── */
+.dark-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.dark-btn:hover { background: var(--bg-tertiary); }
+.dark-btn:active { transform: scale(0.98); }
+
+.dark-btn-accent {
+  background: #000;
+  border: 1px solid #000;
+  color: #fff;
+}
+.dark-btn-accent:hover { background: var(--bg-hover); }
+
+.dark-btn-green {
+  background: var(--accent-green);
+  border: 1px solid var(--accent-green);
+  color: #000;
+  font-weight: 600;
+}
+.dark-btn-green:hover { opacity: 0.9; }
+
+/* ─── Badge / Pill ─────────────────────────────────── */
+.dark-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ─── Status dots ──────────────────────────────────── */
+.dot-green { background: var(--accent-green); }
+.dot-amber { background: var(--accent-amber); }
+.dot-red { background: var(--accent-red); }
+
+/* ─── Glass header (subtle dark glass) ────────────── */
+.dark-glass {
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+/* ─── Dark nav rail ────────────────────────────────── */
+.dark-nav-rail {
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* ─── Table dark ───────────────────────────────────── */
+.dark-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.dark-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+}
+.dark-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dark-table tr:hover td {
+  background: var(--bg-tertiary);
+}
+.dark-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Safe areas mobile ───────────────────────────── */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+/* ─── Mobile breakpoints ───────────────────────────── */
+@media (max-width: 767px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: block !important; }
+  .mobile-full { width: 100% !important; }
+  .mobile-pb { padding-bottom: 5rem !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hide-tablet { display: none !important; }
+  .show-tablet { display: block !important; }
+}
+
+@media (min-width: 768px) {
+  .hide-desktop { display: none !important; }
+  .show-desktop { display: block !important; }
+}
+
+/* ─── Touch targets mobile ────────────────────────── */
+@media (max-width: 767px) {
+  button, a, [role="button"], input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ─── Momentum scroll ─────────────────────────────── */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ─── Keyframes ────────────────────────────────────── */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slideInLeft {
+  animation: slideInLeft 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Prevent iOS text inflation ──────────────────── */
+@media (max-width: 767px) {
+  html { -webkit-text-size-adjust: 100%; }
+}
+
+/* ─── Touch manipulation ──────────────────────────── */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ─── Overflow scroll native ──────────────────────── */
+.overflow-y-auto { -webkit-overflow-scrolling: touch; }

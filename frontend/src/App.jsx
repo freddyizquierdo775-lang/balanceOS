@@ -146,7 +146,7 @@ export default function App() {
 
   // ─── Logo SVG ──────────────────────────────────
   const LogoIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-slate-900">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
       <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
       <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
       <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
@@ -156,13 +156,13 @@ export default function App() {
   // ─── MOBILE LAYOUT ─────────────────────────────
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
         {/* Mobile header */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-900/5 safe-top">
+        <header className="sticky top-0 z-30 bg-[#141414]/90 backdrop-blur-md border-b border-[#262626] safe-top">
           <div className="flex items-center justify-between h-14 px-4">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 transition-all duration-200 touch-manipulation"
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:bg-[#262626] transition-all duration-200 touch-manipulation"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M4 6h16M4 12h16M4 18h16" />
@@ -171,11 +171,11 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <LogoIcon />
               <div className="flex flex-col leading-none">
-                <span className="text-[15px] font-semibold tracking-tighter text-slate-900">Balance</span>
-                <span className="text-[10px] text-slate-400 tracking-wide -mt-0.5">OS</span>
+                <span className="text-[15px] font-semibold tracking-tighter text-white">Balance</span>
+                <span className="text-[10px] text-[#A1A1AA] tracking-wide -mt-0.5">OS</span>
               </div>
             </div>
-            <span className="text-[10px] font-medium text-white bg-slate-400 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-white bg-[#52525B] px-2 py-0.5 rounded-full uppercase tracking-wider">
               {rolLabel[usuario.rol] || usuario.rol}
             </span>
           </div>
@@ -209,7 +209,7 @@ export default function App() {
   // ─── DESKTOP LAYOUT (>=768px) ────────────────────
   // Glassmorphism 3-column premium layout
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f5f5]">
+    <div className="flex h-screen overflow-hidden bg-[#0A0A0A]">
       {/* Columna 1: Rail izquierdo — 56px */}
       <NavRail
         usuario={usuario}
@@ -228,17 +228,17 @@ export default function App() {
       {/* Columna 3: Contenido principal — flex-1 */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header superior glass */}
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-900/5 px-6 h-14 flex items-center justify-between shrink-0">
+        <header className="sticky top-0 z-20 bg-[#141414]/90 backdrop-blur-md border-b border-[#262626] px-6 h-14 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <LogoIcon />
-              <span className="text-[13px] font-semibold text-slate-400 tracking-wide hidden lg:inline">Balance OS</span>
+              <span className="text-[13px] font-semibold text-[#A1A1AA] tracking-wide hidden lg:inline">Balance OS</span>
             </div>
-            <div className="w-px h-5 bg-slate-200 hidden lg:block" />
-            <h1 className="text-sm font-semibold text-slate-900">
+            <div className="w-px h-5 bg-[#333333] hidden lg:block" />
+            <h1 className="text-sm font-semibold text-white">
               {PAGE_TITLES[page] || 'Clientes'}
             </h1>
-            <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="text-[10px] text-[#A1A1AA] bg-[#262626] px-2 py-0.5 rounded-full uppercase tracking-wider">
               {rolLabel[usuario.rol] || usuario.rol}
             </span>
           </div>
@@ -246,7 +246,7 @@ export default function App() {
             {/* Module settings button */}
             <button
               onClick={() => navigate('module-settings')}
-              className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              className="w-8 h-8 rounded-lg hover:bg-[#262626] flex items-center justify-center text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors"
               title="Configurar módulos"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -254,20 +254,20 @@ export default function App() {
               </svg>
             </button>
             {/* Notifications */}
-            <button className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors relative">
+            <button className="w-8 h-8 rounded-lg hover:bg-[#262626] flex items-center justify-center text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors relative">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </button>
             {/* User pill */}
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-semibold text-slate-600">
+              <div className="w-6 h-6 rounded-full bg-[#333333] flex items-center justify-center text-[10px] font-semibold text-[#D4D4D8]">
                 {usuario.nombre?.charAt(0) || 'U'}
               </div>
-              <span className="text-xs text-slate-500 hidden lg:inline">{usuario.nombre}</span>
+              <span className="text-xs text-[#A1A1AA] hidden lg:inline">{usuario.nombre}</span>
             </div>
             {/* Logout */}
-            <button onClick={cerrarSesion} className="text-xs text-slate-400 hover:text-red-500 transition-colors ml-1">
+            <button onClick={cerrarSesion} className="text-xs text-[#A1A1AA] hover:text-red-400 transition-colors ml-1">
               Salir
             </button>
           </div>

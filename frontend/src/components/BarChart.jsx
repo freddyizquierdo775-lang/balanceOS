@@ -27,19 +27,19 @@ export default function BarChart({ className = '' }) {
   }, []);
 
   return (
-    <div ref={ref} className={`bg-white rounded-2xl p-6 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] ${className}`}>
-      <h3 className="text-sm font-semibold text-slate-900 mb-1">Ingresos vs Gastos</h3>
-      <p className="text-[11px] text-slate-400 mb-6">Últimos 6 meses</p>
+    <div ref={ref} className={`bg-[#141414] rounded-2xl p-6 border border-[#262626] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] ${className}`}>
+      <h3 className="text-sm font-semibold text-white mb-1">Ingresos vs Gastos</h3>
+      <p className="text-[11px] text-[#A1A1AA] mb-6">Últimos 6 meses</p>
 
       {/* Leyenda */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-slate-900" />
-          <span className="text-[10px] text-slate-500 font-medium">Ingresos</span>
+          <div className="w-3 h-3 rounded-sm bg-emerald-400" />
+          <span className="text-[10px] text-[#A1A1AA] font-medium">Ingresos</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-slate-300" />
-          <span className="text-[10px] text-slate-500 font-medium">Gastos</span>
+          <div className="w-3 h-3 rounded-sm bg-[#71717A]" />
+          <span className="text-[10px] text-[#A1A1AA] font-medium">Gastos</span>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default function BarChart({ className = '' }) {
               <div className="w-full flex flex-col items-center gap-0.5" style={{ height: '160px', justifyContent: 'flex-end' }}>
                 {/* Ingresos (back) */}
                 <div
-                  className="w-full max-w-[24px] rounded-t-sm bg-slate-900 transition-all duration-700 ease-out"
+                  className="w-full max-w-[24px] rounded-t-sm bg-emerald-400 transition-all duration-700 ease-out"
                   style={{
                     height: visible ? `${ingH}%` : '0%',
                     opacity: visible ? 1 : 0,
@@ -61,14 +61,14 @@ export default function BarChart({ className = '' }) {
                 />
                 {/* Gastos (front) */}
                 <div
-                  className="w-full max-w-[16px] rounded-t-sm bg-slate-300 transition-all duration-700 ease-out delay-150"
+                  className="w-full max-w-[16px] rounded-t-sm bg-[#71717A] transition-all duration-700 ease-out delay-150"
                   style={{
                     height: visible ? `${gasH}%` : '0%',
                     opacity: visible ? 1 : 0,
                   }}
                 />
               </div>
-              <span className="text-[10px] text-slate-400 font-medium mt-1">{d.mes}</span>
+              <span className="text-[10px] text-[#A1A1AA] font-medium mt-1">{d.mes}</span>
             </div>
           );
         })}

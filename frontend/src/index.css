@@ -1,79 +1,8 @@
 @import "tailwindcss";
+@import "./dark-theme.css";
 
-/* Balance OS — Estilos globales */
+/* Balance OS — config overrides */
 :root {
-  --color-green: #2E8B57;
-  --color-navy: #1A2E44;
-}
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #f5f5f5;
-}
-
-/* ─── Safe area for notched phones ─── */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* ─── Mobile first breakpoints ─── */
-@media (max-width: 767px) {
-  .hide-mobile { display: none !important; }
-  .show-mobile { display: block !important; }
-  .mobile-full { width: 100% !important; }
-  .mobile-pb { padding-bottom: 5rem !important; }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .hide-tablet { display: none !important; }
-  .show-tablet { display: block !important; }
-}
-
-@media (min-width: 768px) {
-  .hide-desktop { display: none !important; }
-  .show-desktop { display: block !important; }
-}
-
-/* ─── Touch targets ─── */
-@media (max-width: 767px) {
-  button, a, [role="button"], input, select, textarea {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
-/* ─── Smooth scrolling ─── */
-.mobile-scroll {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-/* ─── Desktop glassmorphism animations ─── */
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.animate-slideInLeft {
-  animation: slideInLeft 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* ─── Prevent text inflation on iOS ─── */
-@media (max-width: 767px) {
-  html {
-    -webkit-text-size-adjust: 100%;
-  }
-}
-
-/* ─── Active state for touch devices ─── */
-.touch-manipulation {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* ─── Native-like momentum scroll ─── */
-.overflow-y-auto {
-  -webkit-overflow-scrolling: touch;
+  --color-green: #10B981;
+  --color-navy: #0A0A0A;
 }

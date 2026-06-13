@@ -30,8 +30,8 @@ export default function ModuleToggle({ className = '' }) {
 
   return (
     <div className={`${className}`}>
-      <h2 className="text-base font-semibold text-slate-900 mb-1">Módulos</h2>
-      <p className="text-xs text-slate-500 mb-4">Activa o desactiva los módulos de tu plan</p>
+      <h2 className="text-base font-semibold text-white mb-1">Módulos</h2>
+      <p className="text-xs text-[#A1A1AA] mb-4">Activa o desactiva los módulos de tu plan</p>
 
       <div className="space-y-2">
         {MODULOS.map(mod => {
@@ -41,28 +41,28 @@ export default function ModuleToggle({ className = '' }) {
               key={mod.id}
               className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${
                 isActive
-                  ? 'bg-slate-50 border-slate-900/10'
-                  : 'bg-white border-slate-200/60 opacity-70 hover:opacity-90'
+                  ? 'bg-[#1A1A1A] border-[#262626]/10'
+                  : 'bg-[#141414] border-[#333333]/60 opacity-70 hover:opacity-90'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-lg flex-shrink-0">{mod.icono}</span>
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-slate-900 truncate">{mod.nombre}</div>
-                  <div className="text-[10px] text-slate-400 truncate">{mod.descripcion}</div>
+                  <div className="text-sm font-medium text-white truncate">{mod.nombre}</div>
+                  <div className="text-[10px] text-[#A1A1AA] truncate">{mod.descripcion}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                 {!isActive && (
-                  <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold text-[#A1A1AA] bg-[#262626] px-2 py-0.5 rounded-full">
                     {mod.precio}
                   </span>
                 )}
                 <button
                   onClick={() => toggle(mod.id)}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                    isActive ? 'bg-slate-900' : 'bg-slate-300'
+                    isActive ? 'bg-[#0A0A0A]' : 'bg-[#71717A]'
                   }`}
                 >
                   <span

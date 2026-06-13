@@ -318,17 +318,17 @@ export default function Facturacion({ usuario }) {
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Logo />
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Facturación</h1>
-          <p className="text-sm text-slate-500 mt-1">Facturas CFDI y complementos de pago</p>
+          <h1 className="text-2xl font-extrabold tracking-tighter text-white">Facturación</h1>
+          <p className="text-sm text-[#A1A1AA] mt-1">Facturas CFDI y complementos de pago</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-slate-900/5 w-fit">
+      <div className="flex gap-1 mb-6 bg-[#141414] rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#262626] w-fit">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-              tab === t.key ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              tab === t.key ? 'bg-[#0A0A0A] text-white shadow-sm' : 'text-[#A1A1AA] hover:text-[#E5E5E5] hover:bg-[#1A1A1A]'
             }`}>
             {t.label}
           </button>
@@ -341,17 +341,17 @@ export default function Facturacion({ usuario }) {
           {/* Filters */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             <select value={filtroCliente} onChange={e => setFiltroCliente(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[200px]">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[200px]">
               <option value="">Todos los clientes</option>
               {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
             </select>
             <select value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               <option value="">Todos los estatus</option>
               {Object.entries(ESTATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
             <button onClick={() => { setShowFacturaForm(!showFacturaForm); setFacturaErrors({}); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
               {showFacturaForm ? 'Cancelar' : '+ Nueva Factura'}
             </button>
           </div>
@@ -362,78 +362,78 @@ export default function Facturacion({ usuario }) {
 
           {/* New factura form */}
           {showFacturaForm && (
-            <form onSubmit={handleFacturaSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nueva Factura</h2>
+            <form onSubmit={handleFacturaSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nueva Factura</h2>
 
               {/* Receptor */}
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Receptor</h3>
+              <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Receptor</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                 <div>
                   <input placeholder="RFC del receptor *" value={facturaForm.receptor_rfc} onChange={e => setFacturaForm({...facturaForm, receptor_rfc: e.target.value.toUpperCase()})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-slate-400 ${
-                      facturaErrors.receptor_rfc ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-[#A1A1AA] ${
+                      facturaErrors.receptor_rfc ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {facturaErrors.receptor_rfc && <p className="text-xs text-red-500 mt-1">{facturaErrors.receptor_rfc}</p>}
                 </div>
                 <div>
                   <input placeholder="Nombre del receptor *" value={facturaForm.receptor_nombre} onChange={e => setFacturaForm({...facturaForm, receptor_nombre: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-slate-400 ${
-                      facturaErrors.receptor_nombre ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-[#A1A1AA] ${
+                      facturaErrors.receptor_nombre ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {facturaErrors.receptor_nombre && <p className="text-xs text-red-500 mt-1">{facturaErrors.receptor_nombre}</p>}
                 </div>
               </div>
 
               {/* CFDI options */}
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Datos CFDI</h3>
+              <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Datos CFDI</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
                 <select value={facturaForm.uso_cfdi} onChange={e => setFacturaForm({...facturaForm, uso_cfdi: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   <optgroup label="Uso CFDI">
                     {USOS_CFDI.map(u => <option key={u.value} value={u.value}>{u.value} — {u.label}</option>)}
                   </optgroup>
                 </select>
                 <select value={facturaForm.forma_pago} onChange={e => setFacturaForm({...facturaForm, forma_pago: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   {FORMAS_PAGO.map(f => <option key={f.value} value={f.value}>{f.value} — {f.label}</option>)}
                 </select>
                 <select value={facturaForm.metodo_pago} onChange={e => setFacturaForm({...facturaForm, metodo_pago: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   {METODOS_PAGO.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
                 <div>
                   <input placeholder="Serie (opcional)" value={facturaForm.serie} onChange={e => setFacturaForm({...facturaForm, serie: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-400"/>
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#A1A1AA]"/>
                 </div>
               </div>
 
               {/* Conceptos */}
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Conceptos</h3>
+              <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Conceptos</h3>
               {facturaForm.conceptos.length > 0 && (
                 <div className="overflow-x-auto mb-3">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">Clave</th>
-                        <th className="text-left py-2 px-2 text-slate-400 font-medium">Descripción</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Cant.</th>
-                        <th className="text-left py-2 px-2 text-slate-400 font-medium">Unidad</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">V. Unit.</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Importe</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">IVA</th>
+                      <tr className="border-b border-[#262626]">
+                        <th className="text-left py-2 pr-2 text-[#A1A1AA] font-medium">Clave</th>
+                        <th className="text-left py-2 px-2 text-[#A1A1AA] font-medium">Descripción</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Cant.</th>
+                        <th className="text-left py-2 px-2 text-[#A1A1AA] font-medium">Unidad</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">V. Unit.</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Importe</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">IVA</th>
                         <th className="py-2 pl-2 w-8"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {facturaForm.conceptos.map((c, i) => (
                         <tr key={i} className="border-b border-slate-50">
-                          <td className="py-2 pr-2 font-mono text-slate-500">{c.clave_prod_serv}</td>
-                          <td className="py-2 px-2 text-slate-900">{c.descripcion}</td>
-                          <td className="text-right py-2 px-2 text-slate-600">{c.cantidad}</td>
-                          <td className="py-2 px-2 text-slate-400">{c.unidad}</td>
-                          <td className="text-right py-2 px-2 text-slate-600">{fmt(c.valor_unitario)}</td>
-                          <td className="text-right py-2 px-2 text-slate-600">{fmt(c.importe)}</td>
-                          <td className="text-right py-2 px-2 text-slate-600">{fmt(c.iva)}</td>
+                          <td className="py-2 pr-2 font-mono text-[#A1A1AA]">{c.clave_prod_serv}</td>
+                          <td className="py-2 px-2 text-white">{c.descripcion}</td>
+                          <td className="text-right py-2 px-2 text-[#D4D4D8]">{c.cantidad}</td>
+                          <td className="py-2 px-2 text-[#A1A1AA]">{c.unidad}</td>
+                          <td className="text-right py-2 px-2 text-[#D4D4D8]">{fmt(c.valor_unitario)}</td>
+                          <td className="text-right py-2 px-2 text-[#D4D4D8]">{fmt(c.importe)}</td>
+                          <td className="text-right py-2 px-2 text-[#D4D4D8]">{fmt(c.iva)}</td>
                           <td className="py-2 pl-2">
                             <button type="button" onClick={() => removeFacturaConcepto(i)}
                               className="text-slate-300 hover:text-red-500 text-xs">✕</button>
@@ -448,59 +448,59 @@ export default function Facturacion({ usuario }) {
 
               {/* Summary */}
               {facturaForm.conceptos.length > 0 && (
-                <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm">
+                <div className="bg-[#1A1A1A] rounded-xl p-4 mb-4 text-sm">
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-500">Subtotal</span>
-                    <span className="text-slate-900 font-semibold">{fmt(subtotal)}</span>
+                    <span className="text-[#A1A1AA]">Subtotal</span>
+                    <span className="text-white font-semibold">{fmt(subtotal)}</span>
                   </div>
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-500">IVA</span>
-                    <span className="text-slate-900 font-semibold">{fmt(ivaTotal)}</span>
+                    <span className="text-[#A1A1AA]">IVA</span>
+                    <span className="text-white font-semibold">{fmt(ivaTotal)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-t border-slate-200 mt-1 pt-2">
-                    <span className="text-slate-900 font-bold">Total</span>
-                    <span className="text-slate-900 font-extrabold text-base">{fmt(total)}</span>
+                    <span className="text-white font-bold">Total</span>
+                    <span className="text-white font-extrabold text-base">{fmt(total)}</span>
                   </div>
                 </div>
               )}
 
               {/* Add concept */}
-              <div className="flex items-end gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100 flex-wrap">
+              <div className="flex items-end gap-2 bg-[#1A1A1A] rounded-xl p-3 border border-[#262626] flex-wrap">
                 <div className="w-24">
                   <input placeholder="Clave" value={facturaConcInput.clave_prod_serv} onChange={e => setFacturaConcInput({...facturaConcInput, clave_prod_serv: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="flex-1 min-w-[140px]">
                   <input placeholder="Descripción" value={facturaConcInput.descripcion} onChange={e => setFacturaConcInput({...facturaConcInput, descripcion: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="w-16">
                   <input type="number" step="0.01" min="0.01" placeholder="Cant" value={facturaConcInput.cantidad} onChange={e => setFacturaConcInput({...facturaConcInput, cantidad: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="w-20">
                   <input placeholder="Unidad" value={facturaConcInput.unidad} onChange={e => setFacturaConcInput({...facturaConcInput, unidad: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="w-20">
                   <input type="number" step="0.01" min="0" placeholder="V.U." value={facturaConcInput.valor_unitario} onChange={e => setFacturaConcInput({...facturaConcInput, valor_unitario: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="w-16">
                   <select value={facturaConcInput.iva} onChange={e => setFacturaConcInput({...facturaConcInput, iva: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
                     <option value={0.16}>16%</option>
                     <option value={0}>0% (exento)</option>
                     <option value={0.08}>8%</option>
                   </select>
                 </div>
                 <button type="button" onClick={addFacturaConcepto}
-                  className="bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
+                  className="bg-slate-200 text-[#D4D4D8] text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
               </div>
 
               <div className="mt-4 flex gap-3">
                 <button type="submit" disabled={facturaSaving}
-                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                   {facturaSaving ? 'Facturando...' : 'Emitir factura'}
                 </button>
               </div>
@@ -509,33 +509,33 @@ export default function Facturacion({ usuario }) {
 
           {/* Facturas list */}
           {loadingFacturas ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : facturas.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay facturas registradas</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay facturas registradas</div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 overflow-x-auto">
+            <div className="bg-[#141414] rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">UUID</th>
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">Receptor</th>
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">RFC</th>
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">Fecha</th>
-                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Total</th>
-                    <th className="text-center py-3 px-4 text-slate-500 font-semibold">Estatus</th>
+                  <tr className="border-b border-[#262626] bg-[#1A1A1A]">
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">UUID</th>
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">Receptor</th>
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">RFC</th>
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">Fecha</th>
+                    <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Total</th>
+                    <th className="text-center py-3 px-4 text-[#A1A1AA] font-semibold">Estatus</th>
                     <th className="py-3 px-4 w-20"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {facturas.map(f => (
-                    <tr key={f.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-4 font-mono text-slate-500 text-[11px] max-w-[180px] truncate">{f.uuid || '—'}</td>
-                      <td className="py-3 px-4 text-slate-900 font-medium">{f.receptor_nombre}</td>
-                      <td className="py-3 px-4 font-mono text-slate-600">{f.receptor_rfc}</td>
-                      <td className="py-3 px-4 text-slate-600">{f.fecha ? new Date(f.fecha).toLocaleDateString('es-MX') : '—'}</td>
-                      <td className="text-right py-3 px-4 text-slate-900 font-semibold font-mono">{fmt(f.total)}</td>
+                    <tr key={f.id} className="border-b border-slate-50 hover:bg-[#1A1A1A]/50 transition-colors">
+                      <td className="py-3 px-4 font-mono text-[#A1A1AA] text-[11px] max-w-[180px] truncate">{f.uuid || '—'}</td>
+                      <td className="py-3 px-4 text-white font-medium">{f.receptor_nombre}</td>
+                      <td className="py-3 px-4 font-mono text-[#D4D4D8]">{f.receptor_rfc}</td>
+                      <td className="py-3 px-4 text-[#D4D4D8]">{f.fecha ? new Date(f.fecha).toLocaleDateString('es-MX') : '—'}</td>
+                      <td className="text-right py-3 px-4 text-white font-semibold font-mono">{fmt(f.total)}</td>
                       <td className="text-center py-3 px-4">
-                        <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${ESTATUS_FACTURA[f.estatus] || 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${ESTATUS_FACTURA[f.estatus] || 'bg-slate-100 text-[#A1A1AA]'}`}>
                           {ESTATUS_LABEL[f.estatus] || f.estatus}
                         </span>
                       </td>
@@ -560,9 +560,9 @@ export default function Facturacion({ usuario }) {
       {tab === 'complementos' && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-500">{complementos.length} complementos</p>
+            <p className="text-sm text-[#A1A1AA]">{complementos.length} complementos</p>
             <button onClick={() => { setShowCompForm(!showCompForm); setCompErrors({}); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200">
               {showCompForm ? 'Cancelar' : '+ Nuevo Complemento'}
             </button>
           </div>
@@ -573,49 +573,49 @@ export default function Facturacion({ usuario }) {
 
           {/* New complemento form */}
           {showCompForm && (
-            <form onSubmit={handleCompSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nuevo Complemento de Pago</h2>
+            <form onSubmit={handleCompSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nuevo Complemento de Pago</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">RFC del receptor *</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">RFC del receptor *</label>
                   <input placeholder="RFC" value={compForm.receptor_rfc} onChange={e => setCompForm({...compForm, receptor_rfc: e.target.value.toUpperCase()})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                      compErrors.receptor_rfc ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                      compErrors.receptor_rfc ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {compErrors.receptor_rfc && <p className="text-xs text-red-500 mt-1">{compErrors.receptor_rfc}</p>}
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre del receptor *</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Nombre del receptor *</label>
                   <input placeholder="Nombre" value={compForm.receptor_nombre} onChange={e => setCompForm({...compForm, receptor_nombre: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                      compErrors.receptor_nombre ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                      compErrors.receptor_nombre ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {compErrors.receptor_nombre && <p className="text-xs text-red-500 mt-1">{compErrors.receptor_nombre}</p>}
                 </div>
                 <select value={compForm.forma_pago} onChange={e => setCompForm({...compForm, forma_pago: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   {FORMAS_PAGO.map(f => <option key={f.value} value={f.value}>{f.value} — {f.label}</option>)}
                 </select>
               </div>
 
               {/* Pagos */}
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Pagos</h3>
+              <h3 className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Pagos</h3>
               {compForm.pagos.length > 0 && (
                 <div className="overflow-x-auto mb-3">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">UUID Factura</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Importe pagado</th>
+                      <tr className="border-b border-[#262626]">
+                        <th className="text-left py-2 pr-2 text-[#A1A1AA] font-medium">UUID Factura</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Importe pagado</th>
                         <th className="py-2 pl-2 w-8"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {compForm.pagos.map((p, i) => (
                         <tr key={i} className="border-b border-slate-50">
-                          <td className="py-2 pr-2 font-mono text-slate-600 text-[11px]">{p.uuid_factura}</td>
-                          <td className="text-right py-2 px-2 text-slate-900 font-semibold">{fmt(p.importe_pagado)}</td>
+                          <td className="py-2 pr-2 font-mono text-[#D4D4D8] text-[11px]">{p.uuid_factura}</td>
+                          <td className="text-right py-2 px-2 text-white font-semibold">{fmt(p.importe_pagado)}</td>
                           <td className="py-2 pl-2">
                             <button type="button" onClick={() => removeCompPago(i)}
                               className="text-slate-300 hover:text-red-500 text-xs">✕</button>
@@ -625,8 +625,8 @@ export default function Facturacion({ usuario }) {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-slate-200">
-                        <td className="py-2 pr-2 text-slate-900 font-bold">Total pagado</td>
-                        <td className="text-right py-2 px-2 text-slate-900 font-bold">{fmt(compForm.pagos.reduce((s, p) => s + p.importe_pagado, 0))}</td>
+                        <td className="py-2 pr-2 text-white font-bold">Total pagado</td>
+                        <td className="text-right py-2 px-2 text-white font-bold">{fmt(compForm.pagos.reduce((s, p) => s + p.importe_pagado, 0))}</td>
                         <td></td>
                       </tr>
                     </tfoot>
@@ -636,22 +636,22 @@ export default function Facturacion({ usuario }) {
               {compErrors.pagos && <p className="text-xs text-red-500 mb-2">{compErrors.pagos}</p>}
 
               {/* Add payment */}
-              <div className="flex items-end gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+              <div className="flex items-end gap-2 bg-[#1A1A1A] rounded-xl p-3 border border-[#262626]">
                 <div className="flex-1">
                   <input placeholder="UUID de la factura" value={compPagoInput.uuid_factura} onChange={e => setCompPagoInput({...compPagoInput, uuid_factura: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <div className="w-28">
                   <input type="number" step="0.01" min="0" placeholder="Importe" value={compPagoInput.importe_pagado} onChange={e => setCompPagoInput({...compPagoInput, importe_pagado: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
                 </div>
                 <button type="button" onClick={addCompPago}
-                  className="bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
+                  className="bg-slate-200 text-[#D4D4D8] text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
               </div>
 
               <div className="mt-4 flex gap-3">
                 <button type="submit" disabled={compSaving}
-                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                   {compSaving ? 'Guardando...' : 'Guardar complemento'}
                 </button>
               </div>
@@ -660,21 +660,21 @@ export default function Facturacion({ usuario }) {
 
           {/* Complementos list */}
           {loadingComplementos ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : complementos.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay complementos de pago registrados</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay complementos de pago registrados</div>
           ) : (
             <div className="space-y-3">
               {complementos.map(c => (
-                <div key={c.id} className="bg-white rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
+                <div key={c.id} className="bg-[#141414] rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-slate-900">{c.receptor_nombre}</span>
-                      <span className="text-xs text-slate-400 font-mono">{c.receptor_rfc}</span>
+                      <span className="font-semibold text-white">{c.receptor_nombre}</span>
+                      <span className="text-xs text-[#A1A1AA] font-mono">{c.receptor_rfc}</span>
                     </div>
                   </div>
                   {c.pagos && c.pagos.length > 0 && (
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-[#A1A1AA]">
                       {c.pagos.length} pago(s) · Total: {fmt(c.pagos.reduce((s, p) => s + parseFloat(p.importe_pagado || 0), 0))}
                     </div>
                   )}

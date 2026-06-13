@@ -120,7 +120,7 @@ export default function Empleados({ usuario }) {
     e.apellidos.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="p-8 text-sm text-slate-400">Cargando...</div>;
+  if (loading) return <div className="p-8 text-sm text-[#A1A1AA]">Cargando...</div>;
 
   return (
     <main className="mobile-scroll overflow-y-auto h-full">
@@ -128,11 +128,11 @@ export default function Empleados({ usuario }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Empleados</h1>
-          <p className="text-sm text-slate-500 mt-1">{lista.length} registros</p>
+          <h1 className="text-2xl font-extrabold tracking-tighter text-white">Empleados</h1>
+          <p className="text-sm text-[#A1A1AA] mt-1">{lista.length} registros</p>
         </div>
         <button onClick={() => { resetForm(); setShowForm(!showForm); }}
-          className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-all">
+          className="px-4 py-2 bg-[#0A0A0A] text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-all">
           {showForm ? '✕ Cerrar' : '+ Nuevo'}
         </button>
       </div>
@@ -140,8 +140,8 @@ export default function Empleados({ usuario }) {
       {/* Feedback */}
       {feedback && (
         <div className={`mb-4 px-4 py-3 rounded-xl text-xs font-medium ${
-          feedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-          'bg-red-50 text-red-700 border border-red-200'
+          feedback.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/30' :
+          'bg-red-500/10 text-red-400 border border-red-500/30'
         }`}>
           {feedback.text}
         </div>
@@ -150,54 +150,54 @@ export default function Empleados({ usuario }) {
       {/* Search */}
       <input value={search} onChange={e => setSearch(e.target.value)}
         placeholder="Buscar por nombre, RFC o apellidos..."
-        className="w-full mb-4 bg-white border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15" />
+        className="w-full mb-4 bg-[#141414] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15" />
 
       {/* Form */}
       {showForm && (
-        <form onSubmit={guardar} className="bg-white rounded-2xl p-6 mb-6 border border-slate-100 shadow-sm">
-          <h2 className="text-base font-bold text-slate-900 mb-4">{editId ? 'Editar Empleado' : 'Nuevo Empleado'}</h2>
+        <form onSubmit={guardar} className="bg-[#141414] rounded-2xl p-6 mb-6 border border-[#262626] shadow-sm">
+          <h2 className="text-base font-bold text-white mb-4">{editId ? 'Editar Empleado' : 'Nuevo Empleado'}</h2>
           <div className="grid grid-cols-3 gap-4">
             {formFields.map(f => (
               <div key={f.key}>
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">
                   {f.label}{f.required ? ' *' : ''}
                 </label>
                 <input type={f.type} value={form[f.key]} step={f.step}
                   onChange={e => setForm({...form, [f.key]: e.target.value})}
                   required={f.required} placeholder={f.placeholder}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15" />
+                  className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15" />
               </div>
             ))}
             {/* Selects */}
             <div>
-              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contrato</label>
+              <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Contrato</label>
               <select value={form.tipo_contrato} onChange={e => setForm({...form, tipo_contrato: e.target.value})}
-                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
                 {TIPO_CONTRATO.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Jornada</label>
+              <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Jornada</label>
               <select value={form.tipo_jornada} onChange={e => setForm({...form, tipo_jornada: e.target.value})}
-                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
                 {TIPO_JORNADA.map(j => <option key={j} value={j}>{j}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Clase de Riesgo</label>
+              <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Clase de Riesgo</label>
               <select value={form.clase_riesgo} onChange={e => setForm({...form, clase_riesgo: parseInt(e.target.value)})}
-                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
                 {[1,2,3,4,5].map(r => <option key={r} value={r}>{RIESGO_LABEL[r]}</option>)}
               </select>
             </div>
           </div>
           <div className="mt-4 flex gap-2 justify-end">
             <button type="button" onClick={() => { setShowForm(false); resetForm(); }}
-              className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+              className="px-4 py-2 text-xs font-medium text-[#A1A1AA] hover:text-[#E5E5E5] transition-colors">
               Cancelar
             </button>
             <button type="submit"
-              className="px-6 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-all">
+              className="px-6 py-2 bg-[#0A0A0A] text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-all">
               {editId ? 'Actualizar' : 'Crear'}
             </button>
           </div>
@@ -207,20 +207,20 @@ export default function Empleados({ usuario }) {
       {/* Table */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-sm text-slate-400">
+          <div className="text-center py-12 text-sm text-[#A1A1AA]">
             {search ? 'Sin resultados' : 'No hay empleados registrados'}
           </div>
         ) : filtered.map(e => (
-          <div key={e.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center justify-between hover:border-slate-200 transition-colors">
+          <div key={e.id} className="bg-[#141414] rounded-2xl p-4 border border-[#262626] shadow-sm flex items-center justify-between hover:border-[#333333] transition-colors">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-slate-900">{e.nombre} {e.apellidos}</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{e.tipo_contrato}</span>
+                <span className="font-semibold text-white">{e.nombre} {e.apellidos}</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#262626] text-[#D4D4D8]">{e.tipo_contrato}</span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  e.estatus === 'activo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                  e.estatus === 'activo' ? 'bg-green-500/20 text-green-400' : 'bg-[#262626] text-[#A1A1AA]'
                 }`}>{e.estatus}</span>
               </div>
-              <div className="text-xs text-slate-400 mt-1 space-x-3">
+              <div className="text-xs text-[#A1A1AA] mt-1 space-x-3">
                 <span>RFC: {e.rfc}</span>
                 <span>Salario: ${parseFloat(e.salario_diario).toFixed(2)}/día</span>
                 <span>Riesgo: {RIESGO_LABEL[e.clase_riesgo]}</span>
@@ -228,9 +228,9 @@ export default function Empleados({ usuario }) {
             </div>
             <div className="flex gap-1 shrink-0 ml-4">
               <button onClick={() => abrirEdicion(e)}
-                className="text-slate-300 hover:text-slate-600 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-slate-100">✎</button>
+                className="text-[#71717A] hover:text-[#D4D4D8] transition-colors text-sm px-2 py-1 rounded-lg hover:bg-[#262626]">✎</button>
               <button onClick={() => eliminar(e.id, `${e.nombre} ${e.apellidos}`)}
-                className="text-slate-300 hover:text-red-500 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-slate-100">✕</button>
+                className="text-[#71717A] hover:text-red-400 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-[#262626]">✕</button>
             </div>
           </div>
         ))}

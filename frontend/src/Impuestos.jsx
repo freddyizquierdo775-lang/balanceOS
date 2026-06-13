@@ -311,7 +311,7 @@ export default function Impuestos({ usuario }) {
   const anios = Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i);
 
   const Logo = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-[#71717A] shrink-0">
       <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
       <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
       <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
@@ -325,17 +325,17 @@ export default function Impuestos({ usuario }) {
       <div className="flex items-center gap-3 mb-6">
         <Logo />
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Impuestos</h1>
-          <p className="text-sm text-slate-500 mt-1">IVA, ISR y DIOT</p>
+          <h1 className="text-2xl font-extrabold tracking-tighter text-white">Impuestos</h1>
+          <p className="text-sm text-[#A1A1AA] mt-1">IVA, ISR y DIOT</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-slate-900/5 w-fit">
+      <div className="flex gap-1 mb-6 bg-[#141414] rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#262626] w-fit">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-              tab === t.key ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              tab === t.key ? 'bg-[#0A0A0A] text-white shadow-sm' : 'text-[#A1A1AA] hover:text-[#E5E5E5] hover:bg-[#1A1A1A]'
             }`}>
             {t.label}
           </button>
@@ -346,52 +346,52 @@ export default function Impuestos({ usuario }) {
       {tab === 'calculadora' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input form */}
-          <form onSubmit={handleCalc} className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5 h-fit">
-            <h2 className="text-base font-semibold text-slate-900 mb-5">Calculadora de Impuestos</h2>
+          <form onSubmit={handleCalc} className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626] h-fit">
+            <h2 className="text-base font-semibold text-white mb-5">Calculadora de Impuestos</h2>
             <div className="space-y-5">
               <div>
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Ingresos brutos</label>
+                <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Ingresos brutos</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#A1A1AA]">$</span>
                   <input type="number" step="0.01" min="0" required value={calcForm.ingresos}
                     onChange={e => setCalcForm({...calcForm, ingresos: e.target.value})} placeholder="100,000.00"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-3.5 pl-8 pr-4 text-sm text-white outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#71717A]"/>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Deducciones autorizadas</label>
+                <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Deducciones autorizadas</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#A1A1AA]">$</span>
                   <input type="number" step="0.01" min="0" value={calcForm.deducciones}
                     onChange={e => setCalcForm({...calcForm, deducciones: e.target.value})} placeholder="60,000.00"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#71717A]"/>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">IVA trasladado</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">IVA trasladado</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#A1A1AA]">$</span>
                     <input type="number" step="0.01" min="0" value={calcForm.iva_trasladado}
                       onChange={e => setCalcForm({...calcForm, iva_trasladado: e.target.value})} placeholder="16,000.00"
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                      className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#71717A]"/>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">IVA acreditable</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">IVA acreditable</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#A1A1AA]">$</span>
                     <input type="number" step="0.01" min="0" value={calcForm.iva_acreditable}
                       onChange={e => setCalcForm({...calcForm, iva_acreditable: e.target.value})} placeholder="9,600.00"
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                      className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-[#1A1A1A] placeholder:text-[#71717A]"/>
                   </div>
                 </div>
               </div>
               {calcError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{calcError}</div>
+                <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-xl p-3">{calcError}</div>
               )}
               <button type="submit" disabled={calcLoading || !calcForm.ingresos}
-                className="w-full bg-slate-900 text-white text-sm font-semibold rounded-xl py-3.5 hover:bg-slate-800 transition-all disabled:opacity-50">
+                className="w-full bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl py-3.5 hover:bg-slate-800 transition-all disabled:opacity-50">
                 {calcLoading ? 'Calculando...' : 'Calcular'}
               </button>
             </div>
@@ -402,55 +402,55 @@ export default function Impuestos({ usuario }) {
             {calcResult && (
               <>
                 {/* IVA Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-                  <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">IVA</h3>
+                <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+                  <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">IVA</h3>
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_por_pagar || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_por_pagar || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                         {fmt(calcResult.iva_por_pagar)}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-1">Por pagar</div>
+                      <div className="text-[10px] text-[#A1A1AA] mt-1">Por pagar</div>
                     </div>
                     <div>
-                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_a_favor || 0) > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_a_favor || 0) > 0 ? 'text-emerald-400' : 'text-white'}`}>
                         {fmt(calcResult.iva_a_favor)}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-1">A favor</div>
+                      <div className="text-[10px] text-[#A1A1AA] mt-1">A favor</div>
                     </div>
                   </div>
                 </div>
 
                 {/* ISR Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-                  <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">ISR</h3>
+                <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+                  <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">ISR</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Utilidad fiscal</span>
-                      <span className="text-slate-900 font-semibold">{fmt(calcResult.utilidad_fiscal)}</span>
+                      <span className="text-[#A1A1AA]">Utilidad fiscal</span>
+                      <span className="text-white font-semibold">{fmt(calcResult.utilidad_fiscal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Tasa efectiva</span>
-                      <span className="text-slate-900 font-semibold">{pct(calcResult.tasa_efectiva)}</span>
+                      <span className="text-[#A1A1AA]">Tasa efectiva</span>
+                      <span className="text-white font-semibold">{pct(calcResult.tasa_efectiva)}</span>
                     </div>
-                    <div className="border-t border-slate-100 pt-3 flex justify-between text-sm">
-                      <span className="text-slate-700 font-medium">ISR bruto</span>
-                      <span className="text-slate-900 font-bold">{fmt(calcResult.isr_bruto)}</span>
+                    <div className="border-t border-[#262626] pt-3 flex justify-between text-sm">
+                      <span className="text-[#E5E5E5] font-medium">ISR bruto</span>
+                      <span className="text-white font-bold">{fmt(calcResult.isr_bruto)}</span>
                     </div>
                     {calcResult.isr_retenciones > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Retenciones</span>
-                        <span className="text-emerald-600 font-semibold">-{fmt(calcResult.isr_retenciones)}</span>
+                        <span className="text-[#A1A1AA]">Retenciones</span>
+                        <span className="text-emerald-400 font-semibold">-{fmt(calcResult.isr_retenciones)}</span>
                       </div>
                     )}
                     {calcResult.isr_pago_provisional > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Pagos provisionales</span>
-                        <span className="text-emerald-600 font-semibold">-{fmt(calcResult.isr_pago_provisional)}</span>
+                        <span className="text-[#A1A1AA]">Pagos provisionales</span>
+                        <span className="text-emerald-400 font-semibold">-{fmt(calcResult.isr_pago_provisional)}</span>
                       </div>
                     )}
-                    <div className="border-t-2 border-slate-200 pt-3 flex justify-between text-sm">
-                      <span className="text-slate-900 font-bold text-base">ISR neto</span>
-                      <span className={`font-extrabold text-base ${parseFloat(calcResult.isr_neto || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <div className="border-t-2 border-[#333333] pt-3 flex justify-between text-sm">
+                      <span className="text-white font-bold text-base">ISR neto</span>
+                      <span className={`font-extrabold text-base ${parseFloat(calcResult.isr_neto || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                         {fmt(calcResult.isr_neto)}
                       </span>
                     </div>
@@ -459,18 +459,18 @@ export default function Impuestos({ usuario }) {
 
                 {/* Brackets Table + Break-even */}
                 {calcResult.brackets && calcResult.brackets.length > 0 && (
-                  <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                  <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+                    <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">
                       Tarifa Progresiva ISR Art. 152 LISR
                     </h3>
 
                     {/* Break-even visual */}
                     <div className="mb-4">
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                      <div className="flex items-center justify-between text-[10px] text-[#A1A1AA] mb-1">
                         <span>Posición en la tarifa</span>
                         <span>Utilidad: {fmt(calcResult.utilidad_fiscal)}</span>
                       </div>
-                      <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="relative h-2 bg-[#262626] rounded-full overflow-hidden">
                         {/* Background bracket segments */}
                         {calcResult.brackets.map((b, i) => {
                           const total = calcResult.brackets[calcResult.brackets.length - 1]?.limite_inferior || 1;
@@ -485,7 +485,7 @@ export default function Impuestos({ usuario }) {
                           );
                           return (
                             <div key={i}
-                              className={`absolute top-0 h-full transition-all ${isActive ? 'bg-[#2E8B57] z-10' : 'bg-slate-200'}`}
+                              className={`absolute top-0 h-full transition-all ${isActive ? 'bg-[#2E8B57] z-10' : 'bg-[#333333]'}`}
                               style={{ left: `${loPct}%`, width: `${Math.max(width, 0.3)}%` }}
                               title={`Bracket ${i + 1}: ${fmt(b.limite_inferior)} – ${hi === 'Infinity' || hi === null ? '∞' : fmt(hi)}`}
                             />
@@ -498,12 +498,12 @@ export default function Impuestos({ usuario }) {
                           const pct = Math.min((util / total) * 100, 100);
                           return util > 0 ? (
                             <div className="absolute top-1/2 -translate-y-1/2 z-20" style={{ left: `calc(${pct}% - 5px)` }}>
-                              <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border-2 border-white shadow-sm" />
+                              <div className="w-2.5 h-2.5 bg-[#0A0A0A] rounded-full border-2 border-white shadow-sm" />
                             </div>
                           ) : null;
                         })()}
                       </div>
-                      <div className="flex justify-between text-[9px] text-slate-300 mt-0.5">
+                      <div className="flex justify-between text-[9px] text-[#71717A] mt-0.5">
                         <span>$0</span>
                         <span>{fmt(calcResult.brackets[calcResult.brackets.length - 1]?.limite_inferior)}+</span>
                       </div>
@@ -513,7 +513,7 @@ export default function Impuestos({ usuario }) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-[11px]">
                         <thead>
-                          <tr className="border-b border-slate-100 text-slate-400">
+                          <tr className="border-b border-[#262626] text-[#A1A1AA]">
                             <th className="text-left py-1.5 pr-2 font-medium">Límite inf.</th>
                             <th className="text-left py-1.5 px-2 font-medium">Límite sup.</th>
                             <th className="text-right py-1.5 px-2 font-medium">Tasa</th>
@@ -533,9 +533,9 @@ export default function Impuestos({ usuario }) {
                               : fmt(b.limite_superior);
                             return (
                               <tr key={i}
-                                className={`border-b border-slate-50 transition-colors ${isActive ? 'bg-[#2E8B57]/8 font-semibold' : parseFloat(b.base_gravable || 0) > 0 ? 'bg-slate-50' : 'text-slate-300'}`}>
-                                <td className="py-1.5 pr-2 text-slate-700 font-mono">{fmt(b.limite_inferior)}</td>
-                                <td className="py-1.5 px-2 text-slate-700 font-mono">{hiDisplay}</td>
+                                className={`border-b border-slate-50 transition-colors ${isActive ? 'bg-[#2E8B57]/8 font-semibold' : parseFloat(b.base_gravable || 0) > 0 ? 'bg-[#1A1A1A]' : 'text-[#71717A]'}`}>
+                                <td className="py-1.5 pr-2 text-[#E5E5E5] font-mono">{fmt(b.limite_inferior)}</td>
+                                <td className="py-1.5 px-2 text-[#E5E5E5] font-mono">{hiDisplay}</td>
                                 <td className="py-1.5 px-2 text-right font-mono">{(parseFloat(b.tasa) * 100).toFixed(2)}%</td>
                                 <td className="py-1.5 px-2 text-right font-mono">{fmt(b.cuota_fija)}</td>
                                 <td className={`py-1.5 px-2 text-right font-mono ${isActive ? 'text-[#2E8B57]' : ''}`}>
@@ -556,10 +556,10 @@ export default function Impuestos({ usuario }) {
             )}
 
             {!calcResult && !calcLoading && (
-              <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+              <div className="bg-[#141414] rounded-2xl p-12 text-center border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
                 <div className="text-4xl mb-3">🧮</div>
-                <p className="text-sm text-slate-400">Ingresa los datos y presiona "Calcular"</p>
-                <p className="text-xs text-slate-300 mt-1">IVA por pagar/a favor + ISR bruto/neto</p>
+                <p className="text-sm text-[#A1A1AA]">Ingresa los datos y presiona "Calcular"</p>
+                <p className="text-xs text-[#71717A] mt-1">IVA por pagar/a favor + ISR bruto/neto</p>
               </div>
             )}
           </div>
@@ -572,68 +572,68 @@ export default function Impuestos({ usuario }) {
           {/* Filter + New */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             <select value={declFiltroCliente} onChange={e => setDeclFiltroCliente(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[200px]">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[200px]">
               <option value="">Todos los clientes</option>
               {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
             </select>
             <select value={declFiltroMes} onChange={e => setDeclFiltroMes(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               <option value="">Todos los meses</option>
               {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
             <select value={declFiltroAnio} onChange={e => setDeclFiltroAnio(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               <option value="">Todos los años</option>
               {anios.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
             <button onClick={() => { setShowDeclForm(!showDeclForm); setDeclErrors({}); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
               {showDeclForm ? 'Cancelar' : '+ Nueva Declaración'}
             </button>
           </div>
 
           {declErrors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{declErrors.general}</div>
+            <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{declErrors.general}</div>
           )}
 
           {/* New declaration form */}
           {showDeclForm && (
-            <form onSubmit={handleDeclSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nueva Declaración</h2>
+            <form onSubmit={handleDeclSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nueva Declaración</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Cliente *</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Cliente *</label>
                   <select value={declForm.cliente_id} onChange={e => setDeclForm({...declForm, cliente_id: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                      declErrors.cliente_id ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                      declErrors.cliente_id ? 'border-red-300' : 'border-[#262626] focus:border-[#10B981] focus:ring-[#2E8B57]/15'
                     }`}>
                     <option value="">Seleccionar...</option>
                     {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tipo</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Tipo</label>
                   <select value={declForm.tipo} onChange={e => setDeclForm({...declForm, tipo: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15">
                     <option value="mensual">Mensual</option>
                     <option value="anual">Anual</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Período</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Período</label>
                   <div className="flex gap-2">
                     {declForm.tipo === 'mensual' && (
                       <select value={declForm.periodo_mes} onChange={e => setDeclForm({...declForm, periodo_mes: e.target.value})}
-                        className={`flex-1 bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                          declErrors.periodo_mes ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                        className={`flex-1 bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                          declErrors.periodo_mes ? 'border-red-300' : 'border-[#262626] focus:border-[#10B981] focus:ring-[#2E8B57]/15'
                         }`}>
                         <option value="">Mes</option>
                         {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
                       </select>
                     )}
                     <select value={declForm.periodo_anio} onChange={e => setDeclForm({...declForm, periodo_anio: e.target.value})}
-                      className={`flex-1 bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                        declErrors.periodo_anio ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                      className={`flex-1 bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                        declErrors.periodo_anio ? 'border-red-300' : 'border-[#262626] focus:border-[#10B981] focus:ring-[#2E8B57]/15'
                       }`}>
                       <option value="">Año</option>
                       {anios.map(a => <option key={a} value={a}>{a}</option>)}
@@ -643,15 +643,15 @@ export default function Impuestos({ usuario }) {
               </div>
 
               {/* Conceptos */}
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Conceptos</h3>
+              <h3 className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Conceptos</h3>
               {declForm.conceptos.length > 0 && (
                 <div className="overflow-x-auto mb-3">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">Tipo</th>
-                        <th className="text-left py-2 px-2 text-slate-400 font-medium">Concepto</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Monto</th>
+                      <tr className="border-b border-[#262626]">
+                        <th className="text-left py-2 pr-2 text-[#A1A1AA] font-medium">Tipo</th>
+                        <th className="text-left py-2 px-2 text-[#A1A1AA] font-medium">Concepto</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Monto</th>
                         <th className="py-2 pl-2 w-8"></th>
                       </tr>
                     </thead>
@@ -660,54 +660,54 @@ export default function Impuestos({ usuario }) {
                         <tr key={i} className="border-b border-slate-50">
                           <td className="py-2 pr-2">
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                              c.tipo === 'ingreso' ? 'bg-emerald-50 text-emerald-600' :
-                              c.tipo === 'deduccion' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                              c.tipo === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' :
+                              c.tipo === 'deduccion' ? 'bg-red-500/10 text-red-400' : 'bg-blue-50 text-blue-600'
                             }`}>{c.tipo}</span>
                           </td>
-                          <td className="py-2 px-2 text-slate-900">{c.concepto}</td>
-                          <td className="text-right py-2 px-2 text-slate-600 font-mono">{fmt(c.monto)}</td>
+                          <td className="py-2 px-2 text-white">{c.concepto}</td>
+                          <td className="text-right py-2 px-2 text-[#D4D4D8] font-mono">{fmt(c.monto)}</td>
                           <td className="py-2 pl-2">
                             <button type="button" onClick={() => removeDeclConcepto(i)}
-                              className="text-slate-300 hover:text-red-500 text-xs">✕</button>
+                              className="text-[#71717A] hover:text-red-400 text-xs">✕</button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-slate-200">
-                        <td colSpan={2} className="py-2 pr-2 text-slate-900 font-bold">Total</td>
-                        <td className="text-right py-2 px-2 text-slate-900 font-bold">{fmt(declForm.conceptos.reduce((s, c) => s + c.monto, 0))}</td>
+                      <tr className="border-t-2 border-[#333333]">
+                        <td colSpan={2} className="py-2 pr-2 text-white font-bold">Total</td>
+                        <td className="text-right py-2 px-2 text-white font-bold">{fmt(declForm.conceptos.reduce((s, c) => s + c.monto, 0))}</td>
                         <td></td>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
               )}
-              {declErrors.conceptos && <p className="text-xs text-red-500 mb-2">{declErrors.conceptos}</p>}
+              {declErrors.conceptos && <p className="text-xs text-red-400 mb-2">{declErrors.conceptos}</p>}
 
               {/* Add concept */}
-              <div className="flex items-end gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+              <div className="flex items-end gap-2 bg-[#1A1A1A] rounded-xl p-3 border border-[#262626]">
                 <select value={declConcInput.tipo} onChange={e => setDeclConcInput({...declConcInput, tipo: e.target.value})}
-                  className="bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
+                  className="bg-[#141414] border border-[#333333] rounded-lg p-2 text-xs outline-none focus:border-slate-400">
                   <option value="ingreso">Ingreso</option>
                   <option value="deduccion">Deducción</option>
                   <option value="otro">Otro</option>
                 </select>
                 <div className="flex-1">
                   <input placeholder="Concepto" value={declConcInput.concepto} onChange={e => setDeclConcInput({...declConcInput, concepto: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-[#333333] rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-[#71717A]"/>
                 </div>
                 <div className="w-28">
                   <input type="number" step="0.01" min="0" placeholder="Monto" value={declConcInput.monto} onChange={e => setDeclConcInput({...declConcInput, monto: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-[#333333] rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-[#71717A]"/>
                 </div>
                 <button type="button" onClick={addDeclConcepto}
-                  className="bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
+                  className="bg-[#333333] text-[#D4D4D8] text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
               </div>
 
               <div className="mt-4 flex gap-3">
                 <button type="submit" disabled={declSaving}
-                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                   {declSaving ? 'Guardando...' : 'Guardar declaración'}
                 </button>
               </div>
@@ -716,23 +716,23 @@ export default function Impuestos({ usuario }) {
 
           {/* Declaraciones list */}
           {loadingDecl ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : declaraciones.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay declaraciones registradas</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay declaraciones registradas</div>
           ) : (
             <div className="space-y-3">
               {declaraciones.map(d => (
-                <div key={d.id} className="bg-white rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
+                <div key={d.id} className="bg-[#141414] rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-semibold text-white bg-slate-500 px-2 py-0.5 rounded-full uppercase">{d.tipo}</span>
-                      <span className="font-semibold text-slate-900">{d.cliente_razon_social || `Cliente #${d.cliente_id}`}</span>
-                      {d.periodo_mes && <span className="text-xs text-slate-400">{meses.find(m => m.v === d.periodo_mes)?.l} {d.periodo_anio}</span>}
-                      {!d.periodo_mes && <span className="text-xs text-slate-400">Ejercicio {d.periodo_anio}</span>}
+                      <span className="font-semibold text-white">{d.cliente_razon_social || `Cliente #${d.cliente_id}`}</span>
+                      {d.periodo_mes && <span className="text-xs text-[#A1A1AA]">{meses.find(m => m.v === d.periodo_mes)?.l} {d.periodo_anio}</span>}
+                      {!d.periodo_mes && <span className="text-xs text-[#A1A1AA]">Ejercicio {d.periodo_anio}</span>}
                     </div>
                   </div>
                   {d.conceptos && d.conceptos.length > 0 && (
-                    <div className="text-xs text-slate-400 mt-2">
+                    <div className="text-xs text-[#A1A1AA] mt-2">
                       {d.conceptos.length} concepto(s) · Total: {fmt(d.conceptos.reduce((s, c) => s + parseFloat(c.monto || 0), 0))}
                     </div>
                   )}
@@ -749,74 +749,74 @@ export default function Impuestos({ usuario }) {
           {/* Filter */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">
             <select value={diotCliente} onChange={e => setDiotCliente(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
               <option value="">Seleccionar cliente...</option>
               {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
             </select>
             <select value={diotMes} onChange={e => setDiotMes(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
             <select value={diotAnio} onChange={e => setDiotAnio(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {anios.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
             <button onClick={loadDiot} disabled={!diotCliente || diotLoading}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
               {diotLoading ? 'Consultando...' : 'Consultar DIOT'}
             </button>
           </div>
 
           {diotError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{diotError}</div>
+            <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{diotError}</div>
           )}
 
           {/* DIOT Results */}
           {diotData && (
-            <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-5">
+            <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-5">
                 DIOT — {clienteList.find(c => c.id === parseInt(diotCliente))?.razon_social || ''} — {meses.find(m => m.v === diotMes)?.l} {diotAnio}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                <div className="bg-slate-50 rounded-2xl p-4">
-                  <div className="text-xl font-extrabold text-slate-900">{fmt(diotData.iva_acreditable)}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">IVA Acreditable</div>
+                <div className="bg-[#1A1A1A] rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-white">{fmt(diotData.iva_acreditable)}</div>
+                  <div className="text-[10px] text-[#A1A1AA] mt-1">IVA Acreditable</div>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-4">
-                  <div className="text-xl font-extrabold text-slate-900">{fmt(diotData.iva_trasladado)}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">IVA Trasladado</div>
+                <div className="bg-[#1A1A1A] rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-white">{fmt(diotData.iva_trasladado)}</div>
+                  <div className="text-[10px] text-[#A1A1AA] mt-1">IVA Trasladado</div>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-4">
-                  <div className={`text-xl font-extrabold ${parseFloat(diotData.diferencia || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <div className="bg-[#1A1A1A] rounded-2xl p-4">
+                  <div className={`text-xl font-extrabold ${parseFloat(diotData.diferencia || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {fmt(diotData.diferencia)}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-1">Diferencia</div>
+                  <div className="text-[10px] text-[#A1A1AA] mt-1">Diferencia</div>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-4">
-                  <div className="text-xl font-extrabold text-slate-900">{diotData.num_proveedores || 0}</div>
-                  <div className="text-[10px] text-slate-400 mt-1"># Proveedores</div>
+                <div className="bg-[#1A1A1A] rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-white">{diotData.num_proveedores || 0}</div>
+                  <div className="text-[10px] text-[#A1A1AA] mt-1"># Proveedores</div>
                 </div>
               </div>
               {diotData.proveedores && diotData.proveedores.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Proveedores</h4>
+                  <h4 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Proveedores</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="text-left py-2 pr-2 text-slate-400 font-medium">RFC</th>
-                          <th className="text-left py-2 px-2 text-slate-400 font-medium">Nombre</th>
-                          <th className="text-right py-2 px-2 text-slate-400 font-medium">Total facturado</th>
-                          <th className="text-right py-2 pl-2 text-slate-400 font-medium">IVA</th>
+                        <tr className="border-b border-[#262626]">
+                          <th className="text-left py-2 pr-2 text-[#A1A1AA] font-medium">RFC</th>
+                          <th className="text-left py-2 px-2 text-[#A1A1AA] font-medium">Nombre</th>
+                          <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Total facturado</th>
+                          <th className="text-right py-2 pl-2 text-[#A1A1AA] font-medium">IVA</th>
                         </tr>
                       </thead>
                       <tbody>
                         {diotData.proveedores.map((p, i) => (
                           <tr key={i} className="border-b border-slate-50">
-                            <td className="py-2 pr-2 font-mono text-slate-600">{p.rfc}</td>
-                            <td className="py-2 px-2 text-slate-900">{p.nombre}</td>
-                            <td className="text-right py-2 px-2 text-slate-600 font-mono">{fmt(p.total_facturado)}</td>
-                            <td className="text-right py-2 pl-2 text-slate-600 font-mono">{fmt(p.iva)}</td>
+                            <td className="py-2 pr-2 font-mono text-[#D4D4D8]">{p.rfc}</td>
+                            <td className="py-2 px-2 text-white">{p.nombre}</td>
+                            <td className="text-right py-2 px-2 text-[#D4D4D8] font-mono">{fmt(p.total_facturado)}</td>
+                            <td className="text-right py-2 pl-2 text-[#D4D4D8] font-mono">{fmt(p.iva)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -828,9 +828,9 @@ export default function Impuestos({ usuario }) {
           )}
 
           {!diotData && !diotLoading && !diotError && (
-            <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+            <div className="bg-[#141414] rounded-2xl p-12 text-center border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
               <div className="text-4xl mb-3">📋</div>
-              <p className="text-sm text-slate-400">Selecciona un cliente, período y presiona "Consultar DIOT"</p>
+              <p className="text-sm text-[#A1A1AA]">Selecciona un cliente, período y presiona "Consultar DIOT"</p>
             </div>
           )}
         </div>
@@ -842,7 +842,7 @@ export default function Impuestos({ usuario }) {
           {/* Header actions */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">
             <select value={estimuloCliente} onChange={e => setEstimuloCliente(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
+              className="bg-[#141414] border border-[#333333] rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
               <option value="">Seleccionar cliente...</option>
               {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
             </select>
@@ -852,30 +852,30 @@ export default function Impuestos({ usuario }) {
               🌱 Seed Estímulos
             </button>
             <button onClick={() => { setShowEstimuloForm(!showEstimuloForm); setEstimuloError(''); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
               {showEstimuloForm ? 'Cancelar' : '+ Nuevo Estímulo'}
             </button>
           </div>
 
           {estimuloError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{estimuloError}</div>
+            <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{estimuloError}</div>
           )}
 
           {/* New estimulo form */}
           {showEstimuloForm && (
-            <form onSubmit={handleEstimuloSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nuevo Estímulo Fiscal</h2>
+            <form onSubmit={handleEstimuloSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nuevo Estímulo Fiscal</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre *</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Nombre *</label>
                   <input value={estimuloForm.nombre} onChange={e => setEstimuloForm({...estimuloForm, nombre: e.target.value})} required
                     placeholder="Ej. Deducción inmediata inversiones"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15"/>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tipo</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Tipo</label>
                   <select value={estimuloForm.tipo} onChange={e => setEstimuloForm({...estimuloForm, tipo: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15">
                     <option value="credito">Crédito fiscal</option>
                     <option value="deduccion">Deducción</option>
                     <option value="exencion">Exención</option>
@@ -884,19 +884,19 @@ export default function Impuestos({ usuario }) {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Porcentaje</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Porcentaje</label>
                   <div className="relative">
                     <input type="number" step="0.0001" min="0" max="1" value={estimuloForm.porcentaje}
                       onChange={e => setEstimuloForm({...estimuloForm, porcentaje: e.target.value})}
                       placeholder="0.30 = 30%"
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 pr-10 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">%</span>
+                      className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 pr-10 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#A1A1AA]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Impuesto aplicable</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Impuesto aplicable</label>
                   <select value={estimuloForm.impuesto_aplicable} onChange={e => setEstimuloForm({...estimuloForm, impuesto_aplicable: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15">
                     <option value="ISR">ISR</option>
                     <option value="IVA">IVA</option>
                     <option value="IEPS">IEPS</option>
@@ -906,14 +906,14 @@ export default function Impuestos({ usuario }) {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Fundamento legal</label>
+                  <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Fundamento legal</label>
                   <input value={estimuloForm.fundamento_legal} onChange={e => setEstimuloForm({...estimuloForm, fundamento_legal: e.target.value})}
                     placeholder="Art. 204 LISR"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                    className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15"/>
                 </div>
               </div>
               <button type="submit" disabled={!estimuloForm.nombre}
-                className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                 Guardar Estímulo
               </button>
             </form>
@@ -922,12 +922,12 @@ export default function Impuestos({ usuario }) {
           {/* Two-column layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: Estímulos disponibles */}
-            <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Estímulos Disponibles</h3>
+            <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">Estímulos Disponibles</h3>
               {estimulosLoading ? (
-                <div className="text-center py-8 text-slate-400 text-sm">Cargando...</div>
+                <div className="text-center py-8 text-[#A1A1AA] text-sm">Cargando...</div>
               ) : estimulos.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-sm">
+                <div className="text-center py-8 text-[#A1A1AA] text-sm">
                   No hay estímulos. Presiona "🌱 Seed Estímulos" o "+ Nuevo Estímulo"
                 </div>
               ) : (
@@ -936,42 +936,42 @@ export default function Impuestos({ usuario }) {
                     const asignado = estimulosCliente.some(ce => ce.estimulo_id === est.id);
                     return (
                       <div key={est.id} className={`rounded-xl p-4 border transition-all ${
-                        asignado ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-100'
+                        asignado ? 'bg-emerald-500/10 border-emerald-200' : 'bg-[#1A1A1A] border-[#262626]'
                       }`}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900 truncate">{est.nombre}</span>
-                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{est.impuesto_aplicable}</span>
+                              <span className="text-sm font-semibold text-white truncate">{est.nombre}</span>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#333333] text-[#D4D4D8]">{est.impuesto_aplicable}</span>
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                                 est.tipo === 'credito' ? 'bg-blue-50 text-blue-600' :
-                                est.tipo === 'deduccion' ? 'bg-amber-50 text-amber-600' :
-                                est.tipo === 'exencion' ? 'bg-emerald-50 text-emerald-600' :
+                                est.tipo === 'deduccion' ? 'bg-amber-500/10 text-amber-600' :
+                                est.tipo === 'exencion' ? 'bg-emerald-500/10 text-emerald-400' :
                                 'bg-purple-50 text-purple-600'
                               }`}>{est.tipo}</span>
-                              <span className="text-xs text-slate-400 font-mono">{(parseFloat(est.porcentaje) * 100).toFixed(1)}%</span>
+                              <span className="text-xs text-[#A1A1AA] font-mono">{(parseFloat(est.porcentaje) * 100).toFixed(1)}%</span>
                             </div>
                             {est.fundamento_legal && (
-                              <div className="text-[10px] text-slate-400 mt-1 truncate">{est.fundamento_legal}</div>
+                              <div className="text-[10px] text-[#A1A1AA] mt-1 truncate">{est.fundamento_legal}</div>
                             )}
                           </div>
                           <div className="shrink-0">
                             {estimuloCliente ? (
                               asignado ? (
                                 <button onClick={() => handleQuitarEstimulo(est.id)}
-                                  className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                                  className="text-xs text-red-400 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-500/10 transition-colors">
                                   Quitar
                                 </button>
                               ) : (
                                 <button onClick={() => handleAsignarEstimulo(est.id)}
-                                  className="text-xs text-[#2E8B57] hover:text-emerald-700 font-medium px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors">
+                                  className="text-xs text-[#2E8B57] hover:text-emerald-700 font-medium px-2 py-1 rounded-lg hover:bg-emerald-500/10 transition-colors">
                                   + Asignar
                                 </button>
                               )
                             ) : (
-                              <span className="text-[10px] text-slate-300">Selecciona cliente</span>
+                              <span className="text-[10px] text-[#71717A]">Selecciona cliente</span>
                             )}
                           </div>
                         </div>
@@ -985,23 +985,23 @@ export default function Impuestos({ usuario }) {
             {/* Right: Estímulos del cliente + Cálculo */}
             <div className="space-y-6">
               {/* Estímulos del cliente */}
-              <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-                <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+                <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">
                   Estímulos del Cliente
                   {estimuloCliente && clienteList.find(c => c.id === parseInt(estimuloCliente)) && (
-                    <span className="text-slate-900 ml-1 normal-case">
+                    <span className="text-white ml-1 normal-case">
                       — {clienteList.find(c => c.id === parseInt(estimuloCliente)).razon_social}
                     </span>
                   )}
                 </h3>
                 {!estimuloCliente ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">
+                  <div className="text-center py-8 text-[#A1A1AA] text-sm">
                     Selecciona un cliente para ver sus estímulos
                   </div>
                 ) : estimulosClienteLoading ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">Cargando...</div>
+                  <div className="text-center py-8 text-[#A1A1AA] text-sm">Cargando...</div>
                 ) : estimulosCliente.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">
+                  <div className="text-center py-8 text-[#A1A1AA] text-sm">
                     No tiene estímulos asignados
                   </div>
                 ) : (
@@ -1010,10 +1010,10 @@ export default function Impuestos({ usuario }) {
                       const est = estimulos.find(e => e.id === ce.estimulo_id);
                       if (!est) return null;
                       return (
-                        <div key={ce.id} className="flex items-center justify-between bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                          <div className="text-sm font-medium text-slate-900">{est.nombre}</div>
+                        <div key={ce.id} className="flex items-center justify-between bg-emerald-500/10 rounded-xl p-3 border border-emerald-100">
+                          <div className="text-sm font-medium text-white">{est.nombre}</div>
                           <button onClick={() => handleQuitarEstimulo(est.id)}
-                            className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                            className="text-xs text-red-400 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-500/10 transition-colors">
                             ✕
                           </button>
                         </div>
@@ -1024,60 +1024,60 @@ export default function Impuestos({ usuario }) {
               </div>
 
               {/* Calculadora con estímulos */}
-              <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-                <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+                <h3 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">
                   Calcular con Estímulos
                 </h3>
                 <form onSubmit={handleEstimuloCalc} className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Ingresos</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Ingresos</label>
                       <input type="number" step="0.01" min="0" required value={estimuloCalcForm.ingresos}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ingresos: e.target.value})} placeholder="100,000"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Deducciones</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Deducciones</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.deducciones}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, deducciones: e.target.value})} placeholder="60,000"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IVA Trasladado</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">IVA Trasladado</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.iva_trasladado}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, iva_trasladado: e.target.value})} placeholder="16,000"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IVA Acreditable</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">IVA Acreditable</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.iva_acreditable}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, iva_acreditable: e.target.value})} placeholder="9,600"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IEPS Trasladado</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">IEPS Trasladado</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.ieps_trasladado}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ieps_trasladado: e.target.value})} placeholder="0"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IEPS Acreditable</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">IEPS Acreditable</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.ieps_acreditable}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ieps_acreditable: e.target.value})} placeholder="0"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Base ISN (Nómina)</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Base ISN (Nómina)</label>
                       <input type="number" step="0.01" min="0" value={estimuloCalcForm.isn_base}
                         onChange={e => setEstimuloCalcForm({...estimuloCalcForm, isn_base: e.target.value})} placeholder="50,000"
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-[#71717A]"/>
                     </div>
                   </div>
 
                   {/* Estímulos toggle para el cálculo */}
                   {estimulos.length > 0 && (
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-2">
                         Estímulos a aplicar ({estimuloCalcForm.estimulos_ids.length} seleccionados)
                       </label>
                       <div className="flex flex-wrap gap-1.5">
@@ -1086,7 +1086,7 @@ export default function Impuestos({ usuario }) {
                             className={`text-[10px] font-medium px-2.5 py-1.5 rounded-full border transition-all ${
                               estimuloCalcForm.estimulos_ids.includes(est.id)
                                 ? 'bg-[#2E8B57] text-white border-[#2E8B57]'
-                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                : 'bg-[#141414] text-[#A1A1AA] border-[#333333] hover:border-slate-300'
                             }`}>
                             {est.nombre.length > 25 ? est.nombre.slice(0, 25) + '...' : est.nombre}
                           </button>
@@ -1096,10 +1096,10 @@ export default function Impuestos({ usuario }) {
                   )}
 
                   {estimuloCalcError && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{estimuloCalcError}</div>
+                    <div className="bg-red-500/10 border border-red-200 text-red-700 text-sm rounded-xl p-3">{estimuloCalcError}</div>
                   )}
                   <button type="submit" disabled={estimuloCalcLoading}
-                    className="w-full bg-slate-900 text-white text-sm font-semibold rounded-xl py-3 hover:bg-slate-800 transition-all disabled:opacity-50">
+                    className="w-full bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl py-3 hover:bg-slate-800 transition-all disabled:opacity-50">
                     {estimuloCalcLoading ? 'Calculando...' : 'Calcular con Estímulos'}
                   </button>
                 </form>
@@ -1107,13 +1107,13 @@ export default function Impuestos({ usuario }) {
                 {/* Resultados del cálculo */}
                 {estimuloCalcResult && estimuloCalcResult.resumen && (
                   <div className="mt-6 space-y-3">
-                    <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Resultados</h4>
+                    <h4 className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider">Resultados</h4>
                     {estimuloCalcResult.resumen.map((r, i) => (
                       <div key={i} className={`rounded-xl p-4 border ${
-                        r.estimulo_aplicado ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-100'
+                        r.estimulo_aplicado ? 'bg-emerald-500/10 border-emerald-200' : 'bg-[#1A1A1A] border-[#262626]'
                       }`}>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-slate-900">{r.impuesto}</span>
+                          <span className="text-sm font-semibold text-white">{r.impuesto}</span>
                           {r.estimulo_aplicado && (
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                               {r.estimulo_tipo} {(parseFloat(r.estimulo_porcentaje || 0) * 100).toFixed(1)}%
@@ -1122,29 +1122,29 @@ export default function Impuestos({ usuario }) {
                         </div>
                         <div className="grid grid-cols-4 gap-2 text-center">
                           <div>
-                            <div className="text-xs text-slate-400">Base</div>
-                            <div className="text-sm font-mono text-slate-700">{fmt(r.base)}</div>
+                            <div className="text-xs text-[#A1A1AA]">Base</div>
+                            <div className="text-sm font-mono text-[#E5E5E5]">{fmt(r.base)}</div>
                           </div>
                           <div>
-                            <div className="text-xs text-slate-400">Bruto</div>
-                            <div className="text-sm font-mono text-red-600">{fmt(r.bruto)}</div>
+                            <div className="text-xs text-[#A1A1AA]">Bruto</div>
+                            <div className="text-sm font-mono text-red-400">{fmt(r.bruto)}</div>
                           </div>
                           {r.estimulo_aplicado && (
                             <div>
-                              <div className="text-xs text-slate-400">Ahorro</div>
-                              <div className="text-sm font-mono text-emerald-600">-{fmt(r.ahorro_estimulo)}</div>
+                              <div className="text-xs text-[#A1A1AA]">Ahorro</div>
+                              <div className="text-sm font-mono text-emerald-400">-{fmt(r.ahorro_estimulo)}</div>
                             </div>
                           )}
                           <div>
-                            <div className="text-xs text-slate-400">Neto</div>
-                            <div className={`text-sm font-bold ${parseFloat(r.neto || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(r.neto)}</div>
+                            <div className="text-xs text-[#A1A1AA]">Neto</div>
+                            <div className={`text-sm font-bold ${parseFloat(r.neto || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmt(r.neto)}</div>
                           </div>
                         </div>
                       </div>
                     ))}
 
                     {/* Totales */}
-                    <div className="rounded-xl p-4 bg-slate-900 text-white">
+                    <div className="rounded-xl p-4 bg-[#0A0A0A] text-white">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Total bruto</span>
                         <span className="font-mono">{fmt(estimuloCalcResult.total_impuestos_brutos)}</span>

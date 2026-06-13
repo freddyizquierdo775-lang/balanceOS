@@ -130,20 +130,20 @@ export default function Contabilidad({ usuario }) {
     return (
       <div key={cuenta.id}>
         <div
-          className="flex items-center gap-2 py-2.5 px-2 hover:bg-slate-50 rounded-xl transition-colors group"
+          className="flex items-center gap-2 py-2.5 px-2 hover:bg-[#1A1A1A] rounded-xl transition-colors group"
           style={{ paddingLeft: `${16 + depth * 24}px` }}
         >
           {hasChildren ? (
             <button onClick={() => toggleExpand(cuenta.id)}
-              className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors text-xs">
+              className="w-5 h-5 flex items-center justify-center text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors text-xs">
               {isExpanded ? '▼' : '▶'}
             </button>
           ) : (
-            <span className="w-5 h-5 flex items-center justify-center text-slate-300 text-xs">●</span>
+            <span className="w-5 h-5 flex items-center justify-center text-[#71717A] text-xs">●</span>
           )}
-          <span className="font-mono text-xs text-slate-500 w-24 shrink-0">{cuenta.codigo}</span>
-          <span className="text-sm font-medium text-slate-900 flex-1">{cuenta.nombre}</span>
-          <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-20 text-center">{cuenta.tipo}</span>
+          <span className="font-mono text-xs text-[#A1A1AA] w-24 shrink-0">{cuenta.codigo}</span>
+          <span className="text-sm font-medium text-white flex-1">{cuenta.nombre}</span>
+          <span className="text-[10px] text-[#A1A1AA] bg-slate-100 px-2 py-0.5 rounded-full w-20 text-center">{cuenta.tipo}</span>
           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full w-20 text-center ${
             cuenta.naturaleza === 'Deudora' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
           }`}>{cuenta.naturaleza}</span>
@@ -152,10 +152,10 @@ export default function Contabilidad({ usuario }) {
           )}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2">
             <button onClick={() => { setEditCuenta(cuenta); setCuentaErrors({}); }}
-              className="text-slate-300 hover:text-slate-600 text-xs px-2 py-1 rounded-lg hover:bg-slate-100" title="Editar">✎</button>
+              className="text-[#71717A] hover:text-[#D4D4D8] text-xs px-2 py-1 rounded-lg hover:bg-slate-100" title="Editar">✎</button>
             {cuenta.activo !== 0 && (
               <button onClick={() => desactivarCuenta(cuenta.id)}
-                className="text-slate-300 hover:text-red-500 text-xs px-2 py-1 rounded-lg hover:bg-red-50" title="Desactivar">✕</button>
+                className="text-[#71717A] hover:text-red-500 text-xs px-2 py-1 rounded-lg hover:bg-red-50" title="Desactivar">✕</button>
             )}
           </div>
         </div>
@@ -299,7 +299,7 @@ export default function Contabilidad({ usuario }) {
   const anios = Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i);
 
   const Logo = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-[#71717A] shrink-0">
       <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
       <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
       <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
@@ -315,18 +315,18 @@ export default function Contabilidad({ usuario }) {
         <div className="flex items-center gap-3">
           <Logo />
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Contabilidad</h1>
-            <p className="text-sm text-slate-500 mt-1">Módulo de Contabilidad Electrónica</p>
+            <h1 className="text-2xl font-extrabold tracking-tighter text-white">Contabilidad</h1>
+            <p className="text-sm text-[#A1A1AA] mt-1">Módulo de Contabilidad Electrónica</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-slate-900/5 w-fit">
+      <div className="flex gap-1 mb-6 bg-[#141414] rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#262626] w-fit">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-              tab === t.key ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              tab === t.key ? 'bg-[#0A0A0A] text-white shadow-sm' : 'text-[#A1A1AA] hover:text-[#E5E5E5] hover:bg-[#1A1A1A]'
             }`}>
             {t.label}
           </button>
@@ -337,9 +337,9 @@ export default function Contabilidad({ usuario }) {
       {tab === 'catalogo' && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-500">{cuentas.length} cuentas</p>
+            <p className="text-sm text-[#A1A1AA]">{cuentas.length} cuentas</p>
             <button onClick={() => { resetCuentaForm(); setShowCuentaForm(!showCuentaForm); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200">
               {showCuentaForm ? 'Cancelar' : '+ Nueva Cuenta'}
             </button>
           </div>
@@ -350,33 +350,33 @@ export default function Contabilidad({ usuario }) {
 
           {/* New account form */}
           {showCuentaForm && (
-            <form onSubmit={handleCuentaSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nueva Cuenta</h2>
+            <form onSubmit={handleCuentaSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nueva Cuenta</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <input placeholder="Código *" value={cuentaForm.codigo} onChange={e => setCuentaForm({...cuentaForm, codigo: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-slate-400 ${
-                      cuentaErrors.codigo ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-[#A1A1AA] ${
+                      cuentaErrors.codigo ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {cuentaErrors.codigo && <p className="text-xs text-red-500 mt-1">{cuentaErrors.codigo}</p>}
                 </div>
                 <div>
                   <input placeholder="Nombre *" value={cuentaForm.nombre} onChange={e => setCuentaForm({...cuentaForm, nombre: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-slate-400 ${
-                      cuentaErrors.nombre ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none transition-all duration-200 focus:ring-2 placeholder:text-[#A1A1AA] ${
+                      cuentaErrors.nombre ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                   {cuentaErrors.nombre && <p className="text-xs text-red-500 mt-1">{cuentaErrors.nombre}</p>}
                 </div>
                 <select value={cuentaForm.tipo} onChange={e => setCuentaForm({...cuentaForm, tipo: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   {TIPOS_CUENTA.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <select value={cuentaForm.naturaleza} onChange={e => setCuentaForm({...cuentaForm, naturaleza: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   {NATURALEZAS.map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
                 <select value={cuentaForm.padre_id || ''} onChange={e => setCuentaForm({...cuentaForm, padre_id: e.target.value ? parseInt(e.target.value) : null})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   <option value="">Sin padre (raíz)</option>
                   {cuentas.filter(c => c.activo !== 0).map(c => (
                     <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
@@ -385,21 +385,21 @@ export default function Contabilidad({ usuario }) {
               </div>
               <div className="mt-4 flex gap-3">
                 <button type="submit" disabled={cuentaSaving}
-                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                   {cuentaSaving ? 'Guardando...' : 'Guardar'}
                 </button>
-                <button type="button" onClick={resetCuentaForm} className="text-sm text-slate-500 px-4 py-3 hover:text-slate-700">Cancelar</button>
+                <button type="button" onClick={resetCuentaForm} className="text-sm text-[#A1A1AA] px-4 py-3 hover:text-[#E5E5E5]">Cancelar</button>
               </div>
             </form>
           )}
 
           {/* Accounts tree */}
           {loadingCuentas ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : cuentas.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay cuentas registradas</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay cuentas registradas</div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 p-2">
+            <div className="bg-[#141414] rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] p-2">
               {buildTree(cuentas.filter(c => c.padre_id === null).length > 0 ? cuentas : cuentas).map(c => renderCuentaRow(c, 0))}
             </div>
           )}
@@ -407,38 +407,38 @@ export default function Contabilidad({ usuario }) {
           {/* Edit account modal */}
           {editCuenta && (
             <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEditCuenta(null)}>
-              <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-slate-900/5" onClick={e => e.stopPropagation()}>
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Editar cuenta</h2>
+              <div className="bg-[#141414] rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-[#262626]" onClick={e => e.stopPropagation()}>
+                <h2 className="text-lg font-semibold text-white mb-4">Editar cuenta</h2>
                 <form onSubmit={guardarEditCuenta} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Código</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Código</label>
                       <input value={editCuenta.codigo} onChange={e => setEditCuenta({...editCuenta, codigo: e.target.value})}
-                        className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${cuentaErrors.codigo ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'}`}/>
+                        className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${cuentaErrors.codigo ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'}`}/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Nombre</label>
                       <input value={editCuenta.nombre} onChange={e => setEditCuenta({...editCuenta, nombre: e.target.value})}
-                        className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${cuentaErrors.nombre ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'}`}/>
+                        className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${cuentaErrors.nombre ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'}`}/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tipo</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Tipo</label>
                       <select value={editCuenta.tipo} onChange={e => setEditCuenta({...editCuenta, tipo: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                         {TIPOS_CUENTA.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Naturaleza</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Naturaleza</label>
                       <select value={editCuenta.naturaleza} onChange={e => setEditCuenta({...editCuenta, naturaleza: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                         {NATURALEZAS.map(n => <option key={n} value={n}>{n}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Cuenta padre</label>
+                      <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1">Cuenta padre</label>
                       <select value={editCuenta.padre_id || ''} onChange={e => setEditCuenta({...editCuenta, padre_id: e.target.value ? parseInt(e.target.value) : null})}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                        className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                         <option value="">Sin padre (raíz)</option>
                         {cuentas.filter(c => c.id !== editCuenta.id && c.activo !== 0).map(c => (
                           <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
@@ -446,10 +446,10 @@ export default function Contabilidad({ usuario }) {
                       </select>
                     </div>
                     <div className="flex items-center">
-                      <label className="flex items-center gap-2 text-sm text-slate-600">
+                      <label className="flex items-center gap-2 text-sm text-[#D4D4D8]">
                         <input type="checkbox" checked={editCuenta.activo !== 0}
                           onChange={e => setEditCuenta({...editCuenta, activo: e.target.checked ? 1 : 0})}
-                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20"/>
+                          className="rounded border-slate-300 text-white focus:ring-slate-900/20"/>
                         Cuenta activa
                       </label>
                     </div>
@@ -459,11 +459,11 @@ export default function Contabilidad({ usuario }) {
                   )}
                   <div className="flex gap-3 pt-2">
                     <button type="submit" disabled={editCuentaSaving}
-                      className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                      className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                       {editCuentaSaving ? 'Guardando...' : 'Guardar cambios'}
                     </button>
                     <button type="button" onClick={() => setEditCuenta(null)}
-                      className="text-sm text-slate-500 px-4 py-3 hover:text-slate-700">Cancelar</button>
+                      className="text-sm text-[#A1A1AA] px-4 py-3 hover:text-[#E5E5E5]">Cancelar</button>
                   </div>
                 </form>
               </div>
@@ -478,15 +478,15 @@ export default function Contabilidad({ usuario }) {
           {/* Filter */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             <select value={polizaMes} onChange={e => setPolizaMes(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
             <select value={polizaAnio} onChange={e => setPolizaAnio(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {anios.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
             <button onClick={() => { setShowPolizaForm(!showPolizaForm); setPolizaErrors({}); }}
-              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
               {showPolizaForm ? 'Cancelar' : '+ Nueva Póliza'}
             </button>
           </div>
@@ -497,11 +497,11 @@ export default function Contabilidad({ usuario }) {
 
           {/* New poliza form */}
           {showPolizaForm && (
-            <form onSubmit={handlePolizaSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
-              <h2 className="text-base font-semibold text-slate-900 mb-4">Nueva Póliza</h2>
+            <form onSubmit={handlePolizaSubmit} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#262626]">
+              <h2 className="text-base font-semibold text-white mb-4">Nueva Póliza</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <select value={polizaForm.tipo} onChange={e => setPolizaForm({...polizaForm, tipo: e.target.value})}
-                  className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                  className="bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   <option value="diario">Diario</option>
                   <option value="ingreso">Ingreso</option>
                   <option value="egreso">Egreso</option>
@@ -509,30 +509,30 @@ export default function Contabilidad({ usuario }) {
                 </select>
                 <div>
                   <input type="date" value={polizaForm.fecha} onChange={e => setPolizaForm({...polizaForm, fecha: e.target.value})} required
-                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
-                      polizaErrors.fecha ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                      polizaErrors.fecha ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                     }`}/>
                 </div>
               </div>
               <div className="mb-4">
                 <textarea placeholder="Concepto *" value={polizaForm.concepto} onChange={e => setPolizaForm({...polizaForm, concepto: e.target.value})} rows={2} required
-                  className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 placeholder:text-slate-400 ${
-                    polizaErrors.concepto ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                  className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-sm outline-none focus:ring-2 placeholder:text-[#A1A1AA] ${
+                    polizaErrors.concepto ? 'border-red-300' : 'border-[#262626] focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
                   }`}/>
                 {polizaErrors.concepto && <p className="text-xs text-red-500 mt-1">{polizaErrors.concepto}</p>}
               </div>
 
               {/* Detalles table */}
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Detalles</h3>
+              <h3 className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3">Detalles</h3>
               {polizaForm.detalles.length > 0 && (
                 <div className="overflow-x-auto mb-3">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">Cuenta</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Cargo</th>
-                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Abono</th>
-                        <th className="text-left py-2 px-2 text-slate-400 font-medium">Referencia</th>
+                      <tr className="border-b border-[#262626]">
+                        <th className="text-left py-2 pr-2 text-[#A1A1AA] font-medium">Cuenta</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Cargo</th>
+                        <th className="text-right py-2 px-2 text-[#A1A1AA] font-medium">Abono</th>
+                        <th className="text-left py-2 px-2 text-[#A1A1AA] font-medium">Referencia</th>
                         <th className="py-2 pl-2 w-8"></th>
                       </tr>
                     </thead>
@@ -541,13 +541,13 @@ export default function Contabilidad({ usuario }) {
                         const cuenta = cuentas.find(c => c.id === parseInt(d.cuenta_id));
                         return (
                           <tr key={i} className="border-b border-slate-50">
-                            <td className="py-2 pr-2 text-slate-900 font-medium">{cuenta ? `${cuenta.codigo} - ${cuenta.nombre}` : d.cuenta_id}</td>
-                            <td className="text-right py-2 px-2 text-slate-600">{d.cargo > 0 ? fmt(d.cargo) : '-'}</td>
-                            <td className="text-right py-2 px-2 text-slate-600">{d.abono > 0 ? fmt(d.abono) : '-'}</td>
-                            <td className="py-2 px-2 text-slate-400">{d.referencia || '-'}</td>
+                            <td className="py-2 pr-2 text-white font-medium">{cuenta ? `${cuenta.codigo} - ${cuenta.nombre}` : d.cuenta_id}</td>
+                            <td className="text-right py-2 px-2 text-[#D4D4D8]">{d.cargo > 0 ? fmt(d.cargo) : '-'}</td>
+                            <td className="text-right py-2 px-2 text-[#D4D4D8]">{d.abono > 0 ? fmt(d.abono) : '-'}</td>
+                            <td className="py-2 px-2 text-[#A1A1AA]">{d.referencia || '-'}</td>
                             <td className="py-2 pl-2">
                               <button type="button" onClick={() => removeDetalle(i)}
-                                className="text-slate-300 hover:text-red-500 text-xs">✕</button>
+                                className="text-[#71717A] hover:text-red-500 text-xs">✕</button>
                             </td>
                           </tr>
                         );
@@ -555,9 +555,9 @@ export default function Contabilidad({ usuario }) {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-slate-200">
-                        <td className="py-2 pr-2 text-slate-900 font-bold">Totales</td>
-                        <td className="text-right py-2 px-2 text-slate-900 font-bold">{fmt(totalCargos)}</td>
-                        <td className="text-right py-2 px-2 text-slate-900 font-bold">{fmt(totalAbonos)}</td>
+                        <td className="py-2 pr-2 text-white font-bold">Totales</td>
+                        <td className="text-right py-2 px-2 text-white font-bold">{fmt(totalCargos)}</td>
+                        <td className="text-right py-2 px-2 text-white font-bold">{fmt(totalAbonos)}</td>
                         <td></td><td></td>
                       </tr>
                     </tfoot>
@@ -571,10 +571,10 @@ export default function Contabilidad({ usuario }) {
               )}
 
               {/* Add detalle row */}
-              <div className="flex items-end gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+              <div className="flex items-end gap-2 bg-[#1A1A1A] rounded-xl p-3 border border-[#262626]">
                 <div className="flex-1">
                   <select value={polizaDetalleInput.cuenta_id} onChange={e => setPolizaDetalleInput({...polizaDetalleInput, cuenta_id: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
                     <option value="">Seleccionar cuenta...</option>
                     {cuentas.filter(c => c.activo !== 0).map(c => (
                       <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
@@ -583,23 +583,23 @@ export default function Contabilidad({ usuario }) {
                 </div>
                 <div className="w-24">
                   <input type="number" step="0.01" min="0" placeholder="Cargo" value={polizaDetalleInput.cargo} onChange={e => setPolizaDetalleInput({...polizaDetalleInput, cargo: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-[#71717A]"/>
                 </div>
                 <div className="w-24">
                   <input type="number" step="0.01" min="0" placeholder="Abono" value={polizaDetalleInput.abono} onChange={e => setPolizaDetalleInput({...polizaDetalleInput, abono: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-[#71717A]"/>
                 </div>
                 <div className="w-32">
                   <input placeholder="Referencia" value={polizaDetalleInput.referencia} onChange={e => setPolizaDetalleInput({...polizaDetalleInput, referencia: e.target.value})}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                    className="w-full bg-[#141414] border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-[#71717A]"/>
                 </div>
                 <button type="button" onClick={addDetalle}
-                  className="bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
+                  className="bg-slate-200 text-[#D4D4D8] text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
               </div>
 
               <div className="mt-4 flex gap-3">
                 <button type="submit" disabled={polizaSaving}
-                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  className="bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
                   {polizaSaving ? 'Guardando...' : 'Guardar póliza'}
                 </button>
               </div>
@@ -608,25 +608,25 @@ export default function Contabilidad({ usuario }) {
 
           {/* Polizas list */}
           {loadingPolizas ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : polizas.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay pólizas para este período</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay pólizas para este período</div>
           ) : (
             <div className="space-y-3">
               {polizas.map(p => (
-                <div key={p.id} className="bg-white rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
+                <div key={p.id} className="bg-[#141414] rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-semibold text-white bg-slate-500 px-2 py-0.5 rounded-full uppercase">{p.tipo}</span>
-                      <span className="text-sm font-semibold text-slate-900">Póliza #{p.id}</span>
-                      <span className="text-xs text-slate-400">{p.fecha}</span>
+                      <span className="text-sm font-semibold text-white">Póliza #{p.id}</span>
+                      <span className="text-xs text-[#A1A1AA]">{p.fecha}</span>
                     </div>
                     <button onClick={() => eliminarPoliza(p.id)}
-                      className="text-slate-300 hover:text-red-500 text-xs px-2 py-1 rounded-lg hover:bg-red-50">✕</button>
+                      className="text-[#71717A] hover:text-red-500 text-xs px-2 py-1 rounded-lg hover:bg-red-50">✕</button>
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{p.concepto}</p>
+                  <p className="text-sm text-[#D4D4D8] mb-2">{p.concepto}</p>
                   {p.detalles && p.detalles.length > 0 && (
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-[#A1A1AA]">
                       {p.detalles.length} detalle(s) · Total cargos: {fmt(p.detalles.reduce((s, d) => s + parseFloat(d.cargo || 0), 0))} · Total abonos: {fmt(p.detalles.reduce((s, d) => s + parseFloat(d.abono || 0), 0))}
                     </div>
                   )}
@@ -643,51 +643,51 @@ export default function Contabilidad({ usuario }) {
           {/* Filter */}
           <div className="flex items-center gap-3 mb-4">
             <select value={balanzaMes} onChange={e => setBalanzaMes(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
             <select value={balanzaAnio} onChange={e => setBalanzaAnio(parseInt(e.target.value))}
-              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              className="bg-[#141414] border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
               {anios.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
 
           {loadingBalanza ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando...</div>
           ) : balanza.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">No hay datos de balanza para este período</div>
+            <div className="text-center py-12 text-[#A1A1AA] text-sm">No hay datos de balanza para este período</div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 overflow-x-auto">
+            <div className="bg-[#141414] rounded-2xl shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-[#262626] overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">Código</th>
-                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">Nombre</th>
-                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Saldo Inicial</th>
-                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Cargos</th>
-                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Abonos</th>
-                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Saldo Final</th>
+                  <tr className="border-b border-[#262626] bg-[#1A1A1A]">
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">Código</th>
+                    <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">Nombre</th>
+                    <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Saldo Inicial</th>
+                    <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Cargos</th>
+                    <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Abonos</th>
+                    <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Saldo Final</th>
                   </tr>
                 </thead>
                 <tbody>
                   {balanza.map((r, i) => (
-                    <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-4 font-mono text-slate-600">{r.codigo}</td>
-                      <td className="py-3 px-4 text-slate-900 font-medium">{r.nombre}</td>
-                      <td className="text-right py-3 px-4 text-slate-700 font-mono">{fmt(r.saldo_inicial)}</td>
-                      <td className="text-right py-3 px-4 text-slate-700 font-mono">{fmt(r.cargos)}</td>
-                      <td className="text-right py-3 px-4 text-slate-700 font-mono">{fmt(r.abonos)}</td>
-                      <td className="text-right py-3 px-4 text-slate-900 font-semibold font-mono">{fmt(r.saldo_final)}</td>
+                    <tr key={i} className="border-b border-slate-50 hover:bg-[#1A1A1A]/50 transition-colors">
+                      <td className="py-3 px-4 font-mono text-[#D4D4D8]">{r.codigo}</td>
+                      <td className="py-3 px-4 text-white font-medium">{r.nombre}</td>
+                      <td className="text-right py-3 px-4 text-[#E5E5E5] font-mono">{fmt(r.saldo_inicial)}</td>
+                      <td className="text-right py-3 px-4 text-[#E5E5E5] font-mono">{fmt(r.cargos)}</td>
+                      <td className="text-right py-3 px-4 text-[#E5E5E5] font-mono">{fmt(r.abonos)}</td>
+                      <td className="text-right py-3 px-4 text-white font-semibold font-mono">{fmt(r.saldo_final)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-slate-200 bg-slate-50/50">
-                    <td colSpan={2} className="py-3 px-4 text-slate-900 font-bold">Totales</td>
-                    <td className="text-right py-3 px-4 text-slate-900 font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.saldo_inicial || 0), 0))}</td>
-                    <td className="text-right py-3 px-4 text-slate-900 font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.cargos || 0), 0))}</td>
-                    <td className="text-right py-3 px-4 text-slate-900 font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.abonos || 0), 0))}</td>
-                    <td className="text-right py-3 px-4 text-slate-900 font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.saldo_final || 0), 0))}</td>
+                  <tr className="border-t-2 border-slate-200 bg-[#1A1A1A]/50">
+                    <td colSpan={2} className="py-3 px-4 text-white font-bold">Totales</td>
+                    <td className="text-right py-3 px-4 text-white font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.saldo_inicial || 0), 0))}</td>
+                    <td className="text-right py-3 px-4 text-white font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.cargos || 0), 0))}</td>
+                    <td className="text-right py-3 px-4 text-white font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.abonos || 0), 0))}</td>
+                    <td className="text-right py-3 px-4 text-white font-bold font-mono">{fmt(balanza.reduce((s, r) => s + parseFloat(r.saldo_final || 0), 0))}</td>
                   </tr>
                 </tfoot>
               </table>

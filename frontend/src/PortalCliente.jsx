@@ -49,7 +49,7 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
 
   if (loading) return (
     <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
-      <div className="text-slate-400 text-sm">Cargando...</div>
+      <div className="text-[#A1A1AA] text-sm">Cargando...</div>
     </div>
   );
 
@@ -62,17 +62,17 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Navbar minimal */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-900/5">
+      <nav className="sticky top-0 z-50 bg-[#141414]/80 backdrop-blur-md border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-slate-900">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
               <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
               <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
             </svg>
-            <span className="text-[15px] font-semibold tracking-tight text-slate-900">Mi Portal</span>
+            <span className="text-[15px] font-semibold tracking-tight text-white">Mi Portal</span>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-[#A1A1AA]">
             {perfil?.razon_social || usuario.nombre}
             <button onClick={cerrarSesion} className="ml-3 text-red-400 hover:text-red-600 transition-colors">Salir</button>
           </span>
@@ -80,7 +80,7 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
       </nav>
 
       {/* Nav tabs */}
-      <div className="border-b border-slate-900/5 bg-white">
+      <div className="border-b border-[#262626] bg-[#141414]">
         <div className="max-w-4xl mx-auto px-6 flex gap-4">
           {[
             { key: 'dashboard', label: '📊 Dashboard' },
@@ -91,8 +91,8 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
             <button key={tab.key} onClick={() => setPage(tab.key)}
               className={`py-3 text-xs font-medium border-b-2 transition-all ${
                 page === tab.key
-                  ? 'border-slate-900 text-slate-900'
-                  : 'border-transparent text-slate-400 hover:text-slate-600'
+                  ? 'border-slate-900 text-white'
+                  : 'border-transparent text-[#A1A1AA] hover:text-[#D4D4D8]'
               }`}>
               {tab.label}
             </button>
@@ -104,36 +104,36 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
       <div className="max-w-4xl mx-auto p-6">
         {page === 'dashboard' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Dashboard</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Dashboard</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl p-5 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Recibos</div>
-                <div className="text-2xl font-extrabold text-slate-900">{recibos.length}</div>
-                <div className="text-[11px] text-slate-500 mt-1">Emitidos</div>
+              <div className="bg-[#141414] rounded-2xl p-5 border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Recibos</div>
+                <div className="text-2xl font-extrabold text-white">{recibos.length}</div>
+                <div className="text-[11px] text-[#A1A1AA] mt-1">Emitidos</div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Total neto</div>
+              <div className="bg-[#141414] rounded-2xl p-5 border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Total neto</div>
                 <div className="text-2xl font-extrabold text-[#2E8B57]">{fmt(totalesRecibos.neto)}</div>
-                <div className="text-[11px] text-slate-500 mt-1">Acumulado</div>
+                <div className="text-[11px] text-[#A1A1AA] mt-1">Acumulado</div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Documentos</div>
-                <div className="text-2xl font-extrabold text-slate-900">{documentos.length}</div>
-                <div className="text-[11px] text-slate-500 mt-1">En tu expediente</div>
+              <div className="bg-[#141414] rounded-2xl p-5 border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Documentos</div>
+                <div className="text-2xl font-extrabold text-white">{documentos.length}</div>
+                <div className="text-[11px] text-[#A1A1AA] mt-1">En tu expediente</div>
               </div>
             </div>
             {recibos.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Últimos recibos</h3>
+              <div className="bg-[#141414] rounded-2xl p-6 border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <h3 className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider mb-4">Últimos recibos</h3>
                 {recibos.slice(0, 3).map(r => (
                   <div key={r.id} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                     <div>
-                      <div className="text-xs font-medium text-slate-900">Recibo #{r.id}</div>
-                      <div className="text-[10px] text-slate-400">{fmtFecha(r.created_at)}</div>
+                      <div className="text-xs font-medium text-white">Recibo #{r.id}</div>
+                      <div className="text-[10px] text-[#A1A1AA]">{fmtFecha(r.created_at)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs font-bold text-[#2E8B57]">{fmt(r.neto)}</div>
-                      <div className="text-[10px] text-slate-400">Neto</div>
+                      <div className="text-[10px] text-[#A1A1AA]">Neto</div>
                     </div>
                   </div>
                 ))}
@@ -144,31 +144,31 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
 
         {page === 'recibos' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Mis recibos de nómina</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Mis recibos de nómina</h2>
             {recibos.length === 0 ? (
-              <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5">
+              <div className="bg-[#141414] rounded-2xl p-12 text-center border border-[#262626]">
                 <div className="text-4xl mb-3">📄</div>
-                <p className="text-sm text-slate-400">Sin recibos disponibles</p>
+                <p className="text-sm text-[#A1A1AA]">Sin recibos disponibles</p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-900/5 overflow-hidden">
+              <div className="bg-[#141414] rounded-2xl border border-[#262626] overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-slate-100">
-                        <th className="text-left py-3 px-4 text-slate-400 font-medium">#</th>
-                        <th className="text-right py-3 px-2 text-slate-400 font-medium">Sueldo</th>
-                        <th className="text-right py-3 px-2 text-slate-400 font-medium">Percepciones</th>
-                        <th className="text-right py-3 px-2 text-slate-400 font-medium">Deducciones</th>
-                        <th className="text-right py-3 px-4 text-slate-400 font-medium">Neto</th>
+                        <th className="text-left py-3 px-4 text-[#A1A1AA] font-medium">#</th>
+                        <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Sueldo</th>
+                        <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Percepciones</th>
+                        <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Deducciones</th>
+                        <th className="text-right py-3 px-4 text-[#A1A1AA] font-medium">Neto</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recibos.map(r => (
                         <tr key={r.id} className="border-b border-slate-50">
-                          <td className="py-3 px-4 text-slate-900 font-medium">#{r.id}</td>
-                          <td className="text-right py-3 px-2 text-slate-600">{fmt(r.sueldo_base)}</td>
-                          <td className="text-right py-3 px-2 text-slate-900 font-semibold">{fmt(r.total_percepciones)}</td>
+                          <td className="py-3 px-4 text-white font-medium">#{r.id}</td>
+                          <td className="text-right py-3 px-2 text-[#D4D4D8]">{fmt(r.sueldo_base)}</td>
+                          <td className="text-right py-3 px-2 text-white font-semibold">{fmt(r.total_percepciones)}</td>
                           <td className="text-right py-3 px-2 text-red-600">{fmt(r.total_deducciones)}</td>
                           <td className="text-right py-3 px-4 text-[#2E8B57] font-bold">{fmt(r.neto)}</td>
                         </tr>
@@ -176,7 +176,7 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-slate-200">
-                        <td className="py-3 px-4 text-slate-900 font-bold">Totales</td>
+                        <td className="py-3 px-4 text-white font-bold">Totales</td>
                         <td></td>
                         <td className="text-right py-3 px-2 font-bold">{fmt(totalesRecibos.percepciones)}</td>
                         <td className="text-right py-3 px-2 font-bold text-red-600">{fmt(totalesRecibos.deducciones)}</td>
@@ -192,21 +192,21 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
 
         {page === 'documentos' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Mis documentos</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Mis documentos</h2>
             {documentos.length === 0 ? (
-              <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5">
+              <div className="bg-[#141414] rounded-2xl p-12 text-center border border-[#262626]">
                 <div className="text-4xl mb-3">📎</div>
-                <p className="text-sm text-slate-400">Sin documentos disponibles</p>
+                <p className="text-sm text-[#A1A1AA]">Sin documentos disponibles</p>
               </div>
             ) : (
               <div className="grid gap-3">
                 {documentos.map(d => (
-                  <div key={d.id} className="bg-white rounded-2xl p-4 border border-slate-900/5 flex items-center justify-between">
+                  <div key={d.id} className="bg-[#141414] rounded-2xl p-4 border border-[#262626] flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-medium text-slate-900">{d.nombre || 'Documento'}</div>
-                      <div className="text-[10px] text-slate-400">{d.tipo} · {fmtFecha(d.created_at)}</div>
+                      <div className="text-sm font-medium text-white">{d.nombre || 'Documento'}</div>
+                      <div className="text-[10px] text-[#A1A1AA]">{d.tipo} · {fmtFecha(d.created_at)}</div>
                     </div>
-                    <span className="text-[10px] text-slate-400">{d.tipo}</span>
+                    <span className="text-[10px] text-[#A1A1AA]">{d.tipo}</span>
                   </div>
                 ))}
               </div>
@@ -216,8 +216,8 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
 
         {page === 'perfil' && perfil && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Mi perfil</h2>
-            <div className="bg-white rounded-2xl p-6 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+            <h2 className="text-lg font-bold tracking-tight text-white">Mi perfil</h2>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-[#262626] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
               <div className="grid grid-cols-2 gap-6">
                 {[
                   { label: 'Razón social', value: perfil.razon_social },
@@ -230,8 +230,8 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
                   { label: 'REPSE', value: perfil.tiene_repse ? '✅ Activo' : '—' },
                 ].map(f => (
                   <div key={f.label}>
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">{f.label}</div>
-                    <div className="text-sm text-slate-900 font-medium">{f.value}</div>
+                    <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase mb-1">{f.label}</div>
+                    <div className="text-sm text-white font-medium">{f.value}</div>
                   </div>
                 ))}
               </div>
@@ -245,7 +245,7 @@ export default function PortalCliente({ usuario, cerrarSesion }) {
         )}
       </div>
 
-      <div className="text-center py-6 text-[11px] text-slate-400">
+      <div className="text-center py-6 text-[11px] text-[#A1A1AA]">
         Balance OS · Portal del Cliente · {new Date().getFullYear()}
       </div>
     </div>

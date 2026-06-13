@@ -74,26 +74,26 @@ export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, on
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-[#141414] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+        <div className="flex items-center justify-between p-4 border-b border-[#262626]">
           <div className="flex items-center gap-2.5">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-slate-900">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
               <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
               <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
             </svg>
             <div className="flex flex-col leading-none">
-              <span className="text-[15px] font-semibold tracking-tighter text-slate-900">Balance</span>
-              <span className="text-[10px] text-slate-400 tracking-wide -mt-0.5">OS</span>
+              <span className="text-[15px] font-semibold tracking-tighter text-white">Balance</span>
+              <span className="text-[10px] text-[#A1A1AA] tracking-wide -mt-0.5">OS</span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:text-[#D4D4D8] hover:bg-[#262626] transition-all duration-200"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M6 18L18 6M6 6l12 12" />
@@ -102,9 +102,9 @@ export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, on
         </div>
 
         {/* User info */}
-        <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-          <p className="text-sm font-medium text-slate-900">{usuario?.nombre}</p>
-          <span className="text-[10px] font-medium text-white bg-slate-400 px-2 py-0.5 rounded-full uppercase tracking-wider inline-block mt-1">
+        <div className="px-4 py-3 border-b border-[#1F1F1F] bg-[#1A1A1A]/50">
+          <p className="text-sm font-medium text-white">{usuario?.nombre}</p>
+          <span className="text-[10px] font-medium text-white bg-[#52525B] px-2 py-0.5 rounded-full uppercase tracking-wider inline-block mt-1">
             {rolLabel[usuario?.rol] || usuario?.rol}
           </span>
         </div>
@@ -117,8 +117,8 @@ export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, on
               onClick={() => { onNavigate(section.key); onClose(); }}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 touch-manipulation min-h-[44px] ${
                 currentPage === section.key
-                  ? 'bg-slate-100 text-slate-900'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-[#262626] text-white'
+                  : 'text-[#D4D4D8] hover:bg-[#1A1A1A] hover:text-white'
               }`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -126,17 +126,17 @@ export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, on
               </svg>
               <span>{section.label}</span>
               {currentPage === section.key && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-slate-900" />
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0A0A0A]" />
               )}
             </button>
           ))}
         </div>
 
         {/* Footer: Logout */}
-        <div className="p-3 border-t border-slate-100">
+        <div className="p-3 border-t border-[#262626]">
           <button
             onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 touch-manipulation min-h-[44px]"
+            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 touch-manipulation min-h-[44px]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

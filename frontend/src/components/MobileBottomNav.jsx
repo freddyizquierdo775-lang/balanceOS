@@ -9,7 +9,7 @@ const NAV_ITEMS = [
 
 export default function MobileBottomNav({ currentPage, onNavigate, onMore }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-slate-900/5 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#141414]/90 backdrop-blur-xl border-t border-[#262626] safe-bottom">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
         {NAV_ITEMS.slice(0, 4).map(item => (
           <button
@@ -17,26 +17,26 @@ export default function MobileBottomNav({ currentPage, onNavigate, onMore }) {
             onClick={() => onNavigate(item.key)}
             className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 py-1 rounded-xl transition-all duration-200 touch-manipulation ${
               currentPage === item.key
-                ? 'text-slate-900'
-                : 'text-slate-400 hover:text-slate-600'
+                ? 'text-white'
+                : 'text-[#A1A1AA] hover:text-[#D4D4D8]'
             }`}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d={item.icon} />
             </svg>
             <span className={`text-[10px] font-medium leading-tight ${
-              currentPage === item.key ? 'text-slate-900' : ''
+              currentPage === item.key ? 'text-white' : ''
             }`}>
               {item.label}
             </span>
             {currentPage === item.key && (
-              <span className="absolute top-0 w-8 h-0.5 bg-slate-900 rounded-full" />
+              <span className="absolute top-0 w-8 h-0.5 bg-[#0A0A0A] rounded-full" />
             )}
           </button>
         ))}
         <button
           onClick={onMore}
-          className="flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 py-1 rounded-xl text-slate-400 hover:text-slate-600 transition-all duration-200 touch-manipulation"
+          className="flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 py-1 rounded-xl text-[#A1A1AA] hover:text-[#D4D4D8] transition-all duration-200 touch-manipulation"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />

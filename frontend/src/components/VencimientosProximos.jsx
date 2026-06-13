@@ -7,23 +7,23 @@ const VENCIMIENTOS = [
 ];
 
 const CRITICIDAD_COLORS = {
-  critico: 'bg-red-50 border-red-200 text-red-700',
-  alerta: 'bg-amber-50 border-amber-200 text-amber-700',
-  aviso: 'bg-slate-50 border-slate-200 text-slate-500',
+  critico: 'bg-red-500/10 border-red-500/30 text-red-400',
+  alerta: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+  aviso: 'bg-[#1A1A1A] border-[#333333] text-[#A1A1AA]',
 };
 
 const DIAS_LABEL = {
-  critico: 'text-red-600',
-  alerta: 'text-amber-600',
-  aviso: 'text-slate-400',
+  critico: 'text-red-400',
+  alerta: 'text-amber-400',
+  aviso: 'text-[#A1A1AA]',
 };
 
 export default function VencimientosProximos({ className = '' }) {
   return (
-    <div className={`bg-white rounded-2xl p-6 border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] ${className}`}>
+    <div className={`bg-[#141414] rounded-2xl p-6 border border-[#262626] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">Vencimientos Próximos</h3>
-        <button className="text-[10px] font-medium text-slate-400 hover:text-slate-600 transition-colors">
+        <h3 className="text-sm font-semibold text-white">Vencimientos Próximos</h3>
+        <button className="text-[10px] font-medium text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors">
           Ver todos →
         </button>
       </div>
