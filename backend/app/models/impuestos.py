@@ -61,3 +61,61 @@ class ConfiguracionDiot(Base):
     iva_trasladado = Column(Numeric(14, 2), default=Decimal("0.00"))
     iva_por_acreditar = Column(Numeric(14, 2), default=Decimal("0.00"))
     generated_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ─── Catálogo de impuestos mexicanos ──────────────────────
+
+class TipoImpuesto(str, enum.Enum):
+    """Catálogo de impuestos mexicanos."""
+    # Federales directos
+    ISR = "ISR"                    # Impuesto Sobre la Renta
+    # Federales indirectos
+    IVA = "IVA"                    # Impuesto al Valor Agregado
+    IEPS = "IEPS"                  # Impuesto Especial sobre Producción y Servicios
+    ISH = "ISH"                    # Impuesto Sobre Hospedaje
+    IAN = "IAN"                    # Impuesto sobre Actividades No Lucrativas (placeholder)
+    # Estatales
+    ISN = "ISN"                    # Impuesto Sobre Nómina (estatal, 2-3%)
+    IMPUESTO_CEDULAR = "CEDULAR"   # Impuesto cedular estatal
+    # Retenciones
+    IVA_RETENIDO = "IVA_RET"
+    ISR_RETENIDO = "ISR_RET"
+    # Especiales
+    IDE = "IDE"                    # Impuesto a Depósitos en Efectivo (derogado pero ref)
+    IETU = "IETU"                  # Impuesto Empresarial a Tasa Única (derogado pero ref)
+
+
+class AmbitoImpuesto(str, enum.Enum):
+    FEDERAL = "federal"
+    ESTATAL = "estatal"
+    MUNICIPAL = "municipal"
+
+
+class EstimuloFiscal(Base):
+    """Estímulos fiscales aplicables (ej. constructoras, agrícolas, exportadoras)."""
+    __tablename__ = "estimulos_fiscales"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(200), nullable=False)
+    descripcion = Column(Text)
+    tipo = Column(String(50))  # credito, deduccion, exencion, tasa_reducida, diferimiento
+    porcentaje = Column(Numeric(6, 4))  # ej. 0.30 = 30% de crédito
+    impuesto_aplicable = Column(String(10))  # ISR, IVA, IEPS, etc.
+    fundamento_legal = Column(String(300))
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClienteEstimulo(Base):
+    """Estímulos asignados a un cliente específico."""
+    __tablename__ = "clientes_estimulos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    estimulo_id = Column(Integer, ForeignKey("estimulos_fiscales.id"), nullable=False)
+    fecha_inicio = Column(DateTime)
+    fecha_fin = Column(DateTime)
+    activo = Column(Boolean, default=True)
+
+    cliente = relationship("Cliente")
+    estimulo = relationship("EstimuloFiscal")

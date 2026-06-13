@@ -63,12 +63,108 @@ async def listar_listas_efos(
             "tipo_lista": i.tipo_lista,
             "fecha_publicacion": i.fecha_publicacion.isoformat() if i.fecha_publicacion else None,
             "fecha_consulta": i.fecha_consulta.isoformat(),
+            "created_at": i.created_at.isoformat(),
         }
         for i in items
     ]
 
 
+# ─── Seed ──────────────────────────────────────────
+
+
+@router.post("/seed", response_model=dict)
+async def seed_listas_efos(
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Siembra datos de prueba en la tabla listas_efos (RFCs 69-B del SAT)."""
+    from sqlalchemy import func, select as sa_select
+
+    # Solo sembrar si la tabla está vacía
+    count_result = await db.execute(sa_select(func.count()).select_from(ListaEfos))
+    count = count_result.scalar()
+    if count > 0:
+        return {"detail": f"La tabla ya tiene {count} registros. Seed omitido."}
+
+    rfcs_prueba = [
+        ("ABC010101XXX", "69-B", datetime(2025, 1, 15)),
+        ("XYZ020202XXX", "69-B", datetime(2025, 3, 20)),
+        ("DEF030303XXX", "69", datetime(2025, 6, 10)),
+        ("GHI040404XXX", "definitivos", datetime(2025, 9, 1)),
+        ("JKL050505XXX", "sentencias", datetime(2025, 11, 15)),
+        ("MNO060606XXX", "69-B", datetime(2025, 2, 10)),
+        ("PQR070707XXX", "69-B", datetime(2025, 4, 5)),
+        ("STU080808XXX", "69", datetime(2025, 7, 22)),
+        ("VWX090909XXX", "definitivos", datetime(2025, 10, 30)),
+        ("YZA101010XXX", "sentencias", datetime(2025, 12, 1)),
+        ("BCD111111XXX", "69-B", datetime(2025, 8, 14)),
+        ("EFG121212XXX", "69", datetime(2025, 5, 18)),
+        ("HIJ131313XXX", "69-B", datetime(2025, 6, 25)),
+        ("KLM141414XXX", "definitivos", datetime(2025, 11, 8)),
+        ("NOP151515XXX", "sentencias", datetime(2025, 3, 2)),
+    ]
+
+    for rfc, tipo, fecha_pub in rfcs_prueba:
+        entrada = ListaEfos(
+            rfc=rfc,
+            tipo_lista=tipo,
+            fecha_publicacion=fecha_pub,
+        )
+        db.add(entrada)
+
+    await db.commit()
+    return {"detail": f"Seed completado: {len(rfcs_prueba)} RFCs insertados en listas_efos."}
+
+
+# ─── Helpers ────────────────────────────────────────
+
+
+async def _check_rfc_in_listas(rfc: str, db: AsyncSession):
+    """Busca un RFC en las listas EFOS activas. Devuelve la ListaEfos si existe."""
+    result = await db.execute(
+        select(ListaEfos)
+        .where(ListaEfos.rfc == rfc)
+        .where(ListaEfos.activo == True)
+    )
+    return result.scalar_one_or_none()
+
+
 # ─── Verificación ──────────────────────────────────
+# IMPORTANTE: /verificar/todos DEBE ir antes de /verificar/{cliente_id}
+# para que FastAPI no haga match con el parámetro de ruta.
+
+
+@router.post("/verificar/todos", response_model=dict)
+async def verificar_todos_los_clientes(
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Verifica TODOS los clientes activos contra las listas EFOS."""
+    result = await db.execute(select(Cliente).where(Cliente.activo == 1))
+    clientes = result.scalars().all()
+
+    resultados = []
+    encontrados = 0
+    for c in clientes:
+        en_lista = await _check_rfc_in_listas(c.rfc, db)
+        esta_en_lista = en_lista is not None
+        if esta_en_lista:
+            encontrados += 1
+        resultados.append({
+            "rfc": c.rfc,
+            "cliente": c.razon_social,
+            "en_lista": esta_en_lista,
+            "tipo_lista": en_lista.tipo_lista if en_lista else None,
+        })
+
+    total = len(clientes)
+    return {
+        "total": total,
+        "verificados": total,
+        "en_lista": encontrados,
+        "limpios": total - encontrados,
+        "resultados": resultados,
+    }
 
 
 @router.post("/verificar/{cliente_id}", response_model=VerificacionEfosResponse)
@@ -124,37 +220,6 @@ async def verificar_cliente_en_listas(
         tipo_lista=tipo_lista,
         alerta_existente=alerta_existente or en_lista,
     )
-
-
-async def _check_rfc_in_listas(rfc: str, db: AsyncSession):
-    """Busca un RFC en las listas EFOS activas. Devuelve la ListaEfos si existe."""
-    result = await db.execute(
-        select(ListaEfos)
-        .where(ListaEfos.rfc == rfc)
-        .where(ListaEfos.activo == True)
-    )
-    return result.scalar_one_or_none()
-
-
-@router.post("/verificar/todos", response_model=List[dict])
-async def verificar_todos_los_clientes(
-    db: AsyncSession = Depends(get_db),
-    usuario: dict = Depends(verificar_token),
-):
-    """Verifica TODOS los clientes activos contra las listas EFOS."""
-    result = await db.execute(select(Cliente).where(Cliente.activo == 1))
-    clientes = result.scalars().all()
-
-    resultados = []
-    for c in clientes:
-        en_lista = await _check_rfc_in_listas(c.rfc, db)
-        resultados.append({
-            "rfc": c.rfc,
-            "cliente": c.razon_social,
-            "en_lista": en_lista is not None,
-            "tipo_lista": en_lista.tipo_lista if en_lista else None,
-        })
-    return resultados
 
 
 # ─── Alertas ───────────────────────────────────────

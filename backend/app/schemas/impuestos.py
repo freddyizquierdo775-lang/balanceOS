@@ -88,3 +88,78 @@ class DiotResponse(BaseModel):
     iva_trasladado: Decimal
     diferencia: Decimal
     proveedores: int
+
+
+# ─── Estímulos Fiscales ───────────────────────────
+
+class EstimuloFiscalCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    tipo: str  # credito, deduccion, exencion, tasa_reducida, diferimiento
+    porcentaje: Decimal = Decimal("0.00")
+    impuesto_aplicable: Optional[str] = None  # ISR, IVA, IEPS, etc.
+    fundamento_legal: Optional[str] = None
+    activo: bool = True
+
+
+class EstimuloFiscalResponse(BaseModel):
+    id: int
+    nombre: str
+    descripcion: Optional[str] = None
+    tipo: str
+    porcentaje: Decimal
+    impuesto_aplicable: Optional[str] = None
+    fundamento_legal: Optional[str] = None
+    activo: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ClienteEstimuloCreate(BaseModel):
+    cliente_id: int
+    estimulo_id: int
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    activo: bool = True
+
+
+class ClienteEstimuloResponse(BaseModel):
+    id: int
+    cliente_id: int
+    estimulo_id: int
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    activo: bool
+    model_config = {"from_attributes": True}
+
+
+class CalculoCompletoRequest(BaseModel):
+    ingresos: Decimal = Decimal("0.00")
+    deducciones: Decimal = Decimal("0.00")
+    iva_trasladado: Decimal = Decimal("0.00")
+    iva_acreditable: Decimal = Decimal("0.00")
+    ieps_trasladado: Decimal = Decimal("0.00")
+    ieps_acreditable: Decimal = Decimal("0.00")
+    isn_base: Decimal = Decimal("0.00")
+    periodo_mes: int
+    periodo_anio: int
+    estimulos_ids: List[int] = []
+
+
+class ImpuestoDesglose(BaseModel):
+    impuesto: str  # ISR, IVA, IEPS, ISN, etc.
+    base: Decimal
+    tasa: Decimal
+    bruto: Decimal
+    estimulo_aplicado: bool = False
+    estimulo_tipo: Optional[str] = None
+    estimulo_porcentaje: Optional[Decimal] = None
+    ahorro_estimulo: Decimal = Decimal("0.00")
+    neto: Decimal
+
+
+class CalculoCompletoResponse(BaseModel):
+    resumen: List[ImpuestoDesglose]
+    total_impuestos_brutos: Decimal
+    total_ahorro_estimulos: Decimal
+    total_impuestos_netos: Decimal

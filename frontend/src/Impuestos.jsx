@@ -7,6 +7,7 @@ export default function Impuestos({ usuario }) {
     { key: 'calculadora', label: 'Calculadora IVA/ISR' },
     { key: 'declaraciones', label: 'Declaraciones' },
     { key: 'diot', label: 'DIOT' },
+    { key: 'estimulos', label: 'Estímulos Fiscales' },
   ];
 
   // ─── Calculadora ──────────────────────────────
@@ -162,6 +163,142 @@ export default function Impuestos({ usuario }) {
     } finally {
       setDiotLoading(false);
     }
+  };
+
+  // ─── Estímulos Fiscales ────────────────────────
+  const [estimulos, setEstimulos] = useState([]);
+  const [estimulosLoading, setEstimulosLoading] = useState(true);
+  const [estimuloCliente, setEstimuloCliente] = useState('');
+  const [estimulosCliente, setEstimulosCliente] = useState([]);
+  const [estimulosClienteLoading, setEstimulosClienteLoading] = useState(false);
+  const [showEstimuloForm, setShowEstimuloForm] = useState(false);
+  const [estimuloForm, setEstimuloForm] = useState({
+    nombre: '', tipo: 'credito', porcentaje: '', impuesto_aplicable: 'ISR', fundamento_legal: '', descripcion: '',
+  });
+  const [estimuloError, setEstimuloError] = useState('');
+  const [estimuloCalcForm, setEstimuloCalcForm] = useState({
+    ingresos: '', deducciones: '', iva_trasladado: '', iva_acreditable: '',
+    ieps_trasladado: '', ieps_acreditable: '', isn_base: '',
+    estimulos_ids: [],
+  });
+  const [estimuloCalcResult, setEstimuloCalcResult] = useState(null);
+  const [estimuloCalcLoading, setEstimuloCalcLoading] = useState(false);
+  const [estimuloCalcError, setEstimuloCalcError] = useState('');
+
+  const loadEstimulos = async () => {
+    setEstimulosLoading(true);
+    try {
+      const data = await impuestos.listarEstimulos(true);
+      setEstimulos(data);
+    } catch (_) {
+      setEstimulos([]);
+    } finally {
+      setEstimulosLoading(false);
+    }
+  };
+
+  const loadEstimulosCliente = async () => {
+    if (!estimuloCliente) { setEstimulosCliente([]); return; }
+    setEstimulosClienteLoading(true);
+    try {
+      const data = await impuestos.listarEstimulosCliente(parseInt(estimuloCliente));
+      setEstimulosCliente(data);
+    } catch (_) {
+      setEstimulosCliente([]);
+    } finally {
+      setEstimulosClienteLoading(false);
+    }
+  };
+
+  useEffect(() => { loadEstimulos(); }, []);
+  useEffect(() => { loadEstimulosCliente(); }, [estimuloCliente]);
+
+  const handleAsignarEstimulo = async (estimuloId) => {
+    if (!estimuloCliente) return;
+    try {
+      await impuestos.asignarEstimuloCliente(parseInt(estimuloCliente), {
+        cliente_id: parseInt(estimuloCliente), estimulo_id: estimuloId,
+      });
+      loadEstimulosCliente();
+      setEstimuloError('');
+    } catch (err) {
+      setEstimuloError(err.message);
+    }
+  };
+
+  const handleQuitarEstimulo = async (estimuloId) => {
+    if (!estimuloCliente) return;
+    try {
+      await impuestos.quitarEstimuloCliente(parseInt(estimuloCliente), estimuloId);
+      loadEstimulosCliente();
+      setEstimuloError('');
+    } catch (err) {
+      setEstimuloError(err.message);
+    }
+  };
+
+  const handleEstimuloSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await impuestos.crearEstimulo({
+        nombre: estimuloForm.nombre,
+        tipo: estimuloForm.tipo,
+        porcentaje: parseFloat(estimuloForm.porcentaje) || 0,
+        impuesto_aplicable: estimuloForm.impuesto_aplicable,
+        fundamento_legal: estimuloForm.fundamento_legal,
+        descripcion: estimuloForm.descripcion,
+      });
+      setShowEstimuloForm(false);
+      setEstimuloForm({ nombre: '', tipo: 'credito', porcentaje: '', impuesto_aplicable: 'ISR', fundamento_legal: '', descripcion: '' });
+      loadEstimulos();
+      setEstimuloError('');
+    } catch (err) {
+      setEstimuloError(err.message);
+    }
+  };
+
+  const handleSeedEstimulos = async () => {
+    try {
+      await impuestos.seedEstimulos();
+      loadEstimulos();
+      setEstimuloError('');
+    } catch (err) {
+      setEstimuloError(err.message);
+    }
+  };
+
+  const handleEstimuloCalc = async (e) => {
+    e.preventDefault();
+    setEstimuloCalcLoading(true);
+    setEstimuloCalcError('');
+    try {
+      const data = await impuestos.calcularCompleto({
+        ingresos: parseFloat(estimuloCalcForm.ingresos) || 0,
+        deducciones: parseFloat(estimuloCalcForm.deducciones) || 0,
+        iva_trasladado: parseFloat(estimuloCalcForm.iva_trasladado) || 0,
+        iva_acreditable: parseFloat(estimuloCalcForm.iva_acreditable) || 0,
+        ieps_trasladado: parseFloat(estimuloCalcForm.ieps_trasladado) || 0,
+        ieps_acreditable: parseFloat(estimuloCalcForm.ieps_acreditable) || 0,
+        isn_base: parseFloat(estimuloCalcForm.isn_base) || 0,
+        periodo_mes: new Date().getMonth() + 1,
+        periodo_anio: new Date().getFullYear(),
+        estimulos_ids: estimuloCalcForm.estimulos_ids,
+      });
+      setEstimuloCalcResult(data);
+    } catch (err) {
+      setEstimuloCalcError(err.message);
+    } finally {
+      setEstimuloCalcLoading(false);
+    }
+  };
+
+  const toggleEstimuloCalc = (id) => {
+    setEstimuloCalcForm(prev => {
+      const ids = prev.estimulos_ids.includes(id)
+        ? prev.estimulos_ids.filter(x => x !== id)
+        : [...prev.estimulos_ids, id];
+      return { ...prev, estimulos_ids: ids };
+    });
   };
 
   // ─── Helpers ──────────────────────────────────
@@ -696,6 +833,336 @@ export default function Impuestos({ usuario }) {
               <p className="text-sm text-slate-400">Selecciona un cliente, período y presiona "Consultar DIOT"</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── ESTÍMULOS FISCALES ─────────────────── */}
+      {tab === 'estimulos' && (
+        <div>
+          {/* Header actions */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <select value={estimuloCliente} onChange={e => setEstimuloCliente(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
+              <option value="">Seleccionar cliente...</option>
+              {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+            </select>
+            <button onClick={handleSeedEstimulos}
+              className="bg-emerald-600 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50"
+              title="Insertar estímulos fiscales predefinidos">
+              🌱 Seed Estímulos
+            </button>
+            <button onClick={() => { setShowEstimuloForm(!showEstimuloForm); setEstimuloError(''); }}
+              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              {showEstimuloForm ? 'Cancelar' : '+ Nuevo Estímulo'}
+            </button>
+          </div>
+
+          {estimuloError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{estimuloError}</div>
+          )}
+
+          {/* New estimulo form */}
+          {showEstimuloForm && (
+            <form onSubmit={handleEstimuloSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+              <h2 className="text-base font-semibold text-slate-900 mb-4">Nuevo Estímulo Fiscal</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre *</label>
+                  <input value={estimuloForm.nombre} onChange={e => setEstimuloForm({...estimuloForm, nombre: e.target.value})} required
+                    placeholder="Ej. Deducción inmediata inversiones"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tipo</label>
+                  <select value={estimuloForm.tipo} onChange={e => setEstimuloForm({...estimuloForm, tipo: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    <option value="credito">Crédito fiscal</option>
+                    <option value="deduccion">Deducción</option>
+                    <option value="exencion">Exención</option>
+                    <option value="tasa_reducida">Tasa reducida</option>
+                    <option value="diferimiento">Diferimiento</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Porcentaje</label>
+                  <div className="relative">
+                    <input type="number" step="0.0001" min="0" max="1" value={estimuloForm.porcentaje}
+                      onChange={e => setEstimuloForm({...estimuloForm, porcentaje: e.target.value})}
+                      placeholder="0.30 = 30%"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 pr-10 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Impuesto aplicable</label>
+                  <select value={estimuloForm.impuesto_aplicable} onChange={e => setEstimuloForm({...estimuloForm, impuesto_aplicable: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    <option value="ISR">ISR</option>
+                    <option value="IVA">IVA</option>
+                    <option value="IEPS">IEPS</option>
+                    <option value="ISN">ISN</option>
+                    <option value="ISH">ISH</option>
+                    <option value="CEDULAR">Impuesto Cedular</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Fundamento legal</label>
+                  <input value={estimuloForm.fundamento_legal} onChange={e => setEstimuloForm({...estimuloForm, fundamento_legal: e.target.value})}
+                    placeholder="Art. 204 LISR"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15"/>
+                </div>
+              </div>
+              <button type="submit" disabled={!estimuloForm.nombre}
+                className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                Guardar Estímulo
+              </button>
+            </form>
+          )}
+
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: Estímulos disponibles */}
+            <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Estímulos Disponibles</h3>
+              {estimulosLoading ? (
+                <div className="text-center py-8 text-slate-400 text-sm">Cargando...</div>
+              ) : estimulos.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-sm">
+                  No hay estímulos. Presiona "🌱 Seed Estímulos" o "+ Nuevo Estímulo"
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  {estimulos.map(est => {
+                    const asignado = estimulosCliente.some(ce => ce.estimulo_id === est.id);
+                    return (
+                      <div key={est.id} className={`rounded-xl p-4 border transition-all ${
+                        asignado ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-100'
+                      }`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-slate-900 truncate">{est.nombre}</span>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{est.impuesto_aplicable}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                                est.tipo === 'credito' ? 'bg-blue-50 text-blue-600' :
+                                est.tipo === 'deduccion' ? 'bg-amber-50 text-amber-600' :
+                                est.tipo === 'exencion' ? 'bg-emerald-50 text-emerald-600' :
+                                'bg-purple-50 text-purple-600'
+                              }`}>{est.tipo}</span>
+                              <span className="text-xs text-slate-400 font-mono">{(parseFloat(est.porcentaje) * 100).toFixed(1)}%</span>
+                            </div>
+                            {est.fundamento_legal && (
+                              <div className="text-[10px] text-slate-400 mt-1 truncate">{est.fundamento_legal}</div>
+                            )}
+                          </div>
+                          <div className="shrink-0">
+                            {estimuloCliente ? (
+                              asignado ? (
+                                <button onClick={() => handleQuitarEstimulo(est.id)}
+                                  className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                                  Quitar
+                                </button>
+                              ) : (
+                                <button onClick={() => handleAsignarEstimulo(est.id)}
+                                  className="text-xs text-[#2E8B57] hover:text-emerald-700 font-medium px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors">
+                                  + Asignar
+                                </button>
+                              )
+                            ) : (
+                              <span className="text-[10px] text-slate-300">Selecciona cliente</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Right: Estímulos del cliente + Cálculo */}
+            <div className="space-y-6">
+              {/* Estímulos del cliente */}
+              <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+                <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                  Estímulos del Cliente
+                  {estimuloCliente && clienteList.find(c => c.id === parseInt(estimuloCliente)) && (
+                    <span className="text-slate-900 ml-1 normal-case">
+                      — {clienteList.find(c => c.id === parseInt(estimuloCliente)).razon_social}
+                    </span>
+                  )}
+                </h3>
+                {!estimuloCliente ? (
+                  <div className="text-center py-8 text-slate-400 text-sm">
+                    Selecciona un cliente para ver sus estímulos
+                  </div>
+                ) : estimulosClienteLoading ? (
+                  <div className="text-center py-8 text-slate-400 text-sm">Cargando...</div>
+                ) : estimulosCliente.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-sm">
+                    No tiene estímulos asignados
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {estimulosCliente.map(ce => {
+                      const est = estimulos.find(e => e.id === ce.estimulo_id);
+                      if (!est) return null;
+                      return (
+                        <div key={ce.id} className="flex items-center justify-between bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                          <div className="text-sm font-medium text-slate-900">{est.nombre}</div>
+                          <button onClick={() => handleQuitarEstimulo(est.id)}
+                            className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Calculadora con estímulos */}
+              <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+                <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                  Calcular con Estímulos
+                </h3>
+                <form onSubmit={handleEstimuloCalc} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Ingresos</label>
+                      <input type="number" step="0.01" min="0" required value={estimuloCalcForm.ingresos}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ingresos: e.target.value})} placeholder="100,000"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Deducciones</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.deducciones}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, deducciones: e.target.value})} placeholder="60,000"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IVA Trasladado</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.iva_trasladado}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, iva_trasladado: e.target.value})} placeholder="16,000"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IVA Acreditable</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.iva_acreditable}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, iva_acreditable: e.target.value})} placeholder="9,600"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IEPS Trasladado</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.ieps_trasladado}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ieps_trasladado: e.target.value})} placeholder="0"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">IEPS Acreditable</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.ieps_acreditable}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, ieps_acreditable: e.target.value})} placeholder="0"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Base ISN (Nómina)</label>
+                      <input type="number" step="0.01" min="0" value={estimuloCalcForm.isn_base}
+                        onChange={e => setEstimuloCalcForm({...estimuloCalcForm, isn_base: e.target.value})} placeholder="50,000"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300"/>
+                    </div>
+                  </div>
+
+                  {/* Estímulos toggle para el cálculo */}
+                  {estimulos.length > 0 && (
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                        Estímulos a aplicar ({estimuloCalcForm.estimulos_ids.length} seleccionados)
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {estimulos.map(est => (
+                          <button key={est.id} type="button" onClick={() => toggleEstimuloCalc(est.id)}
+                            className={`text-[10px] font-medium px-2.5 py-1.5 rounded-full border transition-all ${
+                              estimuloCalcForm.estimulos_ids.includes(est.id)
+                                ? 'bg-[#2E8B57] text-white border-[#2E8B57]'
+                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                            }`}>
+                            {est.nombre.length > 25 ? est.nombre.slice(0, 25) + '...' : est.nombre}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {estimuloCalcError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{estimuloCalcError}</div>
+                  )}
+                  <button type="submit" disabled={estimuloCalcLoading}
+                    className="w-full bg-slate-900 text-white text-sm font-semibold rounded-xl py-3 hover:bg-slate-800 transition-all disabled:opacity-50">
+                    {estimuloCalcLoading ? 'Calculando...' : 'Calcular con Estímulos'}
+                  </button>
+                </form>
+
+                {/* Resultados del cálculo */}
+                {estimuloCalcResult && estimuloCalcResult.resumen && (
+                  <div className="mt-6 space-y-3">
+                    <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Resultados</h4>
+                    {estimuloCalcResult.resumen.map((r, i) => (
+                      <div key={i} className={`rounded-xl p-4 border ${
+                        r.estimulo_aplicado ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-100'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-slate-900">{r.impuesto}</span>
+                          {r.estimulo_aplicado && (
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                              {r.estimulo_tipo} {(parseFloat(r.estimulo_porcentaje || 0) * 100).toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-center">
+                          <div>
+                            <div className="text-xs text-slate-400">Base</div>
+                            <div className="text-sm font-mono text-slate-700">{fmt(r.base)}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-slate-400">Bruto</div>
+                            <div className="text-sm font-mono text-red-600">{fmt(r.bruto)}</div>
+                          </div>
+                          {r.estimulo_aplicado && (
+                            <div>
+                              <div className="text-xs text-slate-400">Ahorro</div>
+                              <div className="text-sm font-mono text-emerald-600">-{fmt(r.ahorro_estimulo)}</div>
+                            </div>
+                          )}
+                          <div>
+                            <div className="text-xs text-slate-400">Neto</div>
+                            <div className={`text-sm font-bold ${parseFloat(r.neto || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(r.neto)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Totales */}
+                    <div className="rounded-xl p-4 bg-slate-900 text-white">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Total bruto</span>
+                        <span className="font-mono">{fmt(estimuloCalcResult.total_impuestos_brutos)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Ahorro por estímulos</span>
+                        <span className="font-mono text-emerald-300">-{fmt(estimuloCalcResult.total_ahorro_estimulos)}</span>
+                      </div>
+                      <div className="flex justify-between text-base font-bold border-t border-slate-700 pt-2 mt-1">
+                        <span>Total neto a pagar</span>
+                        <span className="font-mono">{fmt(estimuloCalcResult.total_impuestos_netos)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
       </div>

@@ -12,12 +12,15 @@ from typing import List, Optional
 from app.database import get_db
 from app.models import (
     Declaracion, DeclaracionConcepto, ConfiguracionDiot, Cliente,
-    Poliza, PolizaDetalle, CuentaContable,
+    Poliza, PolizaDetalle, CuentaContable, EstimuloFiscal, ClienteEstimulo,
 )
 from app.schemas.impuestos import (
     DeclaracionCreate, DeclaracionConceptoCreate,
     DeclaracionResponse, DeclaracionConceptoResponse,
     CalculoImpuestosRequest, CalculoImpuestosResponse, DiotResponse,
+    EstimuloFiscalCreate, EstimuloFiscalResponse,
+    ClienteEstimuloCreate, ClienteEstimuloResponse,
+    CalculoCompletoRequest, CalculoCompletoResponse, ImpuestoDesglose,
 )
 from app.routers.auth import verificar_token
 
@@ -425,3 +428,372 @@ async def _diot_desde_polizas(
         "iva_trasladado": iva_trasladado,
         "proveedores": proveedores_count,
     }
+
+
+# ══════════════════════════════════════════════════════════════
+# ─── Estímulos Fiscales ──────────────────────────
+# ══════════════════════════════════════════════════════════════
+
+ESTIMULOS_SEED = [
+    {"nombre": "Deducción inmediata de inversiones (constructorcas)", "tipo": "deduccion", "porcentaje": 0.65, "impuesto_aplicable": "ISR", "fundamento_legal": "Art. 204 LISR"},
+    {"nombre": "Estímulo fiscal región fronteriza norte", "tipo": "credito", "porcentaje": 0.33, "impuesto_aplicable": "IVA", "fundamento_legal": "Decreto frontera 2025-2026"},
+    {"nombre": "Estímulo fiscal región fronteriza sur", "tipo": "credito", "porcentaje": 0.50, "impuesto_aplicable": "IVA", "fundamento_legal": "Decreto frontera sur"},
+    {"nombre": "Crédito IEPS diésel agropecuario", "tipo": "credito", "porcentaje": 0.50, "impuesto_aplicable": "IEPS", "fundamento_legal": "LIEPS Art. 16"},
+    {"nombre": "Deducción creación empleos", "tipo": "deduccion", "porcentaje": 0.30, "impuesto_aplicable": "ISR", "fundamento_legal": "Art. 190 LISR"},
+    {"nombre": "Exención IVA exportación servicios", "tipo": "exencion", "porcentaje": 1.0, "impuesto_aplicable": "IVA", "fundamento_legal": "Art. 29 LIVA"},
+    {"nombre": "Estímulo ISN nuevas empresas", "tipo": "exencion", "porcentaje": 1.0, "impuesto_aplicable": "ISN", "fundamento_legal": "Ley estatal"},
+]
+
+
+@router.post("/seed-estimulos", response_model=List[EstimuloFiscalResponse], status_code=status.HTTP_201_CREATED)
+async def seed_estimulos(
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Inserta los estímulos fiscales seed en la base de datos (idempotente: no duplica)."""
+    creados = []
+    for est_data in ESTIMULOS_SEED:
+        # Verificar si ya existe por nombre
+        result = await db.execute(
+            select(EstimuloFiscal).where(EstimuloFiscal.nombre == est_data["nombre"])
+        )
+        existente = result.scalar_one_or_none()
+        if existente:
+            creados.append(existente)
+            continue
+
+        estimulo = EstimuloFiscal(
+            nombre=est_data["nombre"],
+            descripcion=est_data.get("descripcion"),
+            tipo=est_data["tipo"],
+            porcentaje=Decimal(str(est_data["porcentaje"])),
+            impuesto_aplicable=est_data["impuesto_aplicable"],
+            fundamento_legal=est_data["fundamento_legal"],
+            activo=True,
+        )
+        db.add(estimulo)
+        creados.append(estimulo)
+
+    await db.commit()
+    for e in creados:
+        await db.refresh(e)
+    return creados
+
+
+@router.get("/estimulos", response_model=List[EstimuloFiscalResponse])
+async def listar_estimulos(
+    activo: Optional[bool] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Lista todos los estímulos fiscales disponibles."""
+    query = select(EstimuloFiscal)
+    if activo is not None:
+        query = query.where(EstimuloFiscal.activo == activo)
+    query = query.order_by(EstimuloFiscal.nombre)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+@router.post("/estimulos", response_model=EstimuloFiscalResponse, status_code=status.HTTP_201_CREATED)
+async def crear_estimulo(
+    data: EstimuloFiscalCreate,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Crea un nuevo estímulo fiscal."""
+    estimulo = EstimuloFiscal(
+        nombre=data.nombre,
+        descripcion=data.descripcion,
+        tipo=data.tipo,
+        porcentaje=data.porcentaje,
+        impuesto_aplicable=data.impuesto_aplicable,
+        fundamento_legal=data.fundamento_legal,
+        activo=data.activo,
+    )
+    db.add(estimulo)
+    await db.commit()
+    await db.refresh(estimulo)
+    return estimulo
+
+
+@router.put("/estimulos/{estimulo_id}", response_model=EstimuloFiscalResponse)
+async def actualizar_estimulo(
+    estimulo_id: int,
+    data: EstimuloFiscalCreate,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Actualiza un estímulo fiscal existente."""
+    result = await db.execute(
+        select(EstimuloFiscal).where(EstimuloFiscal.id == estimulo_id)
+    )
+    estimulo = result.scalar_one_or_none()
+    if not estimulo:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Estímulo no encontrado")
+
+    estimulo.nombre = data.nombre
+    estimulo.descripcion = data.descripcion
+    estimulo.tipo = data.tipo
+    estimulo.porcentaje = data.porcentaje
+    estimulo.impuesto_aplicable = data.impuesto_aplicable
+    estimulo.fundamento_legal = data.fundamento_legal
+    estimulo.activo = data.activo
+
+    await db.commit()
+    await db.refresh(estimulo)
+    return estimulo
+
+
+@router.delete("/estimulos/{estimulo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar_estimulo(
+    estimulo_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Elimina un estímulo fiscal (soft-delete: lo desactiva)."""
+    result = await db.execute(
+        select(EstimuloFiscal).where(EstimuloFiscal.id == estimulo_id)
+    )
+    estimulo = result.scalar_one_or_none()
+    if not estimulo:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Estímulo no encontrado")
+
+    estimulo.activo = False
+    await db.commit()
+    return None
+
+
+# ─── Cliente-Estímulos ────────────────────────────
+
+
+@router.get("/clientes/{cliente_id}/estimulos", response_model=List[ClienteEstimuloResponse])
+async def listar_estimulos_cliente(
+    cliente_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Lista los estímulos fiscales asignados a un cliente."""
+    result = await db.execute(
+        select(ClienteEstimulo).where(
+            ClienteEstimulo.cliente_id == cliente_id,
+            ClienteEstimulo.activo == True,
+        )
+    )
+    return result.scalars().all()
+
+
+@router.post("/clientes/{cliente_id}/estimulos", response_model=ClienteEstimuloResponse, status_code=status.HTTP_201_CREATED)
+async def asignar_estimulo_cliente(
+    cliente_id: int,
+    data: ClienteEstimuloCreate,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Asigna un estímulo fiscal a un cliente."""
+    # Verificar que el estímulo existe
+    result_est = await db.execute(
+        select(EstimuloFiscal).where(EstimuloFiscal.id == data.estimulo_id)
+    )
+    if not result_est.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Estímulo no encontrado")
+
+    # Verificar que no esté ya asignado
+    result_existente = await db.execute(
+        select(ClienteEstimulo).where(
+            ClienteEstimulo.cliente_id == cliente_id,
+            ClienteEstimulo.estimulo_id == data.estimulo_id,
+            ClienteEstimulo.activo == True,
+        )
+    )
+    if result_existente.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El estímulo ya está asignado al cliente")
+
+    asignacion = ClienteEstimulo(
+        cliente_id=cliente_id,
+        estimulo_id=data.estimulo_id,
+        fecha_inicio=data.fecha_inicio or datetime.utcnow(),
+        fecha_fin=data.fecha_fin,
+        activo=True,
+    )
+    db.add(asignacion)
+    await db.commit()
+    await db.refresh(asignacion)
+    return asignacion
+
+
+@router.delete("/clientes/{cliente_id}/estimulos/{estimulo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def quitar_estimulo_cliente(
+    cliente_id: int,
+    estimulo_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Quita un estímulo fiscal de un cliente (soft-delete)."""
+    result = await db.execute(
+        select(ClienteEstimulo).where(
+            ClienteEstimulo.cliente_id == cliente_id,
+            ClienteEstimulo.estimulo_id == estimulo_id,
+            ClienteEstimulo.activo == True,
+        )
+    )
+    asignacion = result.scalar_one_or_none()
+    if not asignacion:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Estímulo no asignado al cliente")
+
+    asignacion.activo = False
+    asignacion.fecha_fin = datetime.utcnow()
+    await db.commit()
+    return None
+
+
+# ══════════════════════════════════════════════════════════════
+# ─── Calculadora de Impuestos Completa ──────────
+# ══════════════════════════════════════════════════════════════
+
+TASA_IVA = Decimal("0.16")
+TASA_IEPS_DEFAULT = Decimal("0.08")  # placeholder, varía por producto
+TASA_ISN_DEFAULT = Decimal("0.03")   # 3% estatal típico
+
+
+@router.post("/calcular-completo", response_model=CalculoCompletoResponse)
+async def calcular_impuestos_completo(
+    data: CalculoCompletoRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Calcula todos los impuestos aplicables con estímulos fiscales.
+
+    Acepta ingresos, deducciones, IVA, IEPS, ISN y lista de estímulos.
+    Devuelve desglose por cada impuesto con estímulos aplicados.
+    """
+    # Cargar estímulos aplicables
+    estimulos = []
+    if data.estimulos_ids:
+        result_est = await db.execute(
+            select(EstimuloFiscal).where(
+                EstimuloFiscal.id.in_(data.estimulos_ids),
+                EstimuloFiscal.activo == True,
+            )
+        )
+        estimulos = result_est.scalars().all()
+
+    # Indexar estímulos por impuesto
+    estimulos_por_impuesto = {}
+    for est in estimulos:
+        imp = est.impuesto_aplicable or ""
+        if imp not in estimulos_por_impuesto:
+            estimulos_por_impuesto[imp] = []
+        estimulos_por_impuesto[imp].append(est)
+
+    resumen = []
+    total_bruto = Decimal("0.00")
+    total_ahorro = Decimal("0.00")
+    total_neto = Decimal("0.00")
+
+    def _aplicar_estimulos(impuesto_key: str, base: Decimal, tasa: Decimal, bruto: Decimal) -> ImpuestoDesglose:
+        """Aplica el mejor estímulo disponible para este impuesto y devuelve el desglose."""
+        neto = bruto
+        ahorro = Decimal("0.00")
+        estimulo_aplicado = False
+        estimulo_tipo = None
+        estimulo_pct = None
+
+        est_list = estimulos_por_impuesto.get(impuesto_key, [])
+        if est_list:
+            # Tomar el mejor estímulo (el que dé más ahorro)
+            mejor_ahorro = Decimal("0.00")
+            mejor_est = None
+            for est in est_list:
+                pct = est.porcentaje or Decimal("0.00")
+                if est.tipo == "credito":
+                    ahorro_est = bruto * pct
+                elif est.tipo == "deduccion":
+                    # Deducción reduce la base
+                    base_reducida = base - (base * pct)
+                    if base_reducida < Decimal("0.00"):
+                        base_reducida = Decimal("0.00")
+                    nuevo_bruto = base_reducida * tasa
+                    ahorro_est = bruto - nuevo_bruto
+                elif est.tipo == "exencion":
+                    ahorro_est = bruto * pct  # 100% = todo exento
+                elif est.tipo == "tasa_reducida":
+                    nueva_tasa = tasa * (Decimal("1.00") - pct)
+                    nuevo_bruto = base * nueva_tasa
+                    ahorro_est = bruto - nuevo_bruto
+                elif est.tipo == "diferimiento":
+                    ahorro_est = bruto * pct  # diferido, no pagado ahora
+                else:
+                    ahorro_est = bruto * pct
+
+                if ahorro_est > mejor_ahorro:
+                    mejor_ahorro = ahorro_est
+                    mejor_est = est
+
+            if mejor_est and mejor_ahorro > Decimal("0.00"):
+                ahorro = mejor_ahorro.quantize(Decimal("0.01"))
+                neto = (bruto - ahorro).quantize(Decimal("0.01"))
+                if neto < Decimal("0.00"):
+                    neto = Decimal("0.00")
+                estimulo_aplicado = True
+                estimulo_tipo = mejor_est.tipo
+                estimulo_pct = mejor_est.porcentaje
+
+        return ImpuestoDesglose(
+            impuesto=impuesto_key,
+            base=base.quantize(Decimal("0.01")),
+            tasa=tasa,
+            bruto=bruto.quantize(Decimal("0.01")),
+            estimulo_aplicado=estimulo_aplicado,
+            estimulo_tipo=estimulo_tipo,
+            estimulo_porcentaje=estimulo_pct,
+            ahorro_estimulo=ahorro,
+            neto=neto,
+        )
+
+    utilidad = data.ingresos - data.deducciones
+
+    # ── 1. ISR ──
+    if utilidad > Decimal("0.00"):
+        bracket_idx = _buscar_bracket(utilidad)
+        _, _, tasa_isr = TARIFA_ISR_ANUAL[bracket_idx]
+        cuota_fija = CUOTA_FIJA_ANUAL[bracket_idx]
+        margen = utilidad - TARIFA_ISR_ANUAL[bracket_idx][0] + Decimal("0.01")
+        isr_bruto = (margen * tasa_isr + cuota_fija).quantize(Decimal("0.01"))
+    else:
+        isr_bruto = Decimal("0.00")
+        tasa_isr = Decimal("0.00")
+
+    desglose_isr = _aplicar_estimulos("ISR", utilidad, tasa_isr, isr_bruto)
+    resumen.append(desglose_isr)
+
+    # ── 2. IVA ──
+    iva_bruto = data.iva_trasladado - data.iva_acreditable
+    if iva_bruto < Decimal("0.00"):
+        iva_bruto = Decimal("0.00")
+    desglose_iva = _aplicar_estimulos("IVA", data.iva_trasladado, TASA_IVA, iva_bruto)
+    resumen.append(desglose_iva)
+
+    # ── 3. IEPS ──
+    ieps_bruto = data.ieps_trasladado - data.ieps_acreditable
+    if ieps_bruto < Decimal("0.00"):
+        ieps_bruto = Decimal("0.00")
+    desglose_ieps = _aplicar_estimulos("IEPS", data.ieps_trasladado, TASA_IEPS_DEFAULT, ieps_bruto)
+    resumen.append(desglose_ieps)
+
+    # ── 4. ISN ──
+    isn_bruto = data.isn_base * TASA_ISN_DEFAULT
+    desglose_isn = _aplicar_estimulos("ISN", data.isn_base, TASA_ISN_DEFAULT, isn_bruto)
+    resumen.append(desglose_isn)
+
+    # ── Totales ──
+    total_bruto = sum(r.bruto for r in resumen)
+    total_ahorro = sum(r.ahorro_estimulo for r in resumen)
+    total_neto = sum(r.neto for r in resumen)
+
+    return CalculoCompletoResponse(
+        resumen=resumen,
+        total_impuestos_brutos=total_bruto.quantize(Decimal("0.01")),
+        total_ahorro_estimulos=total_ahorro.quantize(Decimal("0.01")),
+        total_impuestos_netos=total_neto.quantize(Decimal("0.01")),
+    )

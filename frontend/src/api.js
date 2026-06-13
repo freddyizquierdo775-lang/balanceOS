@@ -136,7 +136,18 @@ export const impuestos = {
   crearDeclaracion: (data) => api('/impuestos/declaraciones', { method: 'POST', body: JSON.stringify(data) }),
   obtenerDeclaracion: (id) => api(`/impuestos/declaraciones/${id}`),
   calcular: (data) => api('/impuestos/calcular', { method: 'POST', body: JSON.stringify(data) }),
+  calcularCompleto: (data) => api('/impuestos/calcular-completo', { method: 'POST', body: JSON.stringify(data) }),
   diot: (clienteId, mes, anio) => api(`/impuestos/diot?cliente_id=${clienteId}&mes=${mes}&anio=${anio}`),
+  // Estímulos fiscales
+  listarEstimulos: (activo = null) => api(`/impuestos/estimulos${activo !== null ? `?activo=${activo}` : ''}`),
+  crearEstimulo: (data) => api('/impuestos/estimulos', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarEstimulo: (id, data) => api(`/impuestos/estimulos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  eliminarEstimulo: (id) => api(`/impuestos/estimulos/${id}`, { method: 'DELETE' }),
+  seedEstimulos: () => api('/impuestos/seed-estimulos', { method: 'POST' }),
+  // Cliente-estímulos
+  listarEstimulosCliente: (clienteId) => api(`/impuestos/clientes/${clienteId}/estimulos`),
+  asignarEstimuloCliente: (clienteId, data) => api(`/impuestos/clientes/${clienteId}/estimulos`, { method: 'POST', body: JSON.stringify(data) }),
+  quitarEstimuloCliente: (clienteId, estimuloId) => api(`/impuestos/clientes/${clienteId}/estimulos/${estimuloId}`, { method: 'DELETE' }),
 };
 
 export const facturacion = {
