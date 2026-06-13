@@ -118,3 +118,32 @@ export const empleados = {
   actualizar: (id, data) => api(`/empleados/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   eliminar: (id) => api(`/empleados/${id}`, { method: 'DELETE' }),
 };
+
+export const contabilidad = {
+  listarCuentas: () => api('/contabilidad/cuentas'),
+  crearCuenta: (data) => api('/contabilidad/cuentas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarCuenta: (id, data) => api(`/contabilidad/cuentas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  eliminarCuenta: (id) => api(`/contabilidad/cuentas/${id}`, { method: 'DELETE' }),
+  listarPolizas: (params) => api(`/contabilidad/polizas${params}`),
+  crearPoliza: (data) => api('/contabilidad/polizas', { method: 'POST', body: JSON.stringify(data) }),
+  obtenerPoliza: (id) => api(`/contabilidad/polizas/${id}`),
+  eliminarPoliza: (id) => api(`/contabilidad/polizas/${id}`, { method: 'DELETE' }),
+  balanza: (mes, anio) => api(`/contabilidad/balanza?mes=${mes}&anio=${anio}`),
+};
+
+export const impuestos = {
+  listarDeclaraciones: (params) => api(`/impuestos/declaraciones${params}`),
+  crearDeclaracion: (data) => api('/impuestos/declaraciones', { method: 'POST', body: JSON.stringify(data) }),
+  obtenerDeclaracion: (id) => api(`/impuestos/declaraciones/${id}`),
+  calcular: (data) => api('/impuestos/calcular', { method: 'POST', body: JSON.stringify(data) }),
+  diot: (clienteId, mes, anio) => api(`/impuestos/diot?cliente_id=${clienteId}&mes=${mes}&anio=${anio}`),
+};
+
+export const facturacion = {
+  listarFacturas: (params) => api(`/facturacion/facturas${params}`),
+  crearFactura: (data) => api('/facturacion/facturas', { method: 'POST', body: JSON.stringify(data) }),
+  obtenerFactura: (id) => api(`/facturacion/facturas/${id}`),
+  cancelarFactura: (id) => api(`/facturacion/facturas/${id}/cancelar`, { method: 'PUT' }),
+  listarComplementos: () => api('/facturacion/complementos-pago'),
+  crearComplemento: (data) => api('/facturacion/complementos-pago', { method: 'POST', body: JSON.stringify(data) }),
+};

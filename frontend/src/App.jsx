@@ -10,7 +10,14 @@ import PLD from './PLD';
 import FINIQUITOS from './FINIQUITOS';
 import CFDI from './CFDI';
 import Empleados from './Empleados';
+import Tesoreria from './Tesoreria';
+import EstadosFinancieros from './EstadosFinancieros';
+import AlertasEfos from './AlertasEfos';
+import ApiPublica from './ApiPublica';
 import PortalCliente from './PortalCliente';
+import Contabilidad from './Contabilidad';
+import Impuestos from './Impuestos';
+import Facturacion from './Facturacion';
 import { setOnUnauthorized } from './api';
 
 export default function App() {
@@ -123,12 +130,68 @@ export default function App() {
                 CFDI
               </button>
               <button
+                onClick={() => setPage('contabilidad')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'contabilidad' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Contabilidad
+              </button>
+              <button
+                onClick={() => setPage('impuestos')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'impuestos' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Impuestos
+              </button>
+              <button
+                onClick={() => setPage('facturacion')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'facturacion' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Facturación
+              </button>
+              <button
                 onClick={() => setPage('empleados')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
                   page === 'empleados' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Empleados
+              </button>
+              <button
+                onClick={() => setPage('tesoreria')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'tesoreria' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Tesorería
+              </button>
+              <button
+                onClick={() => setPage('estados-financieros')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'estados-financieros' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Estados Fin.
+              </button>
+              <button
+                onClick={() => setPage('alertas-efos')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'alertas-efos' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Alertas EFOS
+              </button>
+              <button
+                onClick={() => setPage('api-publica')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'api-publica' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                API Pública
               </button>
               {usuario.rol === 'admin' && (
                 <button
@@ -163,6 +226,13 @@ export default function App() {
       {page === 'finiquitos' && <FINIQUITOS usuario={usuario} />}
       {page === 'cfdi' && <CFDI usuario={usuario} />}
       {page === 'empleados' && <Empleados usuario={usuario} />}
+      {page === 'tesoreria' && <Tesoreria usuario={usuario} />}
+      {page === 'estados-financieros' && <EstadosFinancieros usuario={usuario} />}
+      {page === 'alertas-efos' && <AlertasEfos usuario={usuario} />}
+      {page === 'api-publica' && <ApiPublica usuario={usuario} />}
+      {page === 'contabilidad' && <Contabilidad usuario={usuario} />}
+      {page === 'impuestos' && <Impuestos usuario={usuario} />}
+      {page === 'facturacion' && <Facturacion usuario={usuario} />}
     </div>
   );
 }

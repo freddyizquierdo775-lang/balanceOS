@@ -3,7 +3,7 @@ Balance OS — Modelos de Datos
 """
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Enum as SAEnum, Boolean, Numeric, Date
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Enum as SAEnum, Boolean, Numeric, Date, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -421,3 +421,9 @@ class CsdCertificado(Base):
     fecha_validez_fin = Column(DateTime, nullable=True)
     activo = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+# ─── Importar modelos de módulos extendidos ──────
+from app.models.contabilidad import *  # noqa: F401, F403
+from app.models.impuestos import *  # noqa: F401, F403
+from app.models.facturacion import *  # noqa: F401, F403
+from app.models.tesoreria import *  # noqa: F401, F403

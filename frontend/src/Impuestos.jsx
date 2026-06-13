@@ -1,0 +1,606 @@
+import { useState, useEffect } from 'react';
+import { impuestos, clientes } from './api';
+
+export default function Impuestos({ usuario }) {
+  const [tab, setTab] = useState('calculadora');
+  const tabs = [
+    { key: 'calculadora', label: 'Calculadora IVA/ISR' },
+    { key: 'declaraciones', label: 'Declaraciones' },
+    { key: 'diot', label: 'DIOT' },
+  ];
+
+  // ─── Calculadora ──────────────────────────────
+  const [calcForm, setCalcForm] = useState({
+    ingresos: '', deducciones: '', iva_trasladado: '', iva_acreditable: '',
+  });
+  const [calcResult, setCalcResult] = useState(null);
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [calcError, setCalcError] = useState('');
+
+  const handleCalc = async (e) => {
+    e.preventDefault();
+    setCalcLoading(true);
+    setCalcError('');
+    try {
+      const data = await impuestos.calcular({
+        ingresos: parseFloat(calcForm.ingresos) || 0,
+        deducciones: parseFloat(calcForm.deducciones) || 0,
+        iva_trasladado: parseFloat(calcForm.iva_trasladado) || 0,
+        iva_acreditable: parseFloat(calcForm.iva_acreditable) || 0,
+      });
+      setCalcResult(data);
+    } catch (err) {
+      setCalcError(err.message);
+    } finally {
+      setCalcLoading(false);
+    }
+  };
+
+  const fmt = (n) => {
+    if (n === null || n === undefined) return '$0.00';
+    return '$' + parseFloat(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const pct = (n) => {
+    if (n === null || n === undefined) return '0.00%';
+    return parseFloat(n).toFixed(2) + '%';
+  };
+
+  // ─── Declaraciones ────────────────────────────
+  const [clienteList, setClienteList] = useState([]);
+  const [declFiltroCliente, setDeclFiltroCliente] = useState('');
+  const [declFiltroMes, setDeclFiltroMes] = useState('');
+  const [declFiltroAnio, setDeclFiltroAnio] = useState('');
+  const [declaraciones, setDeclaraciones] = useState([]);
+  const [loadingDecl, setLoadingDecl] = useState(true);
+  const [showDeclForm, setShowDeclForm] = useState(false);
+  const [declSaving, setDeclSaving] = useState(false);
+  const [declErrors, setDeclErrors] = useState({});
+  const [declForm, setDeclForm] = useState({
+    cliente_id: '', tipo: 'mensual', periodo_mes: '', periodo_anio: '', conceptos: [],
+  });
+  const [declConcInput, setDeclConcInput] = useState({ tipo: 'ingreso', concepto: '', monto: '' });
+  const now = new Date();
+
+  useEffect(() => {
+    const loadClientes = async () => {
+      try {
+        const data = await clientes.listar();
+        setClienteList(data);
+      } catch (_) {}
+    };
+    loadClientes();
+  }, []);
+
+  const loadDeclaraciones = async () => {
+    setLoadingDecl(true);
+    try {
+      const params = new URLSearchParams();
+      if (declFiltroCliente) params.set('cliente_id', declFiltroCliente);
+      if (declFiltroMes) params.set('mes', declFiltroMes);
+      if (declFiltroAnio) params.set('anio', declFiltroAnio);
+      const qs = params.toString();
+      const data = await impuestos.listarDeclaraciones(qs ? `?${qs}` : '');
+      setDeclaraciones(data);
+    } catch (err) {
+      console.error('Error al cargar declaraciones:', err);
+    } finally {
+      setLoadingDecl(false);
+    }
+  };
+
+  useEffect(() => { loadDeclaraciones(); }, [declFiltroCliente, declFiltroMes, declFiltroAnio]);
+
+  const addDeclConcepto = () => {
+    const c = declConcInput;
+    if (!c.concepto || !c.monto) return;
+    setDeclForm(prev => ({
+      ...prev,
+      conceptos: [...prev.conceptos, { ...c, monto: parseFloat(c.monto) }],
+    }));
+    setDeclConcInput({ tipo: 'ingreso', concepto: '', monto: '' });
+  };
+
+  const removeDeclConcepto = (idx) => {
+    setDeclForm(prev => ({
+      ...prev,
+      conceptos: prev.conceptos.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const validateDecl = () => {
+    const errs = {};
+    if (!declForm.cliente_id) errs.cliente_id = 'Selecciona un cliente';
+    if (!declForm.periodo_mes && declForm.tipo === 'mensual') errs.periodo_mes = 'Selecciona mes';
+    if (!declForm.periodo_anio) errs.periodo_anio = 'Selecciona año';
+    if (declForm.conceptos.length === 0) errs.conceptos = 'Agrega al menos un concepto';
+    setDeclErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleDeclSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateDecl()) return;
+    setDeclSaving(true);
+    try {
+      await impuestos.crearDeclaracion({
+        cliente_id: parseInt(declForm.cliente_id),
+        tipo: declForm.tipo,
+        periodo_mes: declForm.tipo === 'mensual' ? parseInt(declForm.periodo_mes) : null,
+        periodo_anio: parseInt(declForm.periodo_anio),
+        conceptos: declForm.conceptos.map(c => ({ ...c, monto: parseFloat(c.monto) })),
+      });
+      setShowDeclForm(false);
+      setDeclForm({ cliente_id: '', tipo: 'mensual', periodo_mes: '', periodo_anio: '', conceptos: [] });
+      setDeclErrors({});
+      loadDeclaraciones();
+    } catch (err) {
+      setDeclErrors({ general: err.message });
+    } finally {
+      setDeclSaving(false);
+    }
+  };
+
+  // ─── DIOT ─────────────────────────────────────
+  const [diotCliente, setDiotCliente] = useState('');
+  const [diotMes, setDiotMes] = useState(now.getMonth() + 1);
+  const [diotAnio, setDiotAnio] = useState(now.getFullYear());
+  const [diotData, setDiotData] = useState(null);
+  const [diotLoading, setDiotLoading] = useState(false);
+  const [diotError, setDiotError] = useState('');
+
+  const loadDiot = async () => {
+    if (!diotCliente) return;
+    setDiotLoading(true);
+    setDiotError('');
+    try {
+      const data = await impuestos.diot(parseInt(diotCliente), diotMes, diotAnio);
+      setDiotData(data);
+    } catch (err) {
+      setDiotError(err.message);
+      setDiotData(null);
+    } finally {
+      setDiotLoading(false);
+    }
+  };
+
+  // ─── Helpers ──────────────────────────────────
+  const meses = [
+    { v: 1, l: 'Enero' }, { v: 2, l: 'Febrero' }, { v: 3, l: 'Marzo' },
+    { v: 4, l: 'Abril' }, { v: 5, l: 'Mayo' }, { v: 6, l: 'Junio' },
+    { v: 7, l: 'Julio' }, { v: 8, l: 'Agosto' }, { v: 9, l: 'Septiembre' },
+    { v: 10, l: 'Octubre' }, { v: 11, l: 'Noviembre' }, { v: 12, l: 'Diciembre' },
+  ];
+  const anios = Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i);
+
+  const Logo = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
+      <path d="M4 9L8 5V15L4 19V9Z" fill="currentColor" opacity="0.85"/>
+      <path d="M10 7L14 3V13L10 17V7Z" fill="currentColor"/>
+      <path d="M16 11L20 7V17L16 21V11Z" fill="currentColor" opacity="0.85"/>
+    </svg>
+  );
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Logo />
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tighter text-slate-900">Impuestos</h1>
+          <p className="text-sm text-slate-500 mt-1">IVA, ISR y DIOT</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-white rounded-2xl p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-slate-900/5 w-fit">
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+              tab === t.key ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── CALCULADORA ───────────────────────── */}
+      {tab === 'calculadora' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Input form */}
+          <form onSubmit={handleCalc} className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5 h-fit">
+            <h2 className="text-base font-semibold text-slate-900 mb-5">Calculadora de Impuestos</h2>
+            <div className="space-y-5">
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Ingresos brutos</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                  <input type="number" step="0.01" min="0" required value={calcForm.ingresos}
+                    onChange={e => setCalcForm({...calcForm, ingresos: e.target.value})} placeholder="100,000.00"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Deducciones autorizadas</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                  <input type="number" step="0.01" min="0" value={calcForm.deducciones}
+                    onChange={e => setCalcForm({...calcForm, deducciones: e.target.value})} placeholder="60,000.00"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">IVA trasladado</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                    <input type="number" step="0.01" min="0" value={calcForm.iva_trasladado}
+                      onChange={e => setCalcForm({...calcForm, iva_trasladado: e.target.value})} placeholder="16,000.00"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">IVA acreditable</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                    <input type="number" step="0.01" min="0" value={calcForm.iva_acreditable}
+                      onChange={e => setCalcForm({...calcForm, iva_acreditable: e.target.value})} placeholder="9,600.00"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3.5 pl-8 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 focus:bg-white placeholder:text-slate-300"/>
+                  </div>
+                </div>
+              </div>
+              {calcError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{calcError}</div>
+              )}
+              <button type="submit" disabled={calcLoading || !calcForm.ingresos}
+                className="w-full bg-slate-900 text-white text-sm font-semibold rounded-xl py-3.5 hover:bg-slate-800 transition-all disabled:opacity-50">
+                {calcLoading ? 'Calculando...' : 'Calcular'}
+              </button>
+            </div>
+          </form>
+
+          {/* Results */}
+          <div className="space-y-4">
+            {calcResult && (
+              <>
+                {/* IVA Card */}
+                <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+                  <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">IVA</h3>
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_por_pagar || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {fmt(calcResult.iva_por_pagar)}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-1">Por pagar</div>
+                    </div>
+                    <div>
+                      <div className={`text-lg font-extrabold ${parseFloat(calcResult.iva_a_favor || 0) > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                        {fmt(calcResult.iva_a_favor)}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-1">A favor</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ISR Card */}
+                <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+                  <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">ISR</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Utilidad fiscal</span>
+                      <span className="text-slate-900 font-semibold">{fmt(calcResult.utilidad_fiscal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Tasa efectiva</span>
+                      <span className="text-slate-900 font-semibold">{pct(calcResult.tasa_efectiva)}</span>
+                    </div>
+                    <div className="border-t border-slate-100 pt-3 flex justify-between text-sm">
+                      <span className="text-slate-700 font-medium">ISR bruto</span>
+                      <span className="text-slate-900 font-bold">{fmt(calcResult.isr_bruto)}</span>
+                    </div>
+                    {calcResult.isr_retenciones > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Retenciones</span>
+                        <span className="text-emerald-600 font-semibold">-{fmt(calcResult.isr_retenciones)}</span>
+                      </div>
+                    )}
+                    {calcResult.isr_pago_provisional > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Pagos provisionales</span>
+                        <span className="text-emerald-600 font-semibold">-{fmt(calcResult.isr_pago_provisional)}</span>
+                      </div>
+                    )}
+                    <div className="border-t-2 border-slate-200 pt-3 flex justify-between text-sm">
+                      <span className="text-slate-900 font-bold text-base">ISR neto</span>
+                      <span className={`font-extrabold text-base ${parseFloat(calcResult.isr_neto || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {fmt(calcResult.isr_neto)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!calcResult && !calcLoading && (
+              <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-4xl mb-3">🧮</div>
+                <p className="text-sm text-slate-400">Ingresa los datos y presiona "Calcular"</p>
+                <p className="text-xs text-slate-300 mt-1">IVA por pagar/a favor + ISR bruto/neto</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── DECLARACIONES ──────────────────────── */}
+      {tab === 'declaraciones' && (
+        <div>
+          {/* Filter + New */}
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <select value={declFiltroCliente} onChange={e => setDeclFiltroCliente(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[200px]">
+              <option value="">Todos los clientes</option>
+              {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+            </select>
+            <select value={declFiltroMes} onChange={e => setDeclFiltroMes(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              <option value="">Todos los meses</option>
+              {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+            </select>
+            <select value={declFiltroAnio} onChange={e => setDeclFiltroAnio(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              <option value="">Todos los años</option>
+              {anios.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <button onClick={() => { setShowDeclForm(!showDeclForm); setDeclErrors({}); }}
+              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 ml-auto">
+              {showDeclForm ? 'Cancelar' : '+ Nueva Declaración'}
+            </button>
+          </div>
+
+          {declErrors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{declErrors.general}</div>
+          )}
+
+          {/* New declaration form */}
+          {showDeclForm && (
+            <form onSubmit={handleDeclSubmit} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+              <h2 className="text-base font-semibold text-slate-900 mb-4">Nueva Declaración</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Cliente *</label>
+                  <select value={declForm.cliente_id} onChange={e => setDeclForm({...declForm, cliente_id: e.target.value})} required
+                    className={`w-full bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                      declErrors.cliente_id ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                    }`}>
+                    <option value="">Seleccionar...</option>
+                    {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tipo</label>
+                  <select value={declForm.tipo} onChange={e => setDeclForm({...declForm, tipo: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                    <option value="mensual">Mensual</option>
+                    <option value="anual">Anual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Período</label>
+                  <div className="flex gap-2">
+                    {declForm.tipo === 'mensual' && (
+                      <select value={declForm.periodo_mes} onChange={e => setDeclForm({...declForm, periodo_mes: e.target.value})}
+                        className={`flex-1 bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                          declErrors.periodo_mes ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                        }`}>
+                        <option value="">Mes</option>
+                        {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+                      </select>
+                    )}
+                    <select value={declForm.periodo_anio} onChange={e => setDeclForm({...declForm, periodo_anio: e.target.value})}
+                      className={`flex-1 bg-slate-50 border rounded-xl p-3 text-sm outline-none focus:ring-2 ${
+                        declErrors.periodo_anio ? 'border-red-300' : 'border-slate-100 focus:border-[#2E8B57] focus:ring-[#2E8B57]/15'
+                      }`}>
+                      <option value="">Año</option>
+                      {anios.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conceptos */}
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Conceptos</h3>
+              {declForm.conceptos.length > 0 && (
+                <div className="overflow-x-auto mb-3">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">Tipo</th>
+                        <th className="text-left py-2 px-2 text-slate-400 font-medium">Concepto</th>
+                        <th className="text-right py-2 px-2 text-slate-400 font-medium">Monto</th>
+                        <th className="py-2 pl-2 w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {declForm.conceptos.map((c, i) => (
+                        <tr key={i} className="border-b border-slate-50">
+                          <td className="py-2 pr-2">
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                              c.tipo === 'ingreso' ? 'bg-emerald-50 text-emerald-600' :
+                              c.tipo === 'deduccion' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                            }`}>{c.tipo}</span>
+                          </td>
+                          <td className="py-2 px-2 text-slate-900">{c.concepto}</td>
+                          <td className="text-right py-2 px-2 text-slate-600 font-mono">{fmt(c.monto)}</td>
+                          <td className="py-2 pl-2">
+                            <button type="button" onClick={() => removeDeclConcepto(i)}
+                              className="text-slate-300 hover:text-red-500 text-xs">✕</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-slate-200">
+                        <td colSpan={2} className="py-2 pr-2 text-slate-900 font-bold">Total</td>
+                        <td className="text-right py-2 px-2 text-slate-900 font-bold">{fmt(declForm.conceptos.reduce((s, c) => s + c.monto, 0))}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+              {declErrors.conceptos && <p className="text-xs text-red-500 mb-2">{declErrors.conceptos}</p>}
+
+              {/* Add concept */}
+              <div className="flex items-end gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <select value={declConcInput.tipo} onChange={e => setDeclConcInput({...declConcInput, tipo: e.target.value})}
+                  className="bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
+                  <option value="ingreso">Ingreso</option>
+                  <option value="deduccion">Deducción</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <div className="flex-1">
+                  <input placeholder="Concepto" value={declConcInput.concepto} onChange={e => setDeclConcInput({...declConcInput, concepto: e.target.value})}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                </div>
+                <div className="w-28">
+                  <input type="number" step="0.01" min="0" placeholder="Monto" value={declConcInput.monto} onChange={e => setDeclConcInput({...declConcInput, monto: e.target.value})}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400 placeholder:text-slate-300"/>
+                </div>
+                <button type="button" onClick={addDeclConcepto}
+                  className="bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg px-3 py-2 hover:bg-slate-300 transition-colors shrink-0">+</button>
+              </div>
+
+              <div className="mt-4 flex gap-3">
+                <button type="submit" disabled={declSaving}
+                  className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+                  {declSaving ? 'Guardando...' : 'Guardar declaración'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Declaraciones list */}
+          {loadingDecl ? (
+            <div className="text-center py-12 text-slate-400 text-sm">Cargando...</div>
+          ) : declaraciones.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-sm">No hay declaraciones registradas</div>
+          ) : (
+            <div className="space-y-3">
+              {declaraciones.map(d => (
+                <div key={d.id} className="bg-white rounded-2xl p-5 shadow-[0_6px_16px_rgba(0,0,0,0.03)] border border-slate-900/5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-semibold text-white bg-slate-500 px-2 py-0.5 rounded-full uppercase">{d.tipo}</span>
+                      <span className="font-semibold text-slate-900">{d.cliente_razon_social || `Cliente #${d.cliente_id}`}</span>
+                      {d.periodo_mes && <span className="text-xs text-slate-400">{meses.find(m => m.v === d.periodo_mes)?.l} {d.periodo_anio}</span>}
+                      {!d.periodo_mes && <span className="text-xs text-slate-400">Ejercicio {d.periodo_anio}</span>}
+                    </div>
+                  </div>
+                  {d.conceptos && d.conceptos.length > 0 && (
+                    <div className="text-xs text-slate-400 mt-2">
+                      {d.conceptos.length} concepto(s) · Total: {fmt(d.conceptos.reduce((s, c) => s + parseFloat(c.monto || 0), 0))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── DIOT ────────────────────────────────── */}
+      {tab === 'diot' && (
+        <div>
+          {/* Filter */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <select value={diotCliente} onChange={e => setDiotCliente(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400 min-w-[250px]">
+              <option value="">Seleccionar cliente...</option>
+              {clienteList.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+            </select>
+            <select value={diotMes} onChange={e => setDiotMes(parseInt(e.target.value))}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              {meses.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+            </select>
+            <select value={diotAnio} onChange={e => setDiotAnio(parseInt(e.target.value))}
+              className="bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-slate-400">
+              {anios.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <button onClick={loadDiot} disabled={!diotCliente || diotLoading}
+              className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-5 py-3 hover:bg-slate-800 transition-all duration-200 disabled:opacity-50">
+              {diotLoading ? 'Consultando...' : 'Consultar DIOT'}
+            </button>
+          </div>
+
+          {diotError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{diotError}</div>
+          )}
+
+          {/* DIOT Results */}
+          {diotData && (
+            <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-5">
+                DIOT — {clienteList.find(c => c.id === parseInt(diotCliente))?.razon_social || ''} — {meses.find(m => m.v === diotMes)?.l} {diotAnio}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div className="bg-slate-50 rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-slate-900">{fmt(diotData.iva_acreditable)}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">IVA Acreditable</div>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-slate-900">{fmt(diotData.iva_trasladado)}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">IVA Trasladado</div>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4">
+                  <div className={`text-xl font-extrabold ${parseFloat(diotData.diferencia || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {fmt(diotData.diferencia)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">Diferencia</div>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4">
+                  <div className="text-xl font-extrabold text-slate-900">{diotData.num_proveedores || 0}</div>
+                  <div className="text-[10px] text-slate-400 mt-1"># Proveedores</div>
+                </div>
+              </div>
+              {diotData.proveedores && diotData.proveedores.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Proveedores</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="text-left py-2 pr-2 text-slate-400 font-medium">RFC</th>
+                          <th className="text-left py-2 px-2 text-slate-400 font-medium">Nombre</th>
+                          <th className="text-right py-2 px-2 text-slate-400 font-medium">Total facturado</th>
+                          <th className="text-right py-2 pl-2 text-slate-400 font-medium">IVA</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {diotData.proveedores.map((p, i) => (
+                          <tr key={i} className="border-b border-slate-50">
+                            <td className="py-2 pr-2 font-mono text-slate-600">{p.rfc}</td>
+                            <td className="py-2 px-2 text-slate-900">{p.nombre}</td>
+                            <td className="text-right py-2 px-2 text-slate-600 font-mono">{fmt(p.total_facturado)}</td>
+                            <td className="text-right py-2 pl-2 text-slate-600 font-mono">{fmt(p.iva)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!diotData && !diotLoading && !diotError && (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-900/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+              <div className="text-4xl mb-3">📋</div>
+              <p className="text-sm text-slate-400">Selecciona un cliente, período y presiona "Consultar DIOT"</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
