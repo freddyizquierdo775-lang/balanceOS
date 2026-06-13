@@ -70,11 +70,16 @@ async def registro(data: UsuarioCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Usuario).where(Usuario.email == data.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email ya registrado")
+    # El primer usuario registrado se convierte en admin automáticamente
+    result_count = await db.execute(select(Usuario).limit(1))
+    primer_usuario = result_count.scalar_one_or_none() is None
+    rol_final = "admin" if primer_usuario else data.rol
+
     usuario = Usuario(
         nombre=data.nombre,
         email=data.email,
         password_hash=hash_password(data.password),
-        rol=data.rol,
+        rol=rol_final,
         telefono=data.telefono,
     )
     db.add(usuario)
