@@ -57,7 +57,7 @@ async def health():
 
 # ─── Servir frontend compilado (producción) ──────
 
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
 
 
 def _frontend_path(path: str) -> str:
