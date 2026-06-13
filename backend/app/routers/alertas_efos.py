@@ -69,6 +69,68 @@ async def listar_listas_efos(
     ]
 
 
+# ─── Actualización desde SAT ─────────────────────
+
+@router.post("/actualizar", response_model=dict)
+async def actualizar_desde_sat(
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """
+    ACTUALIZA las listas EFOS desde el portal del SAT.
+    
+    Descarga las listas 69, 69-B, definitivos y sentencias
+    y las inserta/actualiza en la base de datos.
+    """
+    from app.services.efos_scraper import actualizar_listas_efos
+    from app.database import async_session
+    
+    result = await actualizar_listas_efos(async_session)
+    
+    return {
+        "exitoso": result.exitoso,
+        "total_rfcs": result.total_rfcs,
+        "nuevos": result.nuevos,
+        "actualizados": result.actualizados,
+        "errores": result.errores,
+        "fuente": result.fuente,
+        "mensaje": result.mensaje,
+    }
+
+
+@router.post("/carga-csv", response_model=dict)
+async def cargar_csv_lista(
+    tipo_lista: str = Query(..., description="69, 69-B, definitivos, sentencias"),
+    contenido: str = Query(..., description="Contenido CSV con RFCs"),
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """
+    Carga masiva de RFCs desde un CSV.
+    
+    El CSV debe tener los RFCs en la primera columna.
+    """
+    if tipo_lista not in ("69", "69-B", "definitivos", "sentencias"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de lista inválido. Use: 69, 69-B, definitivos, sentencias"
+        )
+    
+    from app.services.efos_scraper import cargar_desde_csv
+    from app.database import async_session
+    
+    result = await cargar_desde_csv(contenido, tipo_lista, async_session)
+    
+    return {
+        "exitoso": result.exitoso,
+        "total_rfcs": result.total_rfcs,
+        "nuevos": result.nuevos,
+        "actualizados": result.actualizados,
+        "errores": result.errores,
+        "mensaje": result.mensaje,
+    }
+
+
 # ─── Seed ──────────────────────────────────────────
 
 

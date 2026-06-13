@@ -38,6 +38,16 @@ export default function AlertasEfos({ usuario }) {
   const [alertas, setAlertas] = useState([]);
   const [resolviendo, setResolviendo] = useState(null);
 
+  // Actualización SAT
+  const [actualizandoSAT, setActualizandoSAT] = useState(false);
+  const [updateResult, setUpdateResult] = useState(null);
+
+  // Carga CSV
+  const [showCSV, setShowCSV] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvTipo, setCsvTipo] = useState('69-B');
+  const [cargandoCSV, setCargandoCSV] = useState(false);
+
   const tabs = [
     { key: 'dashboard', label: 'Dashboard' },
     { key: 'listas', label: 'Listas EFOS' },
@@ -127,6 +137,53 @@ export default function AlertasEfos({ usuario }) {
     }
   };
 
+  // ─── Actualizar desde SAT ─────────────────────────
+  const handleActualizarSAT = async () => {
+    setActualizandoSAT(true);
+    setError('');
+    setUpdateResult(null);
+    try {
+      const data = await alertasEfos.actualizarDesdeSAT();
+      setUpdateResult(data);
+      if (data.exitoso) {
+        setSuccess(data.mensaje);
+        cargarListas();
+      } else {
+        setError(data.mensaje || 'No se pudo actualizar desde el SAT');
+      }
+    } catch (err) {
+      setError(err.message || 'Error al conectar con el SAT');
+    } finally {
+      setActualizandoSAT(false);
+    }
+  };
+
+  // ─── Cargar CSV ───────────────────────────────────
+  const handleCargarCSV = async () => {
+    if (!csvFile) {
+      setError('Selecciona un archivo CSV');
+      return;
+    }
+    setCargandoCSV(true);
+    setError('');
+    try {
+      const text = await csvFile.text();
+      const data = await alertasEfos.cargarCSV(csvTipo, text);
+      if (data.exitoso) {
+        setSuccess(data.mensaje);
+        setCsvFile(null);
+        setShowCSV(false);
+        cargarListas();
+      } else {
+        setError(data.mensaje || 'Error al procesar el CSV');
+      }
+    } catch (err) {
+      setError(err.message || 'Error al cargar el archivo');
+    } finally {
+      setCargandoCSV(false);
+    }
+  };
+
   // Clear success
   useEffect(() => {
     if (success) {
@@ -194,13 +251,73 @@ export default function AlertasEfos({ usuario }) {
   // ─── Listas EFOS ──────────────────────────────────
   const renderListas = () => (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <h2 className="text-base font-semibold text-slate-900">RFCs en listas EFOS</h2>
-        <button onClick={() => { setShowListaForm(!showListaForm); setError(''); }}
-          className="bg-slate-900 text-white text-xs font-semibold rounded-xl px-4 py-2 hover:bg-slate-800 transition-all">
-          {showListaForm ? 'Cancelar' : '+ Agregar RFC'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleActualizarSAT} disabled={actualizandoSAT}
+            className="bg-[#2E8B57] text-white text-xs font-semibold rounded-xl px-4 py-2 hover:bg-[#236b43] transition-all disabled:opacity-50 flex items-center gap-2">
+            {actualizandoSAT ? (
+              <><span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Actualizando...</>
+            ) : (
+              <>🔄 Actualizar desde SAT</>
+            )}
+          </button>
+          <button onClick={() => { setShowCSV(!showCSV); setError(''); setCsvFile(null); }}
+            className="bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl px-4 py-2 hover:bg-slate-200 transition-all">
+            {showCSV ? 'Cancelar' : '📄 Cargar CSV'}
+          </button>
+          <button onClick={() => { setShowListaForm(!showListaForm); setError(''); }}
+            className="bg-slate-900 text-white text-xs font-semibold rounded-xl px-4 py-2 hover:bg-slate-800 transition-all">
+            {showListaForm ? 'Cancelar' : '+ Agregar RFC'}
+          </button>
+        </div>
       </div>
+
+      {/* Resultado de actualización SAT */}
+      {updateResult && (
+        <div className={`rounded-xl p-4 mb-4 border text-sm ${updateResult.exitoso ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+          <p className="font-semibold mb-1">{updateResult.exitoso ? '✅' : '⚠️'} {updateResult.mensaje}</p>
+          {updateResult.total_rfcs > 0 && (
+            <div className="flex gap-4 text-xs mt-2">
+              <span>Total: <strong>{updateResult.total_rfcs}</strong></span>
+              <span className="text-emerald-600">Nuevos: <strong>{updateResult.nuevos}</strong></span>
+              <span className="text-slate-500">Actualizados: <strong>{updateResult.actualizados}</strong></span>
+            </div>
+          )}
+          {updateResult.errores?.length > 0 && (
+            <div className="mt-2 text-xs text-red-600">
+              {updateResult.errores.map((e, i) => <p key={i}>• {e}</p>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Carga CSV */}
+      {showCSV && (
+        <div className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Cargar RFCs desde archivo CSV</h3>
+          <p className="text-xs text-slate-500 mb-4">El archivo debe tener los RFCs en la primera columna.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Archivo CSV</label>
+              <input type="file" accept=".csv,.txt"
+                onChange={e => setCsvFile(e.target.files[0] || null)}
+                className="w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Tipo de lista</label>
+              <select value={csvTipo} onChange={e => setCsvTipo(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
+                {TIPOS_LISTA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <button onClick={handleCargarCSV} disabled={cargandoCSV || !csvFile}
+            className="bg-slate-900 text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all disabled:opacity-50">
+            {cargandoCSV ? 'Cargando...' : 'Cargar RFCs'}
+          </button>
+        </div>
+      )}
 
       {showListaForm && (
         <form onSubmit={handleAgregarLista} className="bg-white rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">

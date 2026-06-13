@@ -181,4 +181,6 @@ export const alertasEfos = {
   verificarTodos: () => api('/alertas-efos/verificar/todos', { method: 'POST' }),
   listarAlertas: () => api('/alertas-efos/alertas'),
   resolverAlerta: (alertaId) => api(`/alertas-efos/alertas/${alertaId}/resolver`, { method: 'PUT' }),
+  actualizarDesdeSAT: () => api('/alertas-efos/actualizar', { method: 'POST' }),
+  cargarCSV: (tipoLista, contenido) => api(`/alertas-efos/carga-csv?tipo_lista=${encodeURIComponent(tipoLista)}&contenido=${encodeURIComponent(contenido)}`, { method: 'POST' }),
 };
