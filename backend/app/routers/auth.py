@@ -1,0 +1,149 @@
+"""
+Balance OS — Router de Autenticación
+"""
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+import bcrypt as _bcrypt
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List, Optional
+from pydantic import BaseModel
+
+from app.database import get_db
+from app.models import Usuario
+from app.schemas import LoginRequest, TokenResponse, UsuarioCreate, UsuarioResponse
+from app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+security = HTTPBearer()
+
+
+def hash_password(password: str) -> str:
+    return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return _bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def create_token(data: dict) -> str:
+    to_encode = data.copy()
+    to_encode.update({"exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+async def verificar_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        return {"id": int(payload.get("sub")), "rol": payload.get("rol")}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token invalido o expirado")
+
+
+async def verificar_usuario_actual(usuario: dict = Depends(verificar_token), db: AsyncSession = Depends(get_db)) -> Usuario:
+    """Verifica token y retorna el objeto Usuario completo."""
+    result = await db.execute(select(Usuario).where(Usuario.id == usuario["id"]))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    return user
+
+
+@router.get("/check-usuarios")
+async def check_usuarios(db: AsyncSession = Depends(get_db)):
+    """Retorna si existe al menos un usuario registrado (para mostrar botón de registro inicial)."""
+    result = await db.execute(select(Usuario).limit(1))
+    existe = result.scalar_one_or_none() is not None
+    return {"hay_usuarios": existe}
+
+
+@router.post("/registro", response_model=UsuarioResponse)
+async def registro(data: UsuarioCreate, db: AsyncSession = Depends(get_db)):
+    # Validar longitud mínima de contraseña
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+    # Validar email básico
+    if "@" not in data.email or "." not in data.email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Email invalido")
+    result = await db.execute(select(Usuario).where(Usuario.email == data.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Email ya registrado")
+    usuario = Usuario(
+        nombre=data.nombre,
+        email=data.email,
+        password_hash=hash_password(data.password),
+        rol=data.rol,
+        telefono=data.telefono,
+    )
+    db.add(usuario)
+    await db.commit()
+    await db.refresh(usuario)
+    return usuario
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Usuario).where(Usuario.email == data.email))
+    usuario = result.scalar_one_or_none()
+    if not usuario or not verify_password(data.password, usuario.password_hash):
+        raise HTTPException(status_code=401, detail="Credenciales invalidas")
+    token = create_token({"sub": str(usuario.id), "rol": usuario.rol})
+    return TokenResponse(
+        access_token=token,
+        usuario={"id": usuario.id, "nombre": usuario.nombre, "email": usuario.email, "rol": usuario.rol},
+    )
+
+
+@router.get("/me", response_model=UsuarioResponse)
+async def perfil(usuario: dict = Depends(verificar_token), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Usuario).where(Usuario.id == usuario["id"]))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return user
+
+
+# ─── Admin: gestión de usuarios ───────────────────
+
+@router.get("/usuarios", response_model=List[UsuarioResponse])
+async def listar_usuarios(
+    usuario: Usuario = Depends(verificar_usuario_actual),
+    db: AsyncSession = Depends(get_db),
+):
+    """Lista todos los usuarios (solo admin)."""
+    if usuario.rol != "admin":
+        raise HTTPException(status_code=403, detail="Se requiere rol admin")
+    result = await db.execute(select(Usuario).order_by(Usuario.created_at.desc()))
+    return result.scalars().all()
+
+
+class UsuarioUpdateSchema(BaseModel):
+    nombre: Optional[str] = None
+    rol: Optional[str] = None
+    activo: Optional[int] = None
+    telefono: Optional[str] = None
+
+
+@router.put("/usuarios/{user_id}", response_model=UsuarioResponse)
+async def actualizar_usuario(
+    user_id: int,
+    data: UsuarioUpdateSchema,
+    usuario: Usuario = Depends(verificar_usuario_actual),
+    db: AsyncSession = Depends(get_db),
+):
+    """Actualiza datos de un usuario (solo admin)."""
+    if usuario.rol != "admin":
+        raise HTTPException(status_code=403, detail="Se requiere rol admin")
+
+    result = await db.execute(select(Usuario).where(Usuario.id == user_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    for campo, valor in data.model_dump(exclude_unset=True).items():
+        setattr(target, campo, valor)
+    await db.commit()
+    await db.refresh(target)
+    return target

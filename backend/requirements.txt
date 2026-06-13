@@ -1,0 +1,9 @@
+# Balance OS Backend
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy[asyncio]>=2.0.0
+aiosqlite>=0.20.0
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.1.0,<5.0.0
+python-multipart>=0.0.9
+requests>=2.31.0

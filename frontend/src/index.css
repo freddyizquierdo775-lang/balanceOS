@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Balance OS — Estilos globales */
+:root {
+  --color-green: #2E8B57;
+  --color-navy: #1A2E44;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f5f5f5;
+}

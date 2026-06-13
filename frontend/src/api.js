@@ -1,0 +1,112 @@
+export const API_BASE = '';
+
+let onUnauthorized = null; // callback to set from App
+
+export function setOnUnauthorized(cb) {
+  onUnauthorized = cb;
+}
+
+export async function api(path, options = {}) {
+  const token = localStorage.getItem('token');
+  const isFormData = options.body instanceof FormData;
+  const headers = { ...(isFormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    if (onUnauthorized) onUnauthorized();
+    throw new Error('Sesión expirada');
+  }
+  if (res.status === 204) return null;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error del servidor');
+  return data;
+}
+
+export const auth = {
+  login: (email, password) => api('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  registro: (data) => api('/auth/registro', { method: 'POST', body: JSON.stringify(data) }),
+  me: () => api('/auth/me'),
+  checkUsuarios: () => api('/auth/check-usuarios'),
+  usuarios: () => api('/auth/usuarios'),
+  actualizarUsuario: (id, data) => api(`/auth/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+};
+
+export const clientes = {
+  listar: (params = '') => api(`/clientes/${params}`),
+  obtener: (id) => api(`/clientes/${id}`),
+  crear: (data) => api('/clientes/', { method: 'POST', body: JSON.stringify(data) }),
+  actualizar: (id, data) => api(`/clientes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  eliminar: (id) => api(`/clientes/${id}`, { method: 'DELETE' }),
+  stats: () => api('/clientes/stats'),
+  vencimientos: (dias = 90) => api(`/clientes/vencimientos?dias=${dias}`),
+  exportarCsvUrl: () => `${API_BASE}/clientes/exportar/csv`,
+};
+
+export const documentos = {
+  listar: (clienteId, tipo = '') => api(`/documentos/${clienteId}${tipo ? `?tipo=${tipo}` : ''}`),
+  subir: (clienteId, archivo, tipo = 'otro', notas = '') => {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    form.append('tipo', tipo);
+    form.append('notas', notas);
+    return api(`/documentos/${clienteId}`, { method: 'POST', body: form });
+  },
+  descargarUrl: (docId) => `${API_BASE}/documentos/descargar/${docId}`,
+  eliminar: (docId) => api(`/documentos/${docId}`, { method: 'DELETE' }),
+};
+
+export const imss = {
+  calcular: (data) => api('/imss/calcular', { method: 'POST', body: JSON.stringify(data) }),
+  factorIntegracion: (data) => api('/imss/factor-integracion', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+export const nomina = {
+  crearPeriodo: (data) => api('/nomina/periodos', { method: 'POST', body: JSON.stringify(data) }),
+  listarPeriodos: () => api('/nomina/periodos'),
+  obtenerPeriodo: (id) => api(`/nomina/periodos/${id}`),
+  calcularPeriodo: (id) => api(`/nomina/periodos/${id}/calcular`, { method: 'POST' }),
+  listarRecibos: (periodoId = '') => api(`/nomina/recibos${periodoId ? `?periodo_id=${periodoId}` : ''}`),
+  obtenerRecibo: (id) => api(`/nomina/recibos/${id}`),
+};
+
+export const repse = {
+  crearRegistro: (data) => api('/repse/registros', { method: 'POST', body: JSON.stringify(data) }),
+  listarRegistros: (params = '') => api(`/repse/registros${params}`),
+  obtenerRegistro: (id) => api(`/repse/registros/${id}`),
+  actualizarRegistro: (id, data) => api(`/repse/registros/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  eliminarRegistro: (id) => api(`/repse/registros/${id}`, { method: 'DELETE' }),
+  crearAviso: (data) => api('/repse/avisos', { method: 'POST', body: JSON.stringify(data) }),
+  listarAvisos: (registroId) => api(`/repse/avisos/${registroId}`),
+  listarPersonal: (registroId) => api(`/repse/personal/${registroId}`),
+  asignarPersonal: (data) => api('/repse/personal', { method: 'POST', body: JSON.stringify(data) }),
+  stats: () => api('/repse/stats'),
+};
+
+export const pld = {
+  crearCuestionario: (data) => api('/pld/cuestionarios', { method: 'POST', body: JSON.stringify(data) }),
+  listarCuestionarios: (clienteId) => api(`/pld/cuestionarios/${clienteId}`),
+  ultimoCuestionario: (clienteId) => api(`/pld/cuestionarios/ultimo/${clienteId}`),
+  listarDocumentos: (clienteId) => api(`/pld/documentos/${clienteId}`),
+  crearDocumento: (data) => api('/pld/documentos', { method: 'POST', body: JSON.stringify(data) }),
+  verificarDocumento: (docId) => api(`/pld/documentos/${docId}/verificar`, { method: 'PUT' }),
+  resumenCliente: (clienteId) => api(`/pld/resumen/${clienteId}`),
+};
+
+export const finiquitos = {
+  preview: (data) => api('/finiquitos/preview', { method: 'POST', body: JSON.stringify(data) }),
+  calcular: (data) => api('/finiquitos/calcular', { method: 'POST', body: JSON.stringify(data) }),
+  listar: () => api('/finiquitos/'),
+  obtener: (id) => api(`/finiquitos/${id}`),
+  porEmpleado: (eid) => api(`/finiquitos/empleado/${eid}`),
+};
+
+export const cfdi = {
+  registrarCsd: (data) => api('/cfdi/csd', { method: 'POST', body: JSON.stringify(data) }),
+  listarCsd: () => api('/cfdi/csd'),
+  timbrar: (reciboId) => api('/cfdi/timbrar', { method: 'POST', body: JSON.stringify({ recibo_id: reciboId }) }),
+  listarRecibos: (estatus = '') => api(`/cfdi/recibos${estatus ? `?estatus=${estatus}` : ''}`),
+  obtenerPorRecibo: (reciboId) => api(`/cfdi/recibos/${reciboId}`),
+};
