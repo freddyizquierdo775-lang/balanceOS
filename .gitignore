@@ -14,6 +14,8 @@ backend/storage/csd/
 # Env
 .env
 backend/.env
+backend/storage/
+backend/*.db
 
 # OS
 .DS_Store
