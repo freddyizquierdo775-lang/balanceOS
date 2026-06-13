@@ -58,6 +58,10 @@ class CalculoImpuestosResponse(BaseModel):
     isr_retenido: Decimal
     isr_neto: Decimal
     coeficiente: Optional[Decimal] = None
+    utilidad_fiscal: Optional[Decimal] = None
+    tasa_efectiva: Optional[Decimal] = None
+    isr_retenciones: Optional[Decimal] = None
+    isr_pago_provisional: Optional[Decimal] = None
 
 class DiotResponse(BaseModel):
     periodo_mes: int

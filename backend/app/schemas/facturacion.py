@@ -17,6 +17,7 @@ class ConceptoFacturaCreate(BaseModel):
     importe: Decimal
     descuento: Decimal = Decimal("0.00")
     objeto_imp: str = "02"
+    iva: Optional[float] = None
     impuestos: List[dict] = []
 
 class FacturaCreate(BaseModel):

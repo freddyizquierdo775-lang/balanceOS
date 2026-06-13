@@ -126,6 +126,37 @@ async def verificar_cliente_en_listas(
     )
 
 
+async def _check_rfc_in_listas(rfc: str, db: AsyncSession):
+    """Busca un RFC en las listas EFOS activas. Devuelve la ListaEfos si existe."""
+    result = await db.execute(
+        select(ListaEfos)
+        .where(ListaEfos.rfc == rfc)
+        .where(ListaEfos.activo == True)
+    )
+    return result.scalar_one_or_none()
+
+
+@router.post("/verificar/todos", response_model=List[dict])
+async def verificar_todos_los_clientes(
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(verificar_token),
+):
+    """Verifica TODOS los clientes activos contra las listas EFOS."""
+    result = await db.execute(select(Cliente).where(Cliente.activo == 1))
+    clientes = result.scalars().all()
+
+    resultados = []
+    for c in clientes:
+        en_lista = await _check_rfc_in_listas(c.rfc, db)
+        resultados.append({
+            "rfc": c.rfc,
+            "cliente": c.razon_social,
+            "en_lista": en_lista is not None,
+            "tipo_lista": en_lista.tipo_lista if en_lista else None,
+        })
+    return resultados
+
+
 # ─── Alertas ───────────────────────────────────────
 
 

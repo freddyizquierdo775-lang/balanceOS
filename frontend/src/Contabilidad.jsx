@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { contabilidad } from './api';
 
 const TIPOS_CUENTA = [
-  'Activo', 'Pasivo', 'Capital', 'Ingresos', 'Gastos', 'Costos',
+  'activo', 'pasivo', 'capital', 'ingresos', 'gastos', 'costos',
 ];
 
 const NATURALEZAS = ['Deudora', 'Acreedora'];
 
 const CATALOGO_EMPTY = {
-  codigo: '', nombre: '', tipo: 'Activo', naturaleza: 'Deudora', padre_id: null,
+  codigo: '', nombre: '', tipo: 'activo', naturaleza: 'Deudora', padre_id: null,
 };
 
 export default function Contabilidad({ usuario }) {
@@ -100,7 +100,7 @@ export default function Contabilidad({ usuario }) {
         nombre: editCuenta.nombre,
         tipo: editCuenta.tipo,
         naturaleza: editCuenta.naturaleza,
-        activa: editCuenta.activa,
+        activo: editCuenta.activo,
         padre_id: editCuenta.padre_id,
       };
       await contabilidad.actualizarCuenta(editCuenta.id, payload);
@@ -147,13 +147,13 @@ export default function Contabilidad({ usuario }) {
           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full w-20 text-center ${
             cuenta.naturaleza === 'Deudora' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
           }`}>{cuenta.naturaleza}</span>
-          {cuenta.activa === 0 && (
+          {cuenta.activo === 0 && (
             <span className="text-[10px] text-red-500 font-medium bg-red-50 px-2 py-0.5 rounded-full">Inactiva</span>
           )}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2">
             <button onClick={() => { setEditCuenta(cuenta); setCuentaErrors({}); }}
               className="text-slate-300 hover:text-slate-600 text-xs px-2 py-1 rounded-lg hover:bg-slate-100" title="Editar">✎</button>
-            {cuenta.activa !== 0 && (
+            {cuenta.activo !== 0 && (
               <button onClick={() => desactivarCuenta(cuenta.id)}
                 className="text-slate-300 hover:text-red-500 text-xs px-2 py-1 rounded-lg hover:bg-red-50" title="Desactivar">✕</button>
             )}
@@ -377,7 +377,7 @@ export default function Contabilidad({ usuario }) {
                 <select value={cuentaForm.padre_id || ''} onChange={e => setCuentaForm({...cuentaForm, padre_id: e.target.value ? parseInt(e.target.value) : null})}
                   className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                   <option value="">Sin padre (raíz)</option>
-                  {cuentas.filter(c => c.activa !== 0).map(c => (
+                  {cuentas.filter(c => c.activo !== 0).map(c => (
                     <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
                   ))}
                 </select>
@@ -439,15 +439,15 @@ export default function Contabilidad({ usuario }) {
                       <select value={editCuenta.padre_id || ''} onChange={e => setEditCuenta({...editCuenta, padre_id: e.target.value ? parseInt(e.target.value) : null})}
                         className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
                         <option value="">Sin padre (raíz)</option>
-                        {cuentas.filter(c => c.id !== editCuenta.id && c.activa !== 0).map(c => (
+                        {cuentas.filter(c => c.id !== editCuenta.id && c.activo !== 0).map(c => (
                           <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
                         ))}
                       </select>
                     </div>
                     <div className="flex items-center">
                       <label className="flex items-center gap-2 text-sm text-slate-600">
-                        <input type="checkbox" checked={editCuenta.activa !== 0}
-                          onChange={e => setEditCuenta({...editCuenta, activa: e.target.checked ? 1 : 0})}
+                        <input type="checkbox" checked={editCuenta.activo !== 0}
+                          onChange={e => setEditCuenta({...editCuenta, activo: e.target.checked ? 1 : 0})}
                           className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20"/>
                         Cuenta activa
                       </label>
@@ -575,7 +575,7 @@ export default function Contabilidad({ usuario }) {
                   <select value={polizaDetalleInput.cuenta_id} onChange={e => setPolizaDetalleInput({...polizaDetalleInput, cuenta_id: e.target.value})}
                     className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-slate-400">
                     <option value="">Seleccionar cuenta...</option>
-                    {cuentas.filter(c => c.activa !== 0).map(c => (
+                    {cuentas.filter(c => c.activo !== 0).map(c => (
                       <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>
                     ))}
                   </select>

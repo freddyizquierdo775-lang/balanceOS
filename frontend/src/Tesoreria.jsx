@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { tesoreria } from './api';
 
 const fmt = (n) => {
   if (n === null || n === undefined) return '$0.00';
@@ -16,19 +17,6 @@ const meses = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-const apiFetch = async (path, options = {}) => {
-  const token = localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(path, { ...options, headers });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Error del servidor');
-  }
-  if (res.status === 204) return null;
-  return res.json();
-};
-
 export default function Tesoreria({ usuario }) {
   const [tab, setTab] = useState('cuentas');
   const [cuentas, setCuentas] = useState([]);
@@ -39,7 +27,7 @@ export default function Tesoreria({ usuario }) {
 
   // Form nueva cuenta
   const [showCuentaForm, setShowCuentaForm] = useState(false);
-  const [cuentaForm, setCuentaForm] = useState({ banco: '', num_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
+  const [cuentaForm, setCuentaForm] = useState({ banco: '', numero_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
   const [savingCuenta, setSavingCuenta] = useState(false);
 
   // Form nuevo movimiento
@@ -64,7 +52,7 @@ export default function Tesoreria({ usuario }) {
 
   const cargarCuentas = useCallback(async () => {
     try {
-      const data = await apiFetch('/tesoreria/cuentas');
+      const data = await tesoreria.listarCuentas();
       setCuentas(data);
     } catch (err) {
       setError(err.message);
@@ -78,12 +66,9 @@ export default function Tesoreria({ usuario }) {
     setSavingCuenta(true);
     setError('');
     try {
-      await apiFetch('/tesoreria/cuentas', {
-        method: 'POST',
-        body: JSON.stringify(cuentaForm),
-      });
+      await tesoreria.crearCuenta(cuentaForm);
       setShowCuentaForm(false);
-      setCuentaForm({ banco: '', num_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
+      setCuentaForm({ banco: '', numero_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
       setSuccess('Cuenta creada exitosamente');
       cargarCuentas();
     } catch (err) {
@@ -98,7 +83,7 @@ export default function Tesoreria({ usuario }) {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch(`/tesoreria/movimientos?cuenta_id=${cuentaId}`);
+      const data = await tesoreria.listarMovimientos(cuentaId);
       setMovimientos(data);
     } catch (err) {
       setError(err.message);
@@ -112,10 +97,7 @@ export default function Tesoreria({ usuario }) {
     setSavingMov(true);
     setError('');
     try {
-      await apiFetch('/tesoreria/movimientos', {
-        method: 'POST',
-        body: JSON.stringify(movForm),
-      });
+      await tesoreria.crearMovimiento(movForm);
       setShowMovForm(false);
       setMovForm({ cuenta_id: movForm.cuenta_id, fecha: '', tipo: 'abono', concepto: '', monto: '' });
       setSuccess('Movimiento registrado exitosamente');
@@ -133,14 +115,11 @@ export default function Tesoreria({ usuario }) {
     setError('');
     setConcResult(null);
     try {
-      const data = await apiFetch('/tesoreria/conciliar', {
-        method: 'POST',
-        body: JSON.stringify({
-          cuenta_id: parseInt(concCtaId),
-          mes: concMes,
-          anio: concAnio,
-          saldo_estado_cuenta: parseFloat(concSaldoEstado),
-        }),
+      const data = await tesoreria.conciliar({
+        cuenta_id: parseInt(concCtaId),
+        periodo_mes: concMes,
+        periodo_anio: concAnio,
+        saldo_estado_cuenta: parseFloat(concSaldoEstado),
       });
       setConcResult(data);
       setSuccess('Conciliación completada');
@@ -157,7 +136,7 @@ export default function Tesoreria({ usuario }) {
     setError('');
     setEcData(null);
     try {
-      const data = await apiFetch(`/tesoreria/estado-cuenta/${ecCtaId}?mes=${ecMes}&anio=${ecAnio}`);
+      const data = await tesoreria.estadoCuenta(ecCtaId, ecMes, ecAnio);
       setEcData(data);
     } catch (err) {
       setError(err.message);
@@ -206,8 +185,8 @@ export default function Tesoreria({ usuario }) {
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Número de cuenta</label>
-              <input type="text" required value={cuentaForm.num_cuenta}
-                onChange={e => setCuentaForm(p => ({ ...p, num_cuenta: e.target.value }))}
+              <input type="text" required value={cuentaForm.numero_cuenta}
+                onChange={e => setCuentaForm(p => ({ ...p, numero_cuenta: e.target.value }))}
                 placeholder="1234567890"
                 className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15 placeholder:text-slate-300" />
             </div>
@@ -250,8 +229,8 @@ export default function Tesoreria({ usuario }) {
                 <span className="font-semibold text-slate-900">{c.banco}</span>
                 <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase">{c.tipo}</span>
               </div>
-              <p className="text-xs text-slate-400 font-mono mb-3">{c.num_cuenta}</p>
-              <div className="text-xl font-extrabold text-slate-900">{fmt(c.saldo)}</div>
+              <p className="text-xs text-slate-400 font-mono mb-3">{c.numero_cuenta}</p>
+              <div className="text-xl font-extrabold text-slate-900">{fmt(c.saldo_actual)}</div>
               <p className="text-[10px] text-slate-400 mt-0.5">Saldo actual</p>
             </div>
           ))}
@@ -273,7 +252,7 @@ export default function Tesoreria({ usuario }) {
             }}
             className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
             <option value="">Seleccionar cuenta...</option>
-            {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.num_cuenta}</option>)}
+            {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
           </select>
         </div>
         <div className="pt-5">
@@ -397,7 +376,7 @@ export default function Tesoreria({ usuario }) {
               onChange={e => setConcCtaId(e.target.value)}
               className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
               <option value="">Seleccionar...</option>
-              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.num_cuenta}</option>)}
+              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
             </select>
           </div>
           <div>
@@ -473,7 +452,7 @@ export default function Tesoreria({ usuario }) {
             <select value={ecCtaId} onChange={e => { setEcCtaId(e.target.value); setEcData(null); }}
               className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-[#2E8B57] focus:ring-2 focus:ring-[#2E8B57]/15">
               <option value="">Seleccionar...</option>
-              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.num_cuenta}</option>)}
+              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
             </select>
           </div>
           <div>

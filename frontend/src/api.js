@@ -147,3 +147,27 @@ export const facturacion = {
   listarComplementos: () => api('/facturacion/complementos-pago'),
   crearComplemento: (data) => api('/facturacion/complementos-pago', { method: 'POST', body: JSON.stringify(data) }),
 };
+
+export const tesoreria = {
+  listarCuentas: () => api('/tesoreria/cuentas'),
+  crearCuenta: (data) => api('/tesoreria/cuentas', { method: 'POST', body: JSON.stringify(data) }),
+  listarMovimientos: (cuentaId) => api(`/tesoreria/movimientos?cuenta_id=${cuentaId}`),
+  crearMovimiento: (data) => api('/tesoreria/movimientos', { method: 'POST', body: JSON.stringify(data) }),
+  conciliar: (data) => api('/tesoreria/conciliar', { method: 'POST', body: JSON.stringify(data) }),
+  estadoCuenta: (cuentaId, mes, anio) => api(`/tesoreria/estado-cuenta/${cuentaId}?mes=${mes}&anio=${anio}`),
+};
+
+export const estadosFinancieros = {
+  balanceGeneral: (mes, anio) => api(`/estados-financieros/balance-general?mes=${mes}&anio=${anio}`),
+  estadoResultados: (mes, anio) => api(`/estados-financieros/estado-resultados?mes=${mes}&anio=${anio}`),
+  flujoEfectivo: (mes, anio) => api(`/estados-financieros/flujo-efectivo?mes=${mes}&anio=${anio}`),
+};
+
+export const alertasEfos = {
+  listarListas: () => api('/alertas-efos/listas'),
+  crearLista: (data) => api('/alertas-efos/listas', { method: 'POST', body: JSON.stringify(data) }),
+  verificarCliente: (clienteId) => api(`/alertas-efos/verificar/${clienteId}`, { method: 'POST' }),
+  verificarTodos: () => api('/alertas-efos/verificar/todos', { method: 'POST' }),
+  listarAlertas: () => api('/alertas-efos/alertas'),
+  resolverAlerta: (alertaId) => api(`/alertas-efos/alertas/${alertaId}/resolver`, { method: 'PUT' }),
+};

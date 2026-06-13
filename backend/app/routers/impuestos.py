@@ -114,6 +114,11 @@ async def calcular_impuestos(
     # ISR simplificado: tasa ~30% sobre utilidad
     utilidad = data.ingresos - data.deducciones
     isr_bruto = (utilidad * Decimal("0.30")).quantize(Decimal("0.01"))
+    # Tasa efectiva: (ISR bruto / utilidad) * 100, o 30% si utilidad es 0
+    if utilidad > Decimal("0.00"):
+        tasa_efectiva = (isr_bruto / utilidad * Decimal("100")).quantize(Decimal("0.01"))
+    else:
+        tasa_efectiva = Decimal("30.00")
     # Personas morales: pagos provisionales del 1.25% sobre ingresos
     isr_retenido = (data.ingresos * Decimal("0.0125")).quantize(Decimal("0.01"))
     isr_neto = (isr_bruto - isr_retenido).quantize(Decimal("0.01"))
@@ -127,6 +132,10 @@ async def calcular_impuestos(
         isr_retenido=isr_retenido,
         isr_neto=isr_neto,
         coeficiente=Decimal("0.30"),
+        utilidad_fiscal=utilidad,
+        tasa_efectiva=tasa_efectiva,
+        isr_retenciones=isr_retenido,
+        isr_pago_provisional=isr_retenido,
     )
 
 

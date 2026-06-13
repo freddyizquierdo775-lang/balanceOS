@@ -27,9 +27,9 @@ class CuentaContableCreate(BaseModel):
     @classmethod
     def validar_tipo(cls, v):
         allowed = ["activo","pasivo","capital","ingresos","costos","gastos"]
-        if v not in allowed:
+        if v.lower() not in allowed:
             raise ValueError(f"Tipo debe ser: {', '.join(allowed)}")
-        return v
+        return v.lower()
 
 class CuentaContableUpdate(BaseModel):
     nombre: Optional[str] = None

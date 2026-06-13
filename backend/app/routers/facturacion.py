@@ -62,6 +62,11 @@ async def crear_factura(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea un CFDI de ingreso (genera UUID mock, calcula impuestos)."""
+    # Mapear iva → objeto_imp si se proporciona iva en los conceptos
+    for conc in data.conceptos:
+        if conc.iva is not None:
+            conc.objeto_imp = "02" if conc.iva > 0 else "01"
+
     # Calcular subtotal desde conceptos
     subtotal = sum(c.importe for c in data.conceptos)
     descuento = data.descuento

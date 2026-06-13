@@ -84,8 +84,8 @@ export default function Facturacion({ usuario }) {
     forma_pago: '03', metodo_pago: 'PUE', serie: '', conceptos: [],
   });
   const [facturaConcInput, setFacturaConcInput] = useState({
-    clave_prod_serv: '', descripcion: '', cantidad: 1, unidad: 'Actividad',
-    valor_unitario: '', iva: 0.16,
+    clave_prod_serv: '84111506', descripcion: '', cantidad: 1, unidad: 'Actividad',
+    clave_unidad: 'ACT', valor_unitario: '', iva: 0.16,
   });
   const [cancelingId, setCancelingId] = useState(null);
 
@@ -132,11 +132,12 @@ export default function Facturacion({ usuario }) {
         valor_unitario: parseFloat(c.valor_unitario),
         importe: importe,
         iva: ivaCalc,
+        objeto_imp: (parseFloat(c.iva || 0.16) > 0) ? '02' : '01',
       }],
     }));
     setFacturaConcInput({
-      clave_prod_serv: '', descripcion: '', cantidad: 1, unidad: 'Actividad',
-      valor_unitario: '', iva: 0.16,
+      clave_prod_serv: '84111506', descripcion: '', cantidad: 1, unidad: 'Actividad',
+      clave_unidad: 'ACT', valor_unitario: '', iva: 0.16,
     });
   };
 
@@ -189,9 +190,11 @@ export default function Facturacion({ usuario }) {
           descripcion: c.descripcion,
           cantidad: c.cantidad,
           unidad: c.unidad,
+          clave_unidad: c.clave_unidad || 'ACT',
           valor_unitario: c.valor_unitario,
           importe: c.importe,
           iva: c.iva,
+          objeto_imp: c.objeto_imp || (c.iva > 0 ? '02' : '01'),
         })),
       });
       setShowFacturaForm(false);

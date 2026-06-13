@@ -1,22 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { alertasEfos } from './api';
 
 const fmtFecha = (s) => {
   if (!s) return '—';
   const d = new Date(s);
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-};
-
-const apiFetch = async (path, options = {}) => {
-  const token = localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(path, { ...options, headers });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Error del servidor');
-  }
-  if (res.status === 204) return null;
-  return res.json();
 };
 
 const TIPOS_LISTA = [
@@ -60,11 +48,11 @@ export default function AlertasEfos({ usuario }) {
   const cargarDashboard = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch('/alertas-efos/alertas');
+      const data = await alertasEfos.listarAlertas();
       if (Array.isArray(data)) {
         setAlertas(data);
-        setAlertasActivas(data.filter(a => a.estatus === 'activa' || !a.estatus || a.estatus === 'pendiente').length);
-        setAlertasResueltas(data.filter(a => a.estatus === 'resuelta').length);
+        setAlertasActivas(data.filter(a => !a.resuelto).length);
+        setAlertasResueltas(data.filter(a => a.resuelto).length);
       } else {
         setAlertas([]);
         setAlertasActivas(0);
@@ -79,7 +67,7 @@ export default function AlertasEfos({ usuario }) {
 
   const cargarListas = useCallback(async () => {
     try {
-      const data = await apiFetch('/alertas-efos/listas');
+      const data = await alertasEfos.listarListas();
       setListas(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
@@ -97,10 +85,7 @@ export default function AlertasEfos({ usuario }) {
     setSavingLista(true);
     setError('');
     try {
-      await apiFetch('/alertas-efos/listas', {
-        method: 'POST',
-        body: JSON.stringify(listaForm),
-      });
+      await alertasEfos.crearLista(listaForm);
       setShowListaForm(false);
       setListaForm({ rfc: '', tipo_lista: '69' });
       setSuccess('RFC agregado a la lista correctamente');
@@ -118,7 +103,7 @@ export default function AlertasEfos({ usuario }) {
     setError('');
     setVerificacionResultados(null);
     try {
-      const data = await apiFetch('/alertas-efos/verificar/todos', { method: 'POST' });
+      const data = await alertasEfos.verificarTodos();
       setVerificacionResultados(data);
       setSuccess('Verificación completada');
     } catch (err) {
@@ -132,7 +117,7 @@ export default function AlertasEfos({ usuario }) {
   const handleResolver = async (id) => {
     setResolviendo(id);
     try {
-      await apiFetch(`/alertas-efos/alertas/${id}/resolver`, { method: 'PUT' });
+      await alertasEfos.resolverAlerta(id);
       setSuccess('Alerta resuelta');
       cargarDashboard();
     } catch (err) {
@@ -176,15 +161,15 @@ export default function AlertasEfos({ usuario }) {
       )}
 
       {/* Alertas recientes */}
-      {alertas.filter(a => a.estatus === 'activa' || !a.estatus || a.estatus === 'pendiente').length > 0 && (
+      {alertas.filter(a => !a.resuelto).length > 0 && (
         <div className="mt-6 bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Alertas recientes</h3>
           <div className="space-y-2">
-            {alertas.filter(a => a.estatus === 'activa' || !a.estatus || a.estatus === 'pendiente').slice(0, 5).map(a => (
+            {alertas.filter(a => !a.resuelto).slice(0, 5).map(a => (
               <div key={a.id} className="flex items-center justify-between bg-red-50 border border-red-100 rounded-xl p-3">
                 <div>
-                  <p className="text-xs font-semibold text-slate-900">{a.cliente || a.rfc}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{a.tipo} · {fmtFecha(a.fecha)}</p>
+                  <p className="text-xs font-semibold text-slate-900">{a.rfc}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{a.tipo_lista} · {fmtFecha(a.fecha_alerta)}</p>
                 </div>
                 <button onClick={() => handleResolver(a.id)} disabled={resolviendo === a.id}
                   className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all disabled:opacity-50">
@@ -397,24 +382,24 @@ export default function AlertasEfos({ usuario }) {
               <tbody>
                 {alertas.map(a => (
                   <tr key={a.id} className={`border-b border-slate-50 hover:bg-slate-50/50 ${
-                    a.estatus === 'activa' || !a.estatus || a.estatus === 'pendiente' ? '' : 'opacity-50'
+                    !a.resuelto ? '' : 'opacity-50'
                   }`}>
-                    <td className="py-3.5 px-4 text-slate-900 font-medium">{a.cliente || a.cliente_nombre || '—'}</td>
+                    <td className="py-3.5 px-4 text-slate-900 font-medium">{a.rfc}</td>
                     <td className="py-3.5 px-2 text-slate-600 font-mono">{a.rfc}</td>
                     <td className="py-3.5 px-2">
                       <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                        {a.tipo || a.tipo_lista || 'EFOS'}
+                        {a.tipo_lista || 'EFOS'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-2 text-slate-600">{fmtFecha(a.fecha || a.created_at)}</td>
+                    <td className="py-3.5 px-2 text-slate-600">{fmtFecha(a.fecha_alerta)}</td>
                     <td className="text-center py-3.5 px-4">
-                      {(a.estatus === 'activa' || !a.estatus || a.estatus === 'pendiente') && (
+                      {(!a.resuelto) && (
                         <button onClick={() => handleResolver(a.id)} disabled={resolviendo === a.id}
                           className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all disabled:opacity-50">
                           {resolviendo === a.id ? '...' : 'Resolver'}
                         </button>
                       )}
-                      {(a.estatus === 'resuelta') && (
+                      {(a.resuelto) && (
                         <span className="text-[10px] text-emerald-500 font-medium">✓ Resuelta</span>
                       )}
                     </td>
