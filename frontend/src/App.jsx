@@ -9,6 +9,7 @@ import REPSE from './REPSE';
 import PLD from './PLD';
 import FINIQUITOS from './FINIQUITOS';
 import CFDI from './CFDI';
+import Empleados from './Empleados';
 import PortalCliente from './PortalCliente';
 import { setOnUnauthorized } from './api';
 
@@ -121,6 +122,14 @@ export default function App() {
               >
                 CFDI
               </button>
+              <button
+                onClick={() => setPage('empleados')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  page === 'empleados' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Empleados
+              </button>
               {usuario.rol === 'admin' && (
                 <button
                   onClick={() => setPage('usuarios')}
@@ -153,6 +162,7 @@ export default function App() {
       {page === 'pld' && <PLD usuario={usuario} />}
       {page === 'finiquitos' && <FINIQUITOS usuario={usuario} />}
       {page === 'cfdi' && <CFDI usuario={usuario} />}
+      {page === 'empleados' && <Empleados usuario={usuario} />}
     </div>
   );
 }

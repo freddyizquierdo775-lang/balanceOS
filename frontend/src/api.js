@@ -110,3 +110,11 @@ export const cfdi = {
   listarRecibos: (estatus = '') => api(`/cfdi/recibos${estatus ? `?estatus=${estatus}` : ''}`),
   obtenerPorRecibo: (reciboId) => api(`/cfdi/recibos/${reciboId}`),
 };
+
+export const empleados = {
+  listar: () => api('/empleados/'),
+  obtener: (id) => api(`/empleados/${id}`),
+  crear: (data) => api('/empleados/', { method: 'POST', body: JSON.stringify(data) }),
+  actualizar: (id, data) => api(`/empleados/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  eliminar: (id) => api(`/empleados/${id}`, { method: 'DELETE' }),
+};
