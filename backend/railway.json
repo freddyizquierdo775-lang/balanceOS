@@ -1,11 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "pip install fastapi uvicorn sqlalchemy aiosqlite python-jose passlib bcrypt python-multipart pydantic httpx"
-  },
   "deploy": {
-    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "startCommand": "pip install httpx && uvicorn app.main:app --host 0.0.0.0 --port $PORT",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
