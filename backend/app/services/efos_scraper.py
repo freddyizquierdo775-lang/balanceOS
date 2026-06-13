@@ -13,7 +13,13 @@ from datetime import datetime, timezone
 from typing import Optional
 from dataclasses import dataclass, field
 
-import httpx  # async HTTP client
+# httpx es opcional — solo se necesita para actualizar desde SAT
+try:
+    import httpx
+    HAS_HTTPX = True
+except ImportError:
+    httpx = None  # type: ignore
+    HAS_HTTPX = False
 
 logger = logging.getLogger("efos_scraper")
 
@@ -167,6 +173,10 @@ def _parse_excel_like(content: str) -> list[EfosEntry]:
 
 async def _fetch_url(url: str) -> Optional[str]:
     """Descarga una URL con retry y timeout."""
+    if not HAS_HTTPX:
+        logger.warning(f"httpx no instalado — no se puede descargar {url}")
+        return None
+    
     async with httpx.AsyncClient(
         timeout=REQUEST_TIMEOUT,
         follow_redirects=True,
@@ -246,6 +256,15 @@ async def actualizar_listas_efos(db_session_factory) -> UpdateResult:
     from app.models.tesoreria import ListaEfos
     
     result = UpdateResult(exitoso=False, fuente="SAT")
+    
+    if not HAS_HTTPX:
+        result.mensaje = (
+            "httpx no está instalado en el servidor. "
+            "Usa 'pip install httpx' para habilitar la actualización automática desde SAT. "
+            "Mientras tanto, puedes usar la opción 'Cargar CSV' para subir listas manualmente."
+        )
+        return result
+    
     all_entries: list[EfosEntry] = []
     
     # Descargar cada tipo de lista
