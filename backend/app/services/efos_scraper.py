@@ -18,15 +18,15 @@ import httpx  # async HTTP client
 logger = logging.getLogger("efos_scraper")
 
 # ─── Fuentes oficiales del SAT ──────────────────────
-# URLs conocidas (cambian ocasionalmente; el SAT las publica en su portal)
+# URLs del portal SAT para listas EFOS (actualizadas 2026)
 SAT_SOURCES = {
     "69-B": [
-        "https://www.sat.gob.mx/cs/Satellite?c=Page&pagename=sat%2FPage%2FListaCompleta69B",
-        "http://omawww.sat.gob.mx/cifras_sat/Paginas/datos/vinculo.html?page=ListCompleta69B.html",
+        "https://www.sat.gob.mx/consultas/10783/conoce-los-articulos-69-y-69-b-del-cff",
+        "https://omawww.sat.gob.mx/cifras_sat/Paginas/datos/vinculo.html?page=ListCompleta69B.html",
     ],
     "69": [
-        "https://www.sat.gob.mx/cs/Satellite?c=Page&pagename=sat%2FPage%2FListaCompleta69",
-        "http://omawww.sat.gob.mx/cifras_sat/Paginas/datos/vinculo.html?page=ListCompleta69.html",
+        "https://www.sat.gob.mx/consultas/10783/conoce-los-articulos-69-y-69-b-del-cff",
+        "https://omawww.sat.gob.mx/cifras_sat/Paginas/datos/vinculo.html?page=ListCompleta69.html",
     ],
     "definitivos": [
         "https://www.sat.gob.mx/consultas/10783/conoce-los-articulos-69-y-69-b-del-cff",
@@ -36,17 +36,19 @@ SAT_SOURCES = {
     ],
 }
 
-# URLs directas de descarga CSV (históricamente conocidas)
-SAT_CSV_URLS = [
-    "http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_69-B.csv",
-    "http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_69.csv",
-    "http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_Definitivos.csv",
-    "http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_Sentencias.csv",
+# URLs directas de descarga (formato CSV/Excel publicado por el SAT)
+SAT_DIRECT_DOWNLOADS = [
+    "https://omawww.sat.gob.mx/cifras_sat/Documents/Listado_69-B.csv",
+    "https://omawww.sat.gob.mx/cifras_sat/Documents/Listado_69.csv",
+    "https://omawww.sat.gob.mx/cifras_sat/Documents/Listado_Definitivos.csv",
+    "https://omawww.sat.gob.mx/cifras_sat/Documents/Listado_Sentencias.csv",
+    "https://www.sat.gob.mx/cs/Satellite?c=Page&pagename=sat%2FPage%2FListaCompleta69B",
+    "https://www.sat.gob.mx/cs/Satellite?c=Page&pagename=sat%2FPage%2FListaCompleta69",
 ]
 
-# Timeout y retries
-REQUEST_TIMEOUT = 25  # segundos
-MAX_RETRIES = 2
+# Timeout y retries (SAT es lento — timeouts cortos con pocos retries)
+REQUEST_TIMEOUT = 12  # segundos
+MAX_RETRIES = 1
 
 
 @dataclass
