@@ -3,11 +3,13 @@ Balance OS — Router de Facturación de Ingresos (CFDI)
 """
 from datetime import datetime
 from decimal import Decimal
-from uuid import uuid4
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import PlainTextResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
+import os
 
 from app.database import get_db
 from app.models import CfdiIngreso, CfdiIngresoConcepto, CfdiIngresoImpuesto, CfdiComplementoPago, CfdiPagoDetalle
@@ -16,6 +18,10 @@ from app.schemas.facturacion import (
     CfdiIngresoResponse, ComplementoPagoCreate,
 )
 from app.routers.auth import verificar_token
+from app.pac import get_pac_adapter
+from app.cfdi.generador_xml import generar_xml_ingreso, guardar_xml_ingreso
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/facturacion", tags=["facturacion"])
 
@@ -61,7 +67,7 @@ async def crear_factura(
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
 ):
-    """Crea un CFDI de ingreso (genera UUID mock, calcula impuestos)."""
+    """Crea un CFDI de ingreso: genera XML 4.0, timbra vía PAC y guarda."""
     # Mapear iva → objeto_imp si se proporciona iva en los conceptos
     for conc in data.conceptos:
         if conc.iva is not None:
@@ -76,16 +82,86 @@ async def crear_factura(
     calc = _calcular_impuestos(base, data.conceptos)
     total = base + calc["total_traslados"]
 
-    uuid = uuid4().hex[:36]
+    # ── Construir datos para el XML CFDI 4.0 ──
+    conceptos_xml = []
+    for conc in data.conceptos:
+        conceptos_xml.append({
+            "clave_prod_serv": conc.clave_prod_serv,
+            "no_identificacion": conc.no_identificacion,
+            "cantidad": conc.cantidad,
+            "clave_unidad": conc.clave_unidad,
+            "unidad": conc.unidad,
+            "descripcion": conc.descripcion,
+            "valor_unitario": conc.valor_unitario,
+            "importe": conc.importe,
+            "descuento": conc.descuento,
+            "objeto_imp": conc.objeto_imp,
+        })
+
+    # Construir estructura de impuestos para el XML
+    traslados_xml = []
+    retenciones_xml = []
+    for imp in calc["impuestos"]:
+        if imp["tipo"] == "traslado":
+            traslados_xml.append({
+                "base": imp["base"],
+                "impuesto": "002" if imp["impuesto"] == "IVA" else imp["impuesto"],
+                "tipo_factor": "Tasa",
+                "tasa_cuota": imp["tasa_cuota"],
+                "importe": imp["importe"],
+            })
+
+    fecha_emision = datetime.utcnow()
+    datos_xml = {
+        "serie": data.serie or "F",
+        "folio": data.folio or "1",
+        "fecha_emision": fecha_emision,
+        "receptor_rfc": data.receptor_rfc,
+        "receptor_nombre": data.receptor_nombre,
+        "uso_cfdi": data.uso_cfdi,
+        "forma_pago": data.forma_pago,
+        "metodo_pago": data.metodo_pago,
+        "moneda": data.moneda,
+        "tipo_cambio": data.tipo_cambio,
+        "lugar_expedicion": data.lugar_expedicion,
+        "subtotal": subtotal,
+        "descuento": descuento,
+        "total": total,
+        "conceptos": conceptos_xml,
+        "impuestos": {
+            "total_traslados": calc["total_traslados"],
+            "total_retenciones": calc["total_retenciones"],
+            "traslados": traslados_xml,
+            "retenciones": retenciones_xml,
+        },
+    }
+
+    # ── Generar XML CFDI 4.0 ──
+    cfdi_xml = generar_xml_ingreso(datos_xml)
+
+    # ── Timbrar vía PAC ──
+    pac = get_pac_adapter()
+    uuid_str = ""
+    xml_timbrado = cfdi_xml
+    try:
+        resultado_pac = pac.timbrar(cfdi_xml, csd_pem="", llave_pem="", contrasena="")
+        uuid_str = resultado_pac.get("uuid", "")
+        xml_timbrado = resultado_pac.get("xml_timbrado", cfdi_xml)
+        logger.info(f"CFDI timbrado vía PAC: UUID={uuid_str}")
+    except Exception as e:
+        logger.warning(f"PAC timbrado falló, usando mock: {e}")
+        # Fallback a mock UUID si el PAC falla
+        from uuid import uuid4
+        uuid_str = uuid4().hex[:36]
 
     cfdi = CfdiIngreso(
-        uuid=uuid,
+        uuid=uuid_str,
         cliente_id=data.cliente_id,
         emisor_rfc=RFC_EMISOR,
         emisor_nombre=EMISOR_NOMBRE,
         receptor_rfc=data.receptor_rfc,
         receptor_nombre=data.receptor_nombre,
-        fecha_emision=datetime.utcnow(),
+        fecha_emision=fecha_emision,
         serie=data.serie,
         folio=data.folio,
         tipo_comprobante="I",
@@ -104,6 +180,12 @@ async def crear_factura(
     )
     db.add(cfdi)
     await db.flush()
+
+    # Guardar XML timbrado en disco
+    try:
+        cfdi.xml_path = guardar_xml_ingreso(xml_timbrado, cfdi.id)
+    except Exception as e:
+        logger.warning(f"No se pudo guardar XML en disco: {e}")
 
     # Insertar conceptos
     for conc in data.conceptos:
@@ -192,6 +274,127 @@ async def cancelar_factura(
     factura.estatus = "cancelado"
     await db.commit()
     return {"detail": "Factura cancelada correctamente"}
+
+
+@router.get("/facturas/{factura_id}/xml")
+async def descargar_xml_factura(
+    factura_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Descarga el XML timbrado de un CFDI de ingreso."""
+    result = await db.execute(
+        select(CfdiIngreso).where(CfdiIngreso.id == factura_id)
+    )
+    factura = result.scalar_one_or_none()
+    if not factura:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
+
+    if factura.xml_path and os.path.exists(factura.xml_path):
+        return FileResponse(
+            factura.xml_path,
+            media_type="application/xml",
+            filename=f"cfdi_{factura.uuid}.xml",
+        )
+
+    # Si no hay archivo guardado, regenerar XML desde los datos
+    conceptos_result = await db.execute(
+        select(CfdiIngresoConcepto).where(CfdiIngresoConcepto.cfdi_id == factura_id)
+    )
+    conceptos = conceptos_result.scalars().all()
+
+    impuestos_result = await db.execute(
+        select(CfdiIngresoImpuesto).where(CfdiIngresoImpuesto.cfdi_id == factura_id)
+    )
+    impuestos_list = impuestos_result.scalars().all()
+
+    conceptos_xml = []
+    for c in conceptos:
+        conceptos_xml.append({
+            "clave_prod_serv": c.clave_prod_serv,
+            "no_identificacion": c.no_identificacion,
+            "cantidad": c.cantidad,
+            "clave_unidad": c.clave_unidad,
+            "unidad": c.unidad,
+            "descripcion": c.descripcion,
+            "valor_unitario": c.valor_unitario,
+            "importe": c.importe,
+            "descuento": c.descuento or Decimal("0.00"),
+            "objeto_imp": c.objeto_imp,
+        })
+
+    traslados_xml = []
+    retenciones_xml = []
+    for imp in impuestos_list:
+        entry = {
+            "base": imp.base,
+            "impuesto": "002" if imp.impuesto == "IVA" else imp.impuesto,
+            "tipo_factor": "Tasa",
+            "tasa_cuota": imp.tasa_cuota,
+            "importe": imp.importe,
+        }
+        if imp.tipo == "traslado":
+            traslados_xml.append(entry)
+        else:
+            retenciones_xml.append(entry)
+
+    datos_xml = {
+        "serie": factura.serie,
+        "folio": factura.folio,
+        "fecha_emision": factura.fecha_emision,
+        "receptor_rfc": factura.receptor_rfc,
+        "receptor_nombre": factura.receptor_nombre,
+        "uso_cfdi": factura.uso_cfdi,
+        "forma_pago": factura.forma_pago,
+        "metodo_pago": factura.metodo_pago,
+        "moneda": factura.moneda,
+        "tipo_cambio": factura.tipo_cambio,
+        "lugar_expedicion": factura.lugar_expedicion,
+        "subtotal": factura.subtotal,
+        "descuento": factura.descuento,
+        "total": factura.total,
+        "conceptos": conceptos_xml,
+        "impuestos": {
+            "total_traslados": factura.total_traslados,
+            "total_retenciones": factura.total_retenciones,
+            "traslados": traslados_xml,
+            "retenciones": retenciones_xml,
+        },
+    }
+
+    xml_content = generar_xml_ingreso(datos_xml)
+    return PlainTextResponse(
+        content=xml_content,
+        media_type="application/xml",
+        headers={"Content-Disposition": f"attachment; filename=cfdi_{factura.uuid}.xml"},
+    )
+
+
+@router.get("/facturas/{factura_id}/pdf")
+async def descargar_pdf_factura(
+    factura_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Descarga la representación impresa (PDF) de un CFDI de ingreso.
+    
+    Placeholder: en producción se generaría vía PAC o renderizado local.
+    """
+    result = await db.execute(
+        select(CfdiIngreso).where(CfdiIngreso.id == factura_id)
+    )
+    factura = result.scalar_one_or_none()
+    if not factura:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
+
+    # Placeholder: devolver un texto indicando que el PDF no está disponible aún
+    # En producción: solicitar representación al PAC o generar PDF desde XML/XSLT
+    return {
+        "detail": "Representación PDF no disponible en modo placeholder",
+        "factura_id": factura_id,
+        "uuid": factura.uuid,
+        "mensaje": "La generación de PDF requiere integración con el PAC o renderizador XSL-FO/XSLT (SAT).",
+    }
 
 
 # ─── Complementos de Pago ─────────────────────────

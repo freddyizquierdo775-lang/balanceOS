@@ -5,57 +5,24 @@ from datetime import datetime
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, extract
 from typing import List
 
 from app.database import get_db
-from app.models import CuentaContable, Poliza, PolizaDetalle
+from app.models import CuentaContable, Poliza, PolizaDetalle, MovimientoBancario, CuentaBancaria
 from app.schemas.estados_financieros import (
     BalanceGeneralResponse, EstadoResultadosResponse,
     FlujoEfectivoResponse, SaldoCuenta,
     CategoriaBalance, ActivoNested, PasivoNested, CapitalNested,
 )
 from app.routers.auth import verificar_token
+from app.utils.contabilidad import obtener_saldos_periodo
 
 router = APIRouter(prefix="/estados-financieros", tags=["estados-financieros"])
 
 
 def get_usuario_actual(token: dict = Depends(verificar_token)) -> dict:
     return token
-
-
-async def _obtener_saldos_periodo(db: AsyncSession, mes: int, anio: int) -> dict:
-    """Obtiene los saldos del período agrupados por cuenta contable."""
-    cuentas_result = await db.execute(
-        select(CuentaContable).where(CuentaContable.activo == True)
-    )
-    cuentas = cuentas_result.scalars().all()
-
-    detalles_result = await db.execute(
-        select(PolizaDetalle, Poliza)
-        .join(Poliza, PolizaDetalle.poliza_id == Poliza.id)
-        .where(Poliza.periodo_mes == mes)
-        .where(Poliza.periodo_anio == anio)
-    )
-    filas = detalles_result.all()
-
-    saldos = {}
-    for c in cuentas:
-        saldos[c.id] = {
-            "codigo": c.codigo,
-            "nombre": c.nombre,
-            "tipo": c.tipo,
-            "naturaleza": c.naturaleza,
-            "cargos": Decimal("0.00"),
-            "abonos": Decimal("0.00"),
-        }
-
-    for det, _ in filas:
-        if det.cuenta_id in saldos:
-            saldos[det.cuenta_id]["cargos"] += det.cargo
-            saldos[det.cuenta_id]["abonos"] += det.abono
-
-    return saldos
 
 
 def _saldo_deudora(cargos: Decimal, abonos: Decimal) -> Decimal:
@@ -77,7 +44,8 @@ async def balance_general(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el balance general desde la balanza (activo = pasivo + capital)."""
-    saldos = await _obtener_saldos_periodo(db, mes, anio)
+    # Saldos acumulados desde el inicio hasta el período actual
+    saldos = await obtener_saldos_periodo(db, mes, anio, acumulado=True)
 
     cuentas = []
     activo_total = Decimal("0.00")
@@ -102,15 +70,14 @@ async def balance_general(
         else:
             saldo_periodo = _saldo_acreedora(s["cargos"], s["abonos"])
 
-        saldo_anterior = Decimal("0.00")
-        saldo_actual = saldo_anterior + saldo_periodo
+        saldo_actual = saldo_periodo  # acumulado: saldo_actual IS the accumulated balance
 
         sc = SaldoCuenta(
             cuenta_id=sid,
             codigo=s["codigo"],
             nombre=s["nombre"],
             tipo=s["tipo"],
-            saldo_anterior=saldo_anterior,
+            saldo_anterior=Decimal("0.00"),
             saldo_periodo=saldo_periodo,
             saldo_actual=saldo_actual,
         )
@@ -181,7 +148,8 @@ async def estado_resultados(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el estado de resultados (ingresos - costos - gastos)."""
-    saldos = await _obtener_saldos_periodo(db, mes, anio)
+    # Estado de resultados usa solo el período actual (no acumulado)
+    saldos = await obtener_saldos_periodo(db, mes, anio, acumulado=False)
 
     cuentas = []
     ingresos_totales = Decimal("0.00")
@@ -254,9 +222,6 @@ async def flujo_efectivo(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el flujo de efectivo simplificado."""
-    # Usar movimientos bancarios como base para el flujo
-    from app.models import MovimientoBancario, CuentaBancaria
-
     # Obtener saldo inicial de cuentas activas
     cuentas_result = await db.execute(
         select(CuentaBancaria).where(CuentaBancaria.activo == True)
@@ -264,14 +229,12 @@ async def flujo_efectivo(
     cuentas = cuentas_result.scalars().all()
     saldo_inicial = sum(c.saldo_inicial for c in cuentas)
 
-    # Movimientos del período
-    from sqlalchemy import func
-
+    # Movimientos del período — usando extract() en lugar de func.strftime (portabilidad SQL)
     movs_result = await db.execute(
         select(MovimientoBancario)
         .where(
-            func.strftime("%m", MovimientoBancario.fecha) == f"{mes:02d}",
-            func.strftime("%Y", MovimientoBancario.fecha) == str(anio),
+            extract("month", MovimientoBancario.fecha) == mes,
+            extract("year", MovimientoBancario.fecha) == anio,
         )
     )
     movimientos = movs_result.scalars().all()

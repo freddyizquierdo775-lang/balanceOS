@@ -53,7 +53,7 @@ class Poliza(Base):
     concepto = Column(Text, nullable=False)
     periodo_mes = Column(Integer, nullable=False)
     periodo_anio = Column(Integer, nullable=False)
-    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -64,8 +64,8 @@ class PolizaDetalle(Base):
     __tablename__ = "polizas_detalles"
 
     id = Column(Integer, primary_key=True, index=True)
-    poliza_id = Column(Integer, ForeignKey("polizas.id"), nullable=False)
-    cuenta_id = Column(Integer, ForeignKey("cuentas_contables.id"), nullable=False)
+    poliza_id = Column(Integer, ForeignKey("polizas.id"), nullable=False, index=True)
+    cuenta_id = Column(Integer, ForeignKey("cuentas_contables.id"), nullable=False, index=True)
     cargo = Column(Numeric(14, 2), default=Decimal("0.00"))
     abono = Column(Numeric(14, 2), default=Decimal("0.00"))
     referencia = Column(String(100), nullable=True)

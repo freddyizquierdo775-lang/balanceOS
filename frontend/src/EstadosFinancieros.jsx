@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { estadosFinancieros } from './api';
 
 const fmt = (n) => {
   if (n === null || n === undefined) return '$0.00';
@@ -10,18 +11,6 @@ const meses = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-const apiFetch = async (path, options = {}) => {
-  const token = localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(path, { ...options, headers });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Error del servidor');
-  }
-  if (res.status === 204) return null;
-  return res.json();
-};
 
 export default function EstadosFinancieros({ usuario }) {
   const [tab, setTab] = useState('balance-general');
@@ -45,7 +34,7 @@ export default function EstadosFinancieros({ usuario }) {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch(`/estados-financieros/balance-general?mes=${mes}&anio=${anio}`);
+      const data = await estadosFinancieros.balanceGeneral(mes, anio);
       setBalanceData(data);
     } catch (err) {
       setError(err.message);
@@ -58,7 +47,7 @@ export default function EstadosFinancieros({ usuario }) {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch(`/estados-financieros/estado-resultados?mes=${mes}&anio=${anio}`);
+      const data = await estadosFinancieros.estadoResultados(mes, anio);
       setResultadosData(data);
     } catch (err) {
       setError(err.message);
@@ -71,7 +60,7 @@ export default function EstadosFinancieros({ usuario }) {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch(`/estados-financieros/flujo-efectivo?mes=${mes}&anio=${anio}`);
+      const data = await estadosFinancieros.flujoEfectivo(mes, anio);
       setFlujoData(data);
     } catch (err) {
       setError(err.message);

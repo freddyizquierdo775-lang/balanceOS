@@ -318,6 +318,102 @@ export default function Impuestos({ usuario }) {
                     </div>
                   </div>
                 </div>
+
+                {/* Brackets Table + Break-even */}
+                {calcResult.brackets && calcResult.brackets.length > 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-slate-900/5">
+                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                      Tarifa Progresiva ISR Art. 152 LISR
+                    </h3>
+
+                    {/* Break-even visual */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                        <span>Posición en la tarifa</span>
+                        <span>Utilidad: {fmt(calcResult.utilidad_fiscal)}</span>
+                      </div>
+                      <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
+                        {/* Background bracket segments */}
+                        {calcResult.brackets.map((b, i) => {
+                          const total = calcResult.brackets[calcResult.brackets.length - 1]?.limite_inferior || 1;
+                          const loPct = (parseFloat(b.limite_inferior) / parseFloat(total)) * 100;
+                          const hi = b.limite_superior;
+                          const hiPct = hi === 'Infinity' || hi === null
+                            ? 100
+                            : (Math.min(parseFloat(hi), parseFloat(total)) / parseFloat(total)) * 100;
+                          const width = hiPct - loPct;
+                          const isActive = parseFloat(b.base_gravable || 0) > 0 && (
+                            i === calcResult.brackets.length - 1 || parseFloat(calcResult.brackets[i + 1]?.base_gravable || 0) === 0
+                          );
+                          return (
+                            <div key={i}
+                              className={`absolute top-0 h-full transition-all ${isActive ? 'bg-[#2E8B57] z-10' : 'bg-slate-200'}`}
+                              style={{ left: `${loPct}%`, width: `${Math.max(width, 0.3)}%` }}
+                              title={`Bracket ${i + 1}: ${fmt(b.limite_inferior)} – ${hi === 'Infinity' || hi === null ? '∞' : fmt(hi)}`}
+                            />
+                          );
+                        })}
+                        {/* Marker dot */}
+                        {(() => {
+                          const util = parseFloat(calcResult.utilidad_fiscal || 0);
+                          const total = parseFloat(calcResult.brackets[calcResult.brackets.length - 1]?.limite_inferior || 1);
+                          const pct = Math.min((util / total) * 100, 100);
+                          return util > 0 ? (
+                            <div className="absolute top-1/2 -translate-y-1/2 z-20" style={{ left: `calc(${pct}% - 5px)` }}>
+                              <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border-2 border-white shadow-sm" />
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                      <div className="flex justify-between text-[9px] text-slate-300 mt-0.5">
+                        <span>$0</span>
+                        <span>{fmt(calcResult.brackets[calcResult.brackets.length - 1]?.limite_inferior)}+</span>
+                      </div>
+                    </div>
+
+                    {/* Brackets table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[11px]">
+                        <thead>
+                          <tr className="border-b border-slate-100 text-slate-400">
+                            <th className="text-left py-1.5 pr-2 font-medium">Límite inf.</th>
+                            <th className="text-left py-1.5 px-2 font-medium">Límite sup.</th>
+                            <th className="text-right py-1.5 px-2 font-medium">Tasa</th>
+                            <th className="text-right py-1.5 px-2 font-medium">Cuota fija</th>
+                            <th className="text-right py-1.5 px-2 font-medium">Base gravable</th>
+                            <th className="text-right py-1.5 pl-2 font-medium">Impuesto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {calcResult.brackets.map((b, i) => {
+                            const isActive = parseFloat(b.base_gravable || 0) > 0 && (
+                              i === calcResult.brackets.length - 1 ||
+                              parseFloat(calcResult.brackets[i + 1]?.base_gravable || 0) === 0
+                            );
+                            const hiDisplay = b.limite_superior === 'Infinity' || b.limite_superior === null
+                              ? '∞'
+                              : fmt(b.limite_superior);
+                            return (
+                              <tr key={i}
+                                className={`border-b border-slate-50 transition-colors ${isActive ? 'bg-[#2E8B57]/8 font-semibold' : parseFloat(b.base_gravable || 0) > 0 ? 'bg-slate-50' : 'text-slate-300'}`}>
+                                <td className="py-1.5 pr-2 text-slate-700 font-mono">{fmt(b.limite_inferior)}</td>
+                                <td className="py-1.5 px-2 text-slate-700 font-mono">{hiDisplay}</td>
+                                <td className="py-1.5 px-2 text-right font-mono">{(parseFloat(b.tasa) * 100).toFixed(2)}%</td>
+                                <td className="py-1.5 px-2 text-right font-mono">{fmt(b.cuota_fija)}</td>
+                                <td className={`py-1.5 px-2 text-right font-mono ${isActive ? 'text-[#2E8B57]' : ''}`}>
+                                  {fmt(b.base_gravable)}
+                                </td>
+                                <td className={`py-1.5 pl-2 text-right font-mono ${isActive ? 'text-[#2E8B57]' : ''}`}>
+                                  {fmt(b.impuesto)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 

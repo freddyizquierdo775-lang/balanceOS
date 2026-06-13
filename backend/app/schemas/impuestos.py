@@ -62,6 +62,24 @@ class CalculoImpuestosResponse(BaseModel):
     tasa_efectiva: Optional[Decimal] = None
     isr_retenciones: Optional[Decimal] = None
     isr_pago_provisional: Optional[Decimal] = None
+    brackets: Optional[List["BracketDetalle"]] = None
+
+class BracketDetalle(BaseModel):
+    limite_inferior: Decimal
+    limite_superior: Optional[Decimal] = None
+    tasa: Decimal
+    cuota_fija: Decimal
+    base_gravable: Decimal
+    impuesto: Decimal
+
+class CalculoDetalladoResponse(BaseModel):
+    utilidad_fiscal: Decimal
+    tasa_efectiva: Decimal
+    isr_bruto: Decimal
+    isr_retenciones: Decimal
+    isr_pago_provisional: Decimal
+    isr_neto: Decimal
+    brackets: List[BracketDetalle]
 
 class DiotResponse(BaseModel):
     periodo_mes: int

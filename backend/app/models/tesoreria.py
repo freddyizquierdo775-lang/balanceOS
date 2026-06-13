@@ -33,13 +33,13 @@ class MovimientoBancario(Base):
     __tablename__ = "movimientos_bancarios"
 
     id = Column(Integer, primary_key=True, index=True)
-    cuenta_id = Column(Integer, ForeignKey("cuentas_bancarias.id"), nullable=False)
+    cuenta_id = Column(Integer, ForeignKey("cuentas_bancarias.id"), nullable=False, index=True)
     fecha = Column(DateTime, nullable=False)
     tipo = Column(String(10), nullable=False)  # cargo / abono
     concepto = Column(String(500), nullable=False)
     monto = Column(Numeric(14, 2), nullable=False)
     referencia = Column(String(100), nullable=True)
-    poliza_id = Column(Integer, ForeignKey("polizas.id"), nullable=True)
+    poliza_id = Column(Integer, ForeignKey("polizas.id"), nullable=True, index=True)
     conciliado = Column(Boolean, default=False)
     fecha_conciliacion = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

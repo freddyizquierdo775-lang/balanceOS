@@ -16,6 +16,7 @@ from app.schemas.contabilidad import (
     BalanzaResponse, CuentaSaldo,
 )
 from app.routers.auth import verificar_token
+from app.utils.contabilidad import obtener_saldos_periodo
 
 router = APIRouter(prefix="/contabilidad", tags=["contabilidad"])
 
@@ -228,41 +229,18 @@ async def calcular_balanza(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Calcula la balanza de comprobación para un período (cargos/abonos por cuenta)."""
-    # Obtener todas las cuentas activas
-    cuentas_result = await db.execute(
-        select(CuentaContable).where(CuentaContable.activo == True).order_by(CuentaContable.codigo)
-    )
-    cuentas = cuentas_result.scalars().all()
-
-    # Obtener movimientos (detalles de pólizas) del período
-    detalles_result = await db.execute(
-        select(PolizaDetalle, Poliza.fecha, Poliza.periodo_mes, Poliza.periodo_anio)
-        .join(Poliza, PolizaDetalle.poliza_id == Poliza.id)
-        .where(Poliza.periodo_mes == mes)
-        .where(Poliza.periodo_anio == anio)
-    )
-    filas = detalles_result.all()
-
-    # Acumular saldos por cuenta
-    saldos = {}
-    for c in cuentas:
-        saldos[c.id] = {"cargos": Decimal("0.00"), "abonos": Decimal("0.00")}
-
-    for det, _, _, _ in filas:
-        if det.cuenta_id in saldos:
-            saldos[det.cuenta_id]["cargos"] += det.cargo
-            saldos[det.cuenta_id]["abonos"] += det.abono
+    saldos = await obtener_saldos_periodo(db, mes, anio, acumulado=False)
 
     cuentas_saldo = []
     total_cargos = Decimal("0.00")
     total_abonos = Decimal("0.00")
 
-    for c in cuentas:
-        cargos = saldos[c.id]["cargos"]
-        abonos = saldos[c.id]["abonos"]
+    for cuenta_id, s in sorted(saldos.items(), key=lambda x: x[1]["codigo"]):
+        cargos = s["cargos"]
+        abonos = s["abonos"]
 
         # Calcular saldo según naturaleza
-        if c.naturaleza == "deudora":
+        if s["naturaleza"] == "deudora":
             saldo_final = cargos - abonos
         else:
             saldo_final = abonos - cargos
@@ -271,9 +249,9 @@ async def calcular_balanza(
         total_abonos += abonos
 
         cuentas_saldo.append(CuentaSaldo(
-            cuenta_id=c.id,
-            codigo=c.codigo,
-            nombre=c.nombre,
+            cuenta_id=cuenta_id,
+            codigo=s["codigo"],
+            nombre=s["nombre"],
             saldo_inicial=Decimal("0.00"),
             cargos=cargos,
             abonos=abonos,

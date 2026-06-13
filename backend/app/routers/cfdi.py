@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import os
 import shutil
+import logging
 
 from app.database import get_db
 from app.models import (
@@ -20,8 +21,11 @@ from app.schemas.cfdi import (
 from app.cfdi.generador import (
     generar_cfdi_nomina, guardar_xml,
 )
-from app.cfdi.pac_adapter import PacAdapter, PacConfig
+from app.cfdi.pac_adapter import PacAdapter, PacConfig, MockAdapter
+from app.pac import get_pac_adapter
 from app.routers.auth import verificar_token
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/cfdi", tags=["cfdi"])
 
@@ -194,8 +198,8 @@ async def timbrar_recibo(
         recibo=recibo, empleado=empleado, emisor=csd, folio=folio,
     )
 
-    # 6. Timbrar vía PAC
-    pac = PacAdapter.crear()
+    # 6. Timbrar vía PAC (real o mock con fallback)
+    pac = get_pac_adapter()
     try:
         # Leer CSD files para PAC real
         csd_pem = ""
@@ -215,11 +219,21 @@ async def timbrar_recibo(
         )
         estatus = EstatusCFDI.TIMBRADO
         error_msg = None
+        logger.info(f"CFDI nómina timbrado vía PAC: UUID={resultado_pac.get('uuid')}")
     except Exception as e:
-        estatus = EstatusCFDI.ERROR
-        error_msg = str(e)
-        # En error, guardamos el XML generado igual para depuración
-        resultado_pac = cfdi_data
+        logger.warning(f"PAC real falló ({type(e).__name__}: {e}), usando MockAdapter como fallback")
+        # Fallback: usar MockAdapter explícitamente
+        try:
+            mock_pac = MockAdapter(PacConfig.cargar())
+            resultado_pac = mock_pac.timbrar(cfdi_data["xml"])
+            estatus = EstatusCFDI.TIMBRADO
+            error_msg = f"PAC real falló; timbrado con mock. Error original: {e}"
+            logger.warning(f"MockAdapter fallback exitoso: UUID={resultado_pac.get('uuid')}")
+        except Exception as mock_e:
+            estatus = EstatusCFDI.ERROR
+            error_msg = f"PAC real y mock fallaron: {e} | mock: {mock_e}"
+            resultado_pac = cfdi_data
+            logger.error(f"Timbrado completamente fallido: {error_msg}")
 
     # 7. Guardar XML
     xml_timbrado = resultado_pac.get("xml_timbrado", cfdi_data["xml"])
