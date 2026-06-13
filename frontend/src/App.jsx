@@ -20,6 +20,8 @@ import Impuestos from './Impuestos';
 import Facturacion from './Facturacion';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
+import NavRail from './components/NavRail';
+import SidePanel from './components/SidePanel';
 import { setOnUnauthorized } from './api';
 
 // ─── Responsive hook ──────────────────────────────
@@ -54,6 +56,28 @@ const DESKTOP_NAV = [
   { key: 'alertas-efos', label: 'Alertas EFOS' },
   { key: 'api-publica', label: 'API Pública' },
 ];
+
+// ─── Page titles for desktop header ────────────────
+const PAGE_TITLES = {
+  'dashboard': 'Dashboard',
+  'clientes': 'Clientes',
+  'contabilidad': 'Contabilidad',
+  'facturacion': 'Facturación',
+  'nomina': 'Nómina',
+  'imss': 'Motor IMSS',
+  'repse': 'REPSE',
+  'pld': 'PLD',
+  'finiquitos': 'Finiquitos',
+  'cfdi': 'CFDI',
+  'impuestos': 'Impuestos',
+  'empleados': 'Empleados',
+  'tesoreria': 'Tesorería',
+  'estados-financieros': 'Estados Financieros',
+  'alertas-efos': 'Alertas EFOS',
+  'api-publica': 'API Pública',
+  'usuarios': 'Usuarios',
+  'module-settings': 'Módulos',
+};
 
 export default function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -182,56 +206,78 @@ export default function App() {
     );
   }
 
-  // ─── TABLET / DESKTOP LAYOUT ───────────────────
+  // ─── DESKTOP LAYOUT (>=768px) ────────────────────
+  // Glassmorphism 3-column premium layout
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-900/5">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5">
-              <LogoIcon />
-              <div className="flex flex-col leading-none">
-                <span className="text-[15px] font-semibold tracking-tighter text-slate-900">Balance</span>
-                <span className="text-[10px] text-slate-400 tracking-wide -mt-0.5">OS</span>
-              </div>
-            </div>
-            <div className="flex gap-1 flex-wrap">
-              {DESKTOP_NAV.map(item => (
-                <button
-                  key={item.key}
-                  onClick={() => setPage(item.key)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
-                    page === item.key ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-              {usuario.rol === 'admin' && (
-                <button
-                  onClick={() => setPage('usuarios')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
-                    page === 'usuarios' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Usuarios
-                </button>
-              )}
-            </div>
-          </div>
+    <div className="flex h-screen overflow-hidden bg-[#f5f5f5]">
+      {/* Columna 1: Rail izquierdo — 56px */}
+      <NavRail
+        usuario={usuario}
+        page={page}
+        setPage={navigate}
+        cerrarSesion={cerrarSesion}
+      />
+
+      {/* Columna 2: Panel medio glass — 260px */}
+      <SidePanel
+        usuario={usuario}
+        page={page}
+        setPage={navigate}
+      />
+
+      {/* Columna 3: Contenido principal — flex-1 */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header superior glass */}
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-900/5 px-6 h-14 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-medium text-white bg-slate-400 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <div className="flex items-center gap-2">
+              <LogoIcon />
+              <span className="text-[13px] font-semibold text-slate-400 tracking-wide hidden lg:inline">Balance OS</span>
+            </div>
+            <div className="w-px h-5 bg-slate-200 hidden lg:block" />
+            <h1 className="text-sm font-semibold text-slate-900">
+              {PAGE_TITLES[page] || 'Clientes'}
+            </h1>
+            <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
               {rolLabel[usuario.rol] || usuario.rol}
             </span>
-            <span className="text-xs text-slate-500">{usuario.nombre}</span>
-            <button onClick={cerrarSesion} className="text-xs text-slate-400 hover:text-red-500 transition-colors">Salir</button>
           </div>
-        </div>
-      </nav>
+          <div className="flex items-center gap-3">
+            {/* Module settings button */}
+            <button
+              onClick={() => navigate('module-settings')}
+              className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              title="Configurar módulos"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+            </button>
+            {/* Notifications */}
+            <button className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors relative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </button>
+            {/* User pill */}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-semibold text-slate-600">
+                {usuario.nombre?.charAt(0) || 'U'}
+              </div>
+              <span className="text-xs text-slate-500 hidden lg:inline">{usuario.nombre}</span>
+            </div>
+            {/* Logout */}
+            <button onClick={cerrarSesion} className="text-xs text-slate-400 hover:text-red-500 transition-colors ml-1">
+              Salir
+            </button>
+          </div>
+        </header>
 
-      {/* Main */}
-      {renderPage()}
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto">
+          {renderPage()}
+        </div>
+      </div>
     </div>
   );
 }
