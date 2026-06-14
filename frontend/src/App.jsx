@@ -166,32 +166,30 @@ export default function App() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
-        {/* Mobile header */}
-        <header className="sticky top-0 z-30 bg-[#141414]/90 backdrop-blur-md border-b border-[#262626] safe-top">
-          <div className="flex items-center justify-between h-14 px-4">
+        {/* Mobile header — clean, compact */}
+        <header className="sticky top-0 z-30 bg-[#141414]/95 backdrop-blur-xl border-b border-[#262626] safe-top">
+          <div className="flex items-center justify-between h-12 px-3">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:bg-[#262626] transition-all duration-200 touch-manipulation"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-[#A1A1AA] hover:bg-[#262626] hover:text-[#D4D4D8] transition-all touch-manipulation"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div className="flex items-center gap-2.5">
-              <LogoIcon />
-              <div className="flex flex-col leading-none">
-                <span className="text-[15px] font-semibold tracking-tighter text-white">Balance</span>
-                <span className="text-[10px] text-[#A1A1AA] tracking-wide -mt-0.5">OS</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-white tracking-tight">
+                {PAGE_TITLES[page] || 'Balance OS'}
+              </span>
             </div>
-            <span className="text-[10px] font-medium text-white bg-[#52525B] px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="text-[9px] font-medium text-[#A1A1AA] bg-[#262626] px-2 py-0.5 rounded-full uppercase tracking-wider">
               {rolLabel[usuario.rol] || usuario.rol}
             </span>
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="flex-1">
+        {/* Main content — with bottom padding for nav */}
+        <main className="flex-1 overflow-y-auto pb-20">
           {renderPage()}
         </main>
 

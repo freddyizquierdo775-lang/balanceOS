@@ -75,6 +75,26 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
 
+/* ─── NavRail custom scrollbar (thinner) ──────────── */
+.scrollbar-custom::-webkit-scrollbar { width: 3px; }
+.scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.scrollbar-custom::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ─── Mask bottom fade (indicador de scroll) ──────── */
+.mask-bottom-fade::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to top, var(--bg-primary), transparent);
+  pointer-events: none;
+  display: block;
+  flex-shrink: 0;
+  margin-top: -24px;
+}
+
 /* ─── Selection ────────────────────────────────────── */
 ::selection {
   background: rgba(16, 185, 129, 0.25);

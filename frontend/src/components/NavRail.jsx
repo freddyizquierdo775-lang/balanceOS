@@ -237,10 +237,12 @@ export default function NavRail({ usuario, page, setPage, cerrarSesion, alertCou
       </div>
 
       {/* Main nav items */}
-      <div className="flex flex-col items-center gap-1 flex-1 pt-1 overflow-y-auto">
+      <div className="flex flex-col items-center gap-1 flex-1 pt-1 overflow-y-auto scrollbar-custom mask-bottom-fade relative">
         {navItems.map((item) => (
           <NavButton key={item.id} item={item} />
         ))}
+        {/* Scroll indicator gradient — fades in when scrollable */}
+        <div className="sticky bottom-0 w-full h-8 bg-gradient-to-t from-[#0A0A0A]/90 to-transparent pointer-events-none mt-[-2rem]" />
       </div>
 
       {/* Subtle separator */}
