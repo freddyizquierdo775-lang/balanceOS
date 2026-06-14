@@ -87,6 +87,12 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [page, setPage] = useState('clientes');
+  const [subPage, setSubPage] = useState(null);
+
+  // Reset subPage when module changes
+  useEffect(() => {
+    setSubPage(null);
+  }, [page]);
 
   // ─── Responsive state ─────────────────────────
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -134,25 +140,25 @@ export default function App() {
     const wrap = (el) => <div className={contentClass}>{el}</div>;
 
     switch (page) {
-      case 'clientes': return wrap(<Clientes usuario={usuario} />);
-      case 'dashboard': return wrap(<Dashboard usuario={usuario} />);
-      case 'usuarios': return wrap(<Usuarios usuario={usuario} />);
-      case 'imss': return wrap(<IMSS usuario={usuario} />);
-      case 'nomina': return wrap(<NOMINA usuario={usuario} />);
-      case 'repse': return wrap(<REPSE usuario={usuario} />);
-      case 'pld': return wrap(<PLD usuario={usuario} />);
-      case 'finiquitos': return wrap(<FINIQUITOS usuario={usuario} />);
-      case 'cfdi': return wrap(<CFDI usuario={usuario} />);
-      case 'empleados': return wrap(<Empleados usuario={usuario} />);
-      case 'tesoreria': return wrap(<Tesoreria usuario={usuario} />);
-      case 'estados-financieros': return wrap(<EstadosFinancieros usuario={usuario} />);
-      case 'alertas-efos': return wrap(<AlertasEfos usuario={usuario} />);
-      case 'api-publica': return wrap(<ApiPublica usuario={usuario} />);
-      case 'contabilidad': return wrap(<Contabilidad usuario={usuario} />);
-      case 'impuestos': return wrap(<Impuestos usuario={usuario} />);
-      case 'facturacion': return wrap(<Facturacion usuario={usuario} />);
-      case 'crm': return wrap(<CRM usuario={usuario} />);
-      default: return wrap(<Clientes usuario={usuario} />);
+      case 'clientes': return wrap(<Clientes usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'dashboard': return wrap(<Dashboard usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'usuarios': return wrap(<Usuarios usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'imss': return wrap(<IMSS usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'nomina': return wrap(<NOMINA usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'repse': return wrap(<REPSE usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'pld': return wrap(<PLD usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'finiquitos': return wrap(<FINIQUITOS usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'cfdi': return wrap(<CFDI usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'empleados': return wrap(<Empleados usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'tesoreria': return wrap(<Tesoreria usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'estados-financieros': return wrap(<EstadosFinancieros usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'alertas-efos': return wrap(<AlertasEfos usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'api-publica': return wrap(<ApiPublica usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'contabilidad': return wrap(<Contabilidad usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'impuestos': return wrap(<Impuestos usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'facturacion': return wrap(<Facturacion usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'crm': return wrap(<CRM usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      default: return wrap(<Clientes usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
     }
   };
 
@@ -235,6 +241,8 @@ export default function App() {
         usuario={usuario}
         page={page}
         setPage={navigate}
+        subPage={subPage}
+        setSubPage={setSubPage}
       />
 
       {/* Columna 3: Contenido principal — flex-1 */}

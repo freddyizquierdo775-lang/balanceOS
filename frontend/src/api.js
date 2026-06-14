@@ -61,6 +61,22 @@ export const documentos = {
 export const imss = {
   calcular: (data) => api('/imss/calcular', { method: 'POST', body: JSON.stringify(data) }),
   factorIntegracion: (data) => api('/imss/factor-integracion', { method: 'POST', body: JSON.stringify(data) }),
+  // Riesgos
+  riesgos: () => api('/imss/riesgos'),
+  // Altas
+  listarAltas: (params = '') => api(`/imss/altas${params}`),
+  crearAlta: (data) => api('/imss/altas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarAlta: (id, data) => api(`/imss/altas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  // Bajas
+  listarBajas: (params = '') => api(`/imss/bajas${params}`),
+  crearBaja: (data) => api('/imss/bajas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarBaja: (id, data) => api(`/imss/bajas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  // Trámites
+  listarTramites: (params = '') => api(`/imss/tramites${params}`),
+  crearTramite: (data) => api('/imss/tramites', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarTramite: (id, data) => api(`/imss/tramites/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  // Resumen
+  resumen: (clienteId = '') => api(`/imss/resumen${clienteId ? `?cliente_id=${clienteId}` : ''}`),
 };
 
 export const nomina = {

@@ -594,6 +594,53 @@ function ContextualContent({ page, searchQuery, setPage }) {
   );
 }
 
+// ─── Sub-menu navigation maps ───────────────────────────────────────
+const subMenuMap = {
+  'clientes': ['Todos', 'Activos', 'Prospectos', 'Vencimientos'],
+  'contabilidad': ['Catálogo', 'Pólizas', 'Balanza'],
+  'facturacion': ['Facturas', 'Complementos', 'Canceladas'],
+  'nomina': ['Períodos', 'Recibos', 'Cálculo'],
+  'imss': ['Calculadora', 'Altas', 'Bajas', 'Trámites', 'Riesgos', 'Resumen'],
+  'repse': ['Registros', 'Personal', 'Avisos'],
+  'pld': ['Cuestionarios', 'Documentos', 'Verificaciones'],
+  'finiquitos': ['Buscador', 'Cálculo', 'Historial'],
+  'cfdi': ['Timbrado', 'Historial', 'CSD'],
+  'impuestos': ['Calculadora', 'Declaraciones', 'DIOT', 'Estímulos'],
+  'empleados': ['Activos', 'Historial', 'Altas/Bajas'],
+  'tesoreria': ['Cuentas', 'Movimientos', 'Conciliación'],
+  'estados-financieros': ['Balance', 'Resultados', 'Flujo Efectivo'],
+  'alertas-efos': ['Panel', 'Verificar', 'Carga CSV'],
+  'api-publica': ['Endpoints', 'Documentación'],
+  'crm': ['Timeline', 'Seguimientos', 'Notas'],
+  'dashboard': ['Resumen', 'KPIs', 'Actividad'],
+};
+
+// ─── Badges for sub-menu items (pending counts, etc.) ─────────────
+const subMenuBadges = {
+  'imss': { 'Altas': 3, 'Bajas': 1 },
+};
+
+// ─── Page display labels for sub-menu header ─────────────────────
+const pageLabels = {
+  'clientes': 'Clientes',
+  'contabilidad': 'Contabilidad',
+  'facturacion': 'Facturación',
+  'nomina': 'Nómina',
+  'imss': 'IMSS',
+  'repse': 'REPSE',
+  'pld': 'PLD',
+  'finiquitos': 'Finiquitos',
+  'cfdi': 'CFDI',
+  'impuestos': 'Impuestos',
+  'empleados': 'Empleados',
+  'tesoreria': 'Tesorería',
+  'estados-financieros': 'Estados Fin.',
+  'alertas-efos': 'Alertas EFOS',
+  'api-publica': 'API Pública',
+  'crm': 'CRM',
+  'dashboard': 'Dashboard',
+};
+
 // ─── Module chips (shared across all pages) ─────────────────────────
 const allModules = [
   { id: 'clientes', label: 'Clientes', active: true },
@@ -612,8 +659,81 @@ const allModules = [
   { id: 'crm', label: 'CRM', active: true },
 ];
 
+// ─── Sub-menu navigation component ──────────────────────────────────
+function SubMenu({ page, subPage, setSubPage, collapsed }) {
+  const items = subMenuMap[page];
+  if (!items || items.length <= 1) return null;
+
+  const badges = subMenuBadges[page] || {};
+
+  // ── Collapsed: icon-only mode ──────────────────
+  if (collapsed) {
+    return (
+      <div className="flex flex-col gap-1 items-center w-full">
+        {items.map((item) => {
+          const isActive = subPage === item;
+          return (
+            <button
+              key={item}
+              onClick={() => setSubPage?.(item)}
+              className={`
+                w-7 h-7 rounded-md flex items-center justify-center
+                transition-all duration-150
+                ${isActive
+                  ? 'bg-[#1A1A1A] text-emerald-400 ring-1 ring-emerald-500/30'
+                  : 'text-[#71717A] hover:text-[#D4D4D8] hover:bg-[#1A1A1A]'
+                }
+              `}
+              title={item}
+            >
+              <span className="text-[9px] font-bold leading-none">{item.charAt(0)}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ── Expanded: full text with green left bar ───
+  return (
+    <div>
+      <h3 className="text-[11px] font-bold text-[#A1A1AA] uppercase tracking-[0.08em] mb-2 px-1">
+        {pageLabels[page] || page}
+      </h3>
+      <div className="flex flex-col">
+        {items.map((item) => {
+          const isActive = subPage === item;
+          const badge = badges[item];
+          return (
+            <button
+              key={item}
+              onClick={() => setSubPage?.(item)}
+              className={`
+                flex items-center gap-2 px-3 py-1.5
+                text-left transition-all duration-150 cursor-pointer
+                border-l-2
+                ${isActive
+                  ? 'border-emerald-400 bg-[#1A1A1A] text-white'
+                  : 'border-transparent text-[#A1A1AA] hover:bg-[#1A1A1A] hover:text-[#D4D4D8]'
+                }
+              `}
+            >
+              <span className="text-[12px] font-medium flex-1">{item}</span>
+              {badge != null && (
+                <span className="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                  {badge} pendiente{badge !== 1 ? 's' : ''}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main SidePanel component ───────────────────────────────────────
-export default function SidePanel({ usuario, page, setPage, sidebarCollapsed, onToggleSidebar }) {
+export default function SidePanel({ usuario, page, setPage, subPage, setSubPage, sidebarCollapsed, onToggleSidebar }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [localCollapsed, setLocalCollapsed] = useState(sidebarCollapsed ?? false);
 
@@ -626,6 +746,10 @@ export default function SidePanel({ usuario, page, setPage, sidebarCollapsed, on
       setLocalCollapsed(!collapsed);
     }
   };
+
+  // Effective subPage: defaults to first item in the current module's sub-menu
+  const defaultSubPage = subMenuMap[page]?.[0] || null;
+  const effectiveSubPage = subPage || defaultSubPage;
 
   return (
     <aside className={`
@@ -717,6 +841,14 @@ export default function SidePanel({ usuario, page, setPage, sidebarCollapsed, on
             />
           </div>
         )}
+
+        {/* ─── Sub-menu navigation (always visible) ── */}
+        <SubMenu
+          page={page}
+          subPage={effectiveSubPage}
+          setSubPage={setSubPage}
+          collapsed={collapsed}
+        />
 
         {/* ─── Contextual content per module ───── */}
         {!collapsed && (
