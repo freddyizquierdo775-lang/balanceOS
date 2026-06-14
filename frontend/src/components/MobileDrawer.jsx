@@ -19,7 +19,7 @@ const ALL_SECTIONS = [
   { key: 'api-publica',         label: 'API Publica',         icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
 ];
 
-export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, onNavigate, onLogout }) {
+export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, theme, onToggleTheme, onNavigate, onLogout }) {
   const startX = useRef(0);
   const dragging = useRef(false);
 
@@ -91,14 +91,24 @@ export default function MobileDrawer({ isOpen, onClose, currentPage, usuario, on
               <span className="text-[10px] text-[#A1A1AA] tracking-wide -mt-0.5">OS</span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:text-[#D4D4D8] hover:bg-[#262626] transition-all duration-200"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Theme toggle */}
+            <button
+              onClick={onToggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:text-[#F59E0B] hover:bg-[#262626] transition-all duration-200"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              <span className="text-lg leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#A1A1AA] hover:text-[#D4D4D8] hover:bg-[#262626] transition-all duration-200"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* User info */}

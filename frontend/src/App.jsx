@@ -90,6 +90,15 @@ export default function App() {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
+  // ─── Apply theme class to <html> ──────────────
+  useEffect(() => {
+    document.documentElement.classList.toggle('light-theme', theme === 'light');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
 
   const cerrarSesion = () => {
     localStorage.removeItem('token');
@@ -199,6 +208,8 @@ export default function App() {
           onClose={() => setDrawerOpen(false)}
           currentPage={page}
           usuario={usuario}
+          theme={theme}
+          onToggleTheme={toggleTheme}
           onNavigate={navigate}
           onLogout={cerrarSesion}
         />
@@ -252,6 +263,14 @@ export default function App() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
               </svg>
+            </button>
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-8 h-8 rounded-lg hover:bg-[#262626] flex items-center justify-center text-[#A1A1AA] hover:text-[#F59E0B] transition-colors"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
             </button>
             {/* Notifications */}
             <button className="w-8 h-8 rounded-lg hover:bg-[#262626] flex items-center justify-center text-[#A1A1AA] hover:text-[#D4D4D8] transition-colors relative">

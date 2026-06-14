@@ -34,6 +34,32 @@
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* ─── Light Theme Overrides ───────────────────────── */
+:root.light-theme {
+  --bg-primary: #F9FAFB;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F3F4F6;
+  --bg-elevated: #E5E7EB;
+  --bg-hover: #D1D5DB;
+
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --text-dim: #D1D5DB;
+
+  --border-primary: #E5E7EB;
+  --border-subtle: #F3F4F6;
+
+  --accent-green: #059669;
+  --accent-green-dim: rgba(5, 150, 105, 0.10);
+  --accent-amber: #D97706;
+  --accent-red: #DC2626;
+  --accent-red-dim: rgba(220, 38, 38, 0.10);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
 /* ─── Base ─────────────────────────────────────────── */
 body {
   background: var(--bg-primary);
