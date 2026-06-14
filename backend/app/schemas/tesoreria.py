@@ -75,6 +75,19 @@ class EstadoCuentaResponse(BaseModel):
     total_abonos: Decimal
     saldo_final: Decimal
 
+class ClienteResumenResponse(BaseModel):
+    id: int
+    razon_social: str
+    num_cuentas: int
+    saldo_total: Decimal
+    ultimo_movimiento: Optional[datetime] = None
+
+class ResumenResponse(BaseModel):
+    saldo_total: Decimal
+    ingresos_mes: Decimal
+    egresos_mes: Decimal
+    cuentas_activas: int
+
 # --- EFOS ---
 class ListaEfosCreate(BaseModel):
     rfc: str

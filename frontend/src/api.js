@@ -98,9 +98,11 @@ export const pld = {
 export const finiquitos = {
   preview: (data) => api('/finiquitos/preview', { method: 'POST', body: JSON.stringify(data) }),
   calcular: (data) => api('/finiquitos/calcular', { method: 'POST', body: JSON.stringify(data) }),
-  listar: () => api('/finiquitos/'),
+  listar: (clienteId = '') => api(`/finiquitos/${clienteId ? `?cliente_id=${clienteId}` : ''}`),
   obtener: (id) => api(`/finiquitos/${id}`),
   porEmpleado: (eid) => api(`/finiquitos/empleado/${eid}`),
+  buscarTrabajador: (q) => api(`/finiquitos/buscar-trabajador?q=${encodeURIComponent(q)}`),
+  datosTrabajador: (eid, fechaBaja = '') => api(`/finiquitos/trabajador/${eid}/datos${fechaBaja ? `?fecha_baja=${fechaBaja}` : ''}`),
 };
 
 export const cfdi = {
@@ -160,9 +162,21 @@ export const facturacion = {
 };
 
 export const tesoreria = {
-  listarCuentas: () => api('/tesoreria/cuentas'),
+  // Clientes (vista multi-cliente)
+  listarClientes: () => api('/tesoreria/clientes'),
+  resumen: (clienteId) => api(`/tesoreria/resumen${clienteId ? `?cliente_id=${clienteId}` : ''}`),
+  // Cuentas
+  listarCuentas: (clienteId) => api(`/tesoreria/cuentas${clienteId ? `?cliente_id=${clienteId}` : ''}`),
   crearCuenta: (data) => api('/tesoreria/cuentas', { method: 'POST', body: JSON.stringify(data) }),
-  listarMovimientos: (cuentaId) => api(`/tesoreria/movimientos?cuenta_id=${cuentaId}`),
+  // Movimientos
+  listarMovimientos: ({ cuentaId, clienteId, limite } = {}) => {
+    const params = new URLSearchParams();
+    if (cuentaId) params.append('cuenta_id', cuentaId);
+    if (clienteId) params.append('cliente_id', clienteId);
+    if (limite) params.append('limite', limite);
+    const qs = params.toString();
+    return api(`/tesoreria/movimientos${qs ? `?${qs}` : ''}`);
+  },
   crearMovimiento: (data) => api('/tesoreria/movimientos', { method: 'POST', body: JSON.stringify(data) }),
   conciliar: (data) => api('/tesoreria/conciliar', { method: 'POST', body: JSON.stringify(data) }),
   estadoCuenta: (cuentaId, mes, anio) => api(`/tesoreria/estado-cuenta/${cuentaId}?mes=${mes}&anio=${anio}`),
@@ -183,4 +197,18 @@ export const alertasEfos = {
   resolverAlerta: (alertaId) => api(`/alertas-efos/alertas/${alertaId}/resolver`, { method: 'PUT' }),
   actualizarDesdeSAT: () => api('/alertas-efos/actualizar', { method: 'POST' }),
   cargarCSV: (tipoLista, contenido) => api(`/alertas-efos/carga-csv?tipo_lista=${encodeURIComponent(tipoLista)}&contenido=${encodeURIComponent(contenido)}`, { method: 'POST' }),
+};
+
+export const crm = {
+  // Seguimientos
+  listarSeguimientos: (params = '') => api(`/crm/seguimientos${params}`),
+  crearSeguimiento: (data) => api('/crm/seguimientos', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarSeguimiento: (id, data) => api(`/crm/seguimientos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  // Notas
+  listarNotas: (clienteId = '') => api(`/crm/notas${clienteId ? `?cliente_id=${clienteId}` : ''}`),
+  crearNota: (data) => api('/crm/notas', { method: 'POST', body: JSON.stringify(data) }),
+  // Timeline
+  timeline: (clienteId = '', entidad = '') => api(`/crm/timeline${clienteId || entidad ? `?${clienteId ? `cliente_id=${clienteId}` : ''}${clienteId && entidad ? '&' : ''}${entidad ? `entidad=${entidad}` : ''}` : ''}`),
+  // Búsqueda global
+  buscar: (q) => api(`/crm/buscar?q=${encodeURIComponent(q)}`),
 };

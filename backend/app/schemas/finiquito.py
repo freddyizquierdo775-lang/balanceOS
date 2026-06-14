@@ -59,3 +59,37 @@ class FiniquitoPreview(BaseModel):
     total_deducciones: Decimal
     neto: Decimal
     isr_detalle: Optional[dict] = None
+
+
+# ─── Schemas para buscador de trabajadores ──────────
+
+class TrabajadorBusquedaItem(BaseModel):
+    """Item devuelto por el buscador de trabajadores."""
+    id: int
+    nombre: str
+    apellidos: str
+    rfc: str
+    fecha_ingreso: Optional[datetime] = None
+    salario_diario: Decimal
+    estatus: str
+
+    model_config = {"from_attributes": True}
+
+
+class TrabajadorDatosResponse(BaseModel):
+    """Datos completos del trabajador para pre-llenar cálculo de finiquito."""
+    empleado_id: int
+    nombre: str
+    apellidos: str
+    rfc: str
+    fecha_ingreso: Optional[datetime] = None
+    salario_diario: Decimal
+    estatus: str
+    # Campos calculados (requieren fecha_baja como query param)
+    dias_vacaciones_pendientes: int = 0
+    aguinaldo_proporcional: Decimal = Decimal("0")
+    prima_vacacional_proporcional: Decimal = Decimal("0")
+    anios_servicio: int = 0
+    saldo_pendiente: Decimal = Decimal("0")
+
+    model_config = {"from_attributes": True}

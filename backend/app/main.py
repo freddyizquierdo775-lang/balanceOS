@@ -12,7 +12,7 @@ import os.path
 
 from app.database import init_db
 from app.routers import auth, clientes, documentos, imss, alertas, empleados, nomina, repse, pld, finiquitos, cfdi, portal
-from app.routers import contabilidad, impuestos, facturacion, tesoreria, estados_financieros, api_publica, alertas_efos
+from app.routers import contabilidad, impuestos, facturacion, tesoreria, estados_financieros, api_publica, alertas_efos, crm
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,6 +52,7 @@ app.include_router(tesoreria.router)
 app.include_router(estados_financieros.router)
 app.include_router(api_publica.router)
 app.include_router(alertas_efos.router)
+app.include_router(crm.router)
 
 
 # ─── Health endpoint ──────────────────────────────
@@ -93,6 +94,7 @@ if os.path.isdir(FRONTEND_DIR):
                                   "facturacion/", "tesoreria/",
                                   "estados-financieros/", "api/",
                                   "alertas-efos/",
+                                  "crm/",
                                   "health")):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
 

@@ -18,6 +18,7 @@ import PortalCliente from './PortalCliente';
 import Contabilidad from './Contabilidad';
 import Impuestos from './Impuestos';
 import Facturacion from './Facturacion';
+import CRM from './CRM';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
 import NavRail from './components/NavRail';
@@ -75,6 +76,7 @@ const PAGE_TITLES = {
   'estados-financieros': 'Estados Financieros',
   'alertas-efos': 'Alertas EFOS',
   'api-publica': 'API Pública',
+  'crm': 'CRM',
   'usuarios': 'Usuarios',
   'module-settings': 'Módulos',
 };
@@ -149,6 +151,7 @@ export default function App() {
       case 'contabilidad': return wrap(<Contabilidad usuario={usuario} />);
       case 'impuestos': return wrap(<Impuestos usuario={usuario} />);
       case 'facturacion': return wrap(<Facturacion usuario={usuario} />);
+      case 'crm': return wrap(<CRM usuario={usuario} />);
       default: return wrap(<Clientes usuario={usuario} />);
     }
   };

@@ -12,83 +12,159 @@ const fmtFecha = (s) => {
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const fmtFechaHora = (s) => {
+  if (!s) return 'Sin movimientos';
+  const d = new Date(s);
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const getCurrentMonth = () => new Date().getMonth() + 1;
+const getCurrentYear = () => new Date().getFullYear();
+
 const meses = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
 export default function Tesoreria({ usuario }) {
+  // ─── Cliente selector ─────────────────────────────
+  const [clientes, setClientes] = useState([]);
+  const [clienteId, setClienteId] = useState('');
+  const [clienteLabel, setClienteLabel] = useState('Todas las cuentas');
+
+  // ─── Tab ──────────────────────────────────────────
   const [tab, setTab] = useState('cuentas');
+
+  // ─── Data ─────────────────────────────────────────
   const [cuentas, setCuentas] = useState([]);
   const [movimientos, setMovimientos] = useState([]);
+  const [kpis, setKpis] = useState({ saldo_total: 0, ingresos_mes: 0, egresos_mes: 0, cuentas_activas: 0 });
   const [loading, setLoading] = useState(false);
+  const [loadingClientes, setLoadingClientes] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Form nueva cuenta
+  // ─── Filtros de movimientos ───────────────────────
+  const [filtroMovCuenta, setFiltroMovCuenta] = useState('');
+  const [filtroMovTipo, setFiltroMovTipo] = useState('');
+  const [filtroMovLimite, setFiltroMovLimite] = useState(50);
+
+  // ─── Form nueva cuenta ────────────────────────────
   const [showCuentaForm, setShowCuentaForm] = useState(false);
   const [cuentaForm, setCuentaForm] = useState({ banco: '', numero_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
   const [savingCuenta, setSavingCuenta] = useState(false);
 
-  // Form nuevo movimiento
+  // ─── Form nuevo movimiento ────────────────────────
   const [showMovForm, setShowMovForm] = useState(false);
   const [movForm, setMovForm] = useState({ cuenta_id: '', fecha: '', tipo: 'abono', concepto: '', monto: '' });
   const [savingMov, setSavingMov] = useState(false);
 
-  // Conciliación
+  // ─── Conciliación ─────────────────────────────────
   const [concCtaId, setConcCtaId] = useState('');
-  const [concMes, setConcMes] = useState(new Date().getMonth() + 1);
-  const [concAnio, setConcAnio] = useState(new Date().getFullYear());
+  const [concMes, setConcMes] = useState(getCurrentMonth());
+  const [concAnio, setConcAnio] = useState(getCurrentYear());
   const [concSaldoEstado, setConcSaldoEstado] = useState('');
   const [concResult, setConcResult] = useState(null);
   const [savingConc, setSavingConc] = useState(false);
 
-  // Estado de cuenta
+  // ─── Estado de cuenta ─────────────────────────────
   const [ecCtaId, setEcCtaId] = useState('');
-  const [ecMes, setEcMes] = useState(new Date().getMonth() + 1);
-  const [ecAnio, setEcAnio] = useState(new Date().getFullYear());
+  const [ecMes, setEcMes] = useState(getCurrentMonth());
+  const [ecAnio, setEcAnio] = useState(getCurrentYear());
   const [ecData, setEcData] = useState(null);
   const [loadingEc, setLoadingEc] = useState(false);
 
-  const cargarCuentas = useCallback(async () => {
+  // ─── Cargar clientes ──────────────────────────────
+  const cargarClientes = useCallback(async () => {
+    setLoadingClientes(true);
     try {
-      const data = await tesoreria.listarCuentas();
+      const data = await tesoreria.listarClientes();
+      setClientes(data);
+    } catch (err) {
+      setError('Error al cargar clientes: ' + err.message);
+    } finally {
+      setLoadingClientes(false);
+    }
+  }, []);
+
+  useEffect(() => { cargarClientes(); }, [cargarClientes]);
+
+  // ─── Cargar KPIs ──────────────────────────────────
+  const cargarKpis = useCallback(async (cid) => {
+    try {
+      const data = await tesoreria.resumen(cid || undefined);
+      setKpis(data);
+    } catch (_) {
+      // Silencioso — los KPIs son decorativos
+    }
+  }, []);
+
+  // ─── Cargar cuentas ───────────────────────────────
+  const cargarCuentas = useCallback(async (cid) => {
+    try {
+      const data = await tesoreria.listarCuentas(cid || undefined);
       setCuentas(data);
     } catch (err) {
       setError(err.message);
     }
   }, []);
 
-  useEffect(() => { cargarCuentas(); }, [cargarCuentas]);
+  // ─── Cargar movimientos ───────────────────────────
+  const cargarMovimientos = useCallback(async (opts = {}) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await tesoreria.listarMovimientos(opts);
+      setMovimientos(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ─── Efecto al cambiar cliente ────────────────────
+  useEffect(() => {
+    const cid = clienteId || undefined;
+    cargarKpis(cid);
+    cargarCuentas(cid);
+    cargarMovimientos({ clienteId: cid, limite: 50 });
+    // Limpiar formularios
+    setShowCuentaForm(false);
+    setShowMovForm(false);
+    setMovForm(p => ({ ...p, cuenta_id: '' }));
+    setConcResult(null);
+    setEcData(null);
+  }, [clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Handlers ─────────────────────────────────────
+  const handleClienteChange = (e) => {
+    const cid = e.target.value;
+    setClienteId(cid);
+    if (cid) {
+      const c = clientes.find(x => x.id === parseInt(cid));
+      setClienteLabel(c ? c.razon_social : 'Cliente');
+    } else {
+      setClienteLabel('Todas las cuentas');
+    }
+  };
 
   const handleCrearCuenta = async (e) => {
     e.preventDefault();
     setSavingCuenta(true);
     setError('');
     try {
-      await tesoreria.crearCuenta(cuentaForm);
+      const payload = { ...cuentaForm, cliente_id: parseInt(clienteId) || 1 };
+      await tesoreria.crearCuenta(payload);
       setShowCuentaForm(false);
       setCuentaForm({ banco: '', numero_cuenta: '', tipo: 'cheques', saldo_inicial: '' });
       setSuccess('Cuenta creada exitosamente');
-      cargarCuentas();
+      cargarCuentas(clienteId || undefined);
+      cargarKpis(clienteId || undefined);
     } catch (err) {
       setError(err.message);
     } finally {
       setSavingCuenta(false);
-    }
-  };
-
-  const cargarMovimientos = async (cuentaId) => {
-    if (!cuentaId) return;
-    setLoading(true);
-    setError('');
-    try {
-      const data = await tesoreria.listarMovimientos(cuentaId);
-      setMovimientos(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -99,14 +175,26 @@ export default function Tesoreria({ usuario }) {
     try {
       await tesoreria.crearMovimiento(movForm);
       setShowMovForm(false);
-      setMovForm({ cuenta_id: movForm.cuenta_id, fecha: '', tipo: 'abono', concepto: '', monto: '' });
+      const cid = movForm.cuenta_id;
+      setMovForm({ cuenta_id: cid, fecha: '', tipo: 'abono', concepto: '', monto: '' });
       setSuccess('Movimiento registrado exitosamente');
-      if (movForm.cuenta_id) cargarMovimientos(movForm.cuenta_id);
+      // Recargar
+      cargarMovimientos({ clienteId: clienteId || undefined, cuentaId: cid || undefined, limite: filtroMovLimite });
+      cargarCuentas(clienteId || undefined);
+      cargarKpis(clienteId || undefined);
     } catch (err) {
       setError(err.message);
     } finally {
       setSavingMov(false);
     }
+  };
+
+  const handleFiltrarMovimientos = () => {
+    const opts = {};
+    if (filtroMovCuenta) opts.cuentaId = filtroMovCuenta;
+    if (!filtroMovCuenta && clienteId) opts.clienteId = clienteId;
+    opts.limite = filtroMovLimite;
+    cargarMovimientos(opts);
   };
 
   const handleConciliar = async (e) => {
@@ -123,6 +211,8 @@ export default function Tesoreria({ usuario }) {
       });
       setConcResult(data);
       setSuccess('Conciliación completada');
+      cargarCuentas(clienteId || undefined);
+      cargarKpis(clienteId || undefined);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -145,7 +235,7 @@ export default function Tesoreria({ usuario }) {
     }
   };
 
-  // Clear success message
+  // ─── Clear success ────────────────────────────────
   useEffect(() => {
     if (success) {
       const t = setTimeout(() => setSuccess(''), 3000);
@@ -161,7 +251,42 @@ export default function Tesoreria({ usuario }) {
     { key: 'estado-cuenta', label: 'Estado de Cuenta' },
   ];
 
-  // ─── Cuentas bancarias ────────────────────────────
+  // ─── Cuentas del cliente para selects ─────────────
+  const cuentasFiltradas = filtroMovCuenta
+    ? cuentas
+    : cuentas;
+
+  // ═══════════════════════════════════════════════════
+  // RENDER: KPI Cards
+  // ═══════════════════════════════════════════════════
+  const renderKpis = () => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="bg-[#141414] rounded-2xl p-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
+        <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Saldo total</div>
+        <div className="text-2xl font-extrabold text-white">{fmt(kpis.saldo_total)}</div>
+        <div className="text-[10px] text-[#71717A] mt-1">{clienteLabel}</div>
+      </div>
+      <div className="bg-[#141414] rounded-2xl p-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
+        <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Ingresos del mes</div>
+        <div className="text-2xl font-extrabold text-emerald-400">{fmt(kpis.ingresos_mes)}</div>
+        <div className="text-[10px] text-[#71717A] mt-1">{meses[getCurrentMonth() - 1]} {getCurrentYear()}</div>
+      </div>
+      <div className="bg-[#141414] rounded-2xl p-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
+        <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Egresos del mes</div>
+        <div className="text-2xl font-extrabold text-red-400">{fmt(kpis.egresos_mes)}</div>
+        <div className="text-[10px] text-[#71717A] mt-1">{meses[getCurrentMonth() - 1]} {getCurrentYear()}</div>
+      </div>
+      <div className="bg-[#141414] rounded-2xl p-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
+        <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-1">Cuentas activas</div>
+        <div className="text-2xl font-extrabold text-white">{kpis.cuentas_activas}</div>
+        <div className="text-[10px] text-[#71717A] mt-1">{clienteLabel}</div>
+      </div>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════
+  // RENDER: Cuentas bancarias
+  // ═══════════════════════════════════════════════════
   const renderCuentas = () => (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -174,7 +299,14 @@ export default function Tesoreria({ usuario }) {
 
       {showCuentaForm && (
         <form onSubmit={handleCrearCuenta} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
-          <h3 className="text-sm font-semibold text-white mb-4">Nueva cuenta bancaria</h3>
+          <h3 className="text-sm font-semibold text-white mb-4">
+            Nueva cuenta bancaria {clienteId ? `para ${clienteLabel}` : ''}
+          </h3>
+          {!clienteId && (
+            <div className="mb-4 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs rounded-xl p-3">
+              ⚠️ Selecciona un cliente primero para crear una cuenta.
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Banco</label>
@@ -209,7 +341,7 @@ export default function Tesoreria({ usuario }) {
                 className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 placeholder:text-[#71717A]" />
             </div>
           </div>
-          <button type="submit" disabled={savingCuenta}
+          <button type="submit" disabled={savingCuenta || !clienteId}
             className="mt-4 bg-[#0A0A0A] text-white text-sm font-semibold rounded-xl px-6 py-3 hover:bg-slate-800 transition-all disabled:opacity-50">
             {savingCuenta ? 'Guardando...' : 'Guardar cuenta'}
           </button>
@@ -219,7 +351,9 @@ export default function Tesoreria({ usuario }) {
       {cuentas.length === 0 ? (
         <div className="bg-[#141414] rounded-2xl p-12 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
           <div className="text-4xl mb-3">🏦</div>
-          <p className="text-sm text-[#A1A1AA]">No hay cuentas registradas</p>
+          <p className="text-sm text-[#A1A1AA]">
+            {clienteId ? 'No hay cuentas registradas para este cliente' : 'No hay cuentas registradas'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -239,26 +373,41 @@ export default function Tesoreria({ usuario }) {
     </div>
   );
 
-  // ─── Movimientos ──────────────────────────────────
+  // ═══════════════════════════════════════════════════
+  // RENDER: Movimientos
+  // ═══════════════════════════════════════════════════
   const renderMovimientos = () => (
     <div>
-      <div className="flex items-center gap-4 mb-4 flex-wrap">
-        <div className="flex-1 min-w-[200px]">
-          <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Cuenta</label>
-          <select value={movForm.cuenta_id}
-            onChange={e => {
-              setMovForm(p => ({ ...p, cuenta_id: e.target.value }));
-              cargarMovimientos(e.target.value);
-            }}
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div className="flex-1 min-w-[180px]">
+          <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Cuenta (filtro)</label>
+          <select value={filtroMovCuenta}
+            onChange={e => setFiltroMovCuenta(e.target.value)}
             className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
-            <option value="">Seleccionar cuenta...</option>
+            <option value="">Todas las cuentas{clienteId ? ' del cliente' : ''}</option>
             {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
           </select>
         </div>
-        <div className="pt-5">
+        <div>
+          <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Límite</label>
+          <select value={filtroMovLimite}
+            onChange={e => setFiltroMovLimite(parseInt(e.target.value))}
+            className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
+        </div>
+        <div className="pt-0.5">
+          <button onClick={handleFiltrarMovimientos}
+            className="bg-[#0A0A0A] text-white text-xs font-semibold rounded-xl px-4 py-3 hover:bg-slate-800 transition-all">
+            🔍 Filtrar
+          </button>
+        </div>
+        <div className="pt-0.5 ml-auto">
           <button onClick={() => { setShowMovForm(!showMovForm); setError(''); }}
-            disabled={!movForm.cuenta_id}
-            className="bg-[#0A0A0A] text-white text-xs font-semibold rounded-xl px-4 py-3 hover:bg-slate-800 transition-all disabled:opacity-40">
+            className="bg-[#0A0A0A] text-white text-xs font-semibold rounded-xl px-4 py-3 hover:bg-slate-800 transition-all">
             {showMovForm ? 'Cancelar' : '+ Nuevo movimiento'}
           </button>
         </div>
@@ -267,7 +416,16 @@ export default function Tesoreria({ usuario }) {
       {showMovForm && (
         <form onSubmit={handleCrearMovimiento} className="bg-[#141414] rounded-2xl p-6 mb-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
           <h3 className="text-sm font-semibold text-white mb-4">Nuevo movimiento</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Cuenta</label>
+              <select required value={movForm.cuenta_id}
+                onChange={e => setMovForm(p => ({ ...p, cuenta_id: e.target.value }))}
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
+                <option value="">Seleccionar...</option>
+                {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
+              </select>
+            </div>
             <div>
               <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Fecha</label>
               <input type="date" required value={movForm.fecha}
@@ -307,12 +465,14 @@ export default function Tesoreria({ usuario }) {
 
       {loading ? (
         <div className="text-center py-12 text-[#A1A1AA] text-sm">Cargando movimientos...</div>
-      ) : movimientos.length === 0 && movForm.cuenta_id ? (
+      ) : movimientos.length === 0 ? (
         <div className="bg-[#141414] rounded-2xl p-12 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
           <div className="text-4xl mb-3">📭</div>
-          <p className="text-sm text-[#A1A1AA]">Sin movimientos registrados</p>
+          <p className="text-sm text-[#A1A1AA]">
+            {clienteId ? 'Sin movimientos para este cliente' : 'Sin movimientos registrados'}
+          </p>
         </div>
-      ) : movimientos.length > 0 ? (
+      ) : (
         <div className="bg-[#141414] rounded-2xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -354,16 +514,17 @@ export default function Tesoreria({ usuario }) {
               </tbody>
             </table>
           </div>
-        </div>
-      ) : (
-        <div className="bg-[#141414] rounded-2xl p-12 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
-          <p className="text-sm text-[#A1A1AA]">Selecciona una cuenta para ver sus movimientos</p>
+          <div className="px-4 py-2 text-[10px] text-[#71717A] text-right border-t border-[#262626]">
+            Mostrando {movimientos.length} movimientos
+          </div>
         </div>
       )}
     </div>
   );
 
-  // ─── Conciliación ─────────────────────────────────
+  // ═══════════════════════════════════════════════════
+  // RENDER: Conciliación
+  // ═══════════════════════════════════════════════════
   const renderConciliacion = () => (
     <div>
       <h2 className="text-base font-semibold text-white mb-4">Conciliación bancaria</h2>
@@ -376,7 +537,7 @@ export default function Tesoreria({ usuario }) {
               onChange={e => setConcCtaId(e.target.value)}
               className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
               <option value="">Seleccionar...</option>
-              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
+              {cuentasFiltradas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
             </select>
           </div>
           <div>
@@ -440,7 +601,9 @@ export default function Tesoreria({ usuario }) {
     </div>
   );
 
-  // ─── Estado de cuenta ─────────────────────────────
+  // ═══════════════════════════════════════════════════
+  // RENDER: Estado de cuenta
+  // ═══════════════════════════════════════════════════
   const renderEstadoCuenta = () => (
     <div>
       <h2 className="text-base font-semibold text-white mb-4">Estado de cuenta</h2>
@@ -452,7 +615,7 @@ export default function Tesoreria({ usuario }) {
             <select value={ecCtaId} onChange={e => { setEcCtaId(e.target.value); setEcData(null); }}
               className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
               <option value="">Seleccionar...</option>
-              {cuentas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
+              {cuentasFiltradas.map(c => <option key={c.id} value={c.id}>{c.banco} — {c.numero_cuenta}</option>)}
             </select>
           </div>
           <div>
@@ -483,16 +646,16 @@ export default function Tesoreria({ usuario }) {
           <div className="bg-[#141414] rounded-2xl p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-[#1A1A1A] rounded-xl p-4 text-center">
-                <div className="text-lg font-extrabold text-white">{fmt(ecData.saldo_inicial)}</div>
+                <div className="text-lg font-extrabold text-white">{fmt(ecData.saldo_inicial_periodo)}</div>
                 <div className="text-[10px] text-[#A1A1AA] mt-1">Saldo inicial</div>
               </div>
               <div className="bg-[#1A1A1A] rounded-xl p-4 text-center">
-                <div className="text-lg font-extrabold text-emerald-400">{fmt(ecData.cargos || 0)}</div>
-                <div className="text-[10px] text-[#A1A1AA] mt-1">Cargos</div>
+                <div className="text-lg font-extrabold text-emerald-400">{fmt(ecData.total_abonos)}</div>
+                <div className="text-[10px] text-[#A1A1AA] mt-1">Abonos</div>
               </div>
               <div className="bg-[#1A1A1A] rounded-xl p-4 text-center">
-                <div className="text-lg font-extrabold text-red-400">{fmt(ecData.abonos || 0)}</div>
-                <div className="text-[10px] text-[#A1A1AA] mt-1">Abonos</div>
+                <div className="text-lg font-extrabold text-red-400">{fmt(ecData.total_cargos)}</div>
+                <div className="text-[10px] text-[#A1A1AA] mt-1">Cargos</div>
               </div>
               <div className="bg-[#1A1A1A] rounded-xl p-4 text-center">
                 <div className="text-lg font-extrabold text-white">{fmt(ecData.saldo_final)}</div>
@@ -544,38 +707,73 @@ export default function Tesoreria({ usuario }) {
     </div>
   );
 
-  // ─── Main Render ─────────────────────────────────
+  // ═══════════════════════════════════════════════════
+  // MAIN RENDER
+  // ═══════════════════════════════════════════════════
   return (
     <div className="mobile-scroll overflow-y-auto h-full">
       <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold tracking-tighter text-white">Tesorería</h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">Gestión de cuentas, movimientos y conciliación</p>
-      </div>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tighter text-white">Tesorería</h1>
+          <p className="text-sm text-[#A1A1AA] mt-1">Gestión de cuentas, movimientos y conciliación</p>
+        </div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 mb-4">{error}</div>
-      )}
-      {success && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm rounded-xl p-3 mb-4">{success}</div>
-      )}
+        {/* Alerts */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 mb-4">{error}</div>
+        )}
+        {success && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm rounded-xl p-3 mb-4">{success}</div>
+        )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-[#141414] rounded-xl p-1 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626] w-fit">
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => { setTab(t.key); setError(''); setSuccess(''); }}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-              tab === t.key ? 'bg-[#0A0A0A] text-white' : 'text-[#A1A1AA] hover:text-[#E5E5E5]'
-            }`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+        {/* Cliente Selector */}
+        <div className="bg-[#141414] rounded-2xl p-4 mb-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626]">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-1 min-w-[250px]">
+              <label className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider block mb-1.5">Cliente</label>
+              {loadingClientes ? (
+                <div className="text-sm text-[#71717A] py-3">Cargando clientes...</div>
+              ) : (
+                <select value={clienteId}
+                  onChange={handleClienteChange}
+                  className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15">
+                  <option value="">Todas las cuentas (vista contador)</option>
+                  {clientes.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.razon_social} — {c.num_cuentas} cuentas — {fmt(c.saldo_total)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {clientes.length > 0 && (
+              <div className="text-[10px] text-[#71717A] pt-5 hidden sm:block">
+                {clientes.length} clientes disponibles
+              </div>
+            )}
+          </div>
+        </div>
 
-      {tab === 'cuentas' && renderCuentas()}
-      {tab === 'movimientos' && renderMovimientos()}
-      {tab === 'conciliacion' && renderConciliacion()}
-      {tab === 'estado-cuenta' && renderEstadoCuenta()}
+        {/* KPI Cards */}
+        {renderKpis()}
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 bg-[#141414] rounded-xl p-1 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3)] border border-[#262626] w-fit">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => { setTab(t.key); setError(''); setSuccess(''); }}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                tab === t.key ? 'bg-[#0A0A0A] text-white' : 'text-[#A1A1AA] hover:text-[#E5E5E5]'
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'cuentas' && renderCuentas()}
+        {tab === 'movimientos' && renderMovimientos()}
+        {tab === 'conciliacion' && renderConciliacion()}
+        {tab === 'estado-cuenta' && renderEstadoCuenta()}
       </div>
     </div>
   );

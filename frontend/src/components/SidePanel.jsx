@@ -559,6 +559,19 @@ function ContextualContent({ page, searchQuery, setPage }) {
     );
   }
 
+  // ── CRM ────────────────────────────────────────────
+  if (page === 'crm') {
+    return (
+      <div>
+        <SectionTitle title="CRM" />
+        <p className="text-[11px] text-[#A1A1AA]">Seguimientos, notas y timeline</p>
+        <button onClick={() => setPage?.('crm')} className="mt-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[#1A1A1A] text-[11px] text-[#D4D4D8] transition-colors">
+          Ver timeline completo →
+        </button>
+      </div>
+    );
+  }
+
   // ── Dashboard (default) ──────────────────────────
   return (
     <div>
@@ -596,6 +609,7 @@ const allModules = [
   { id: 'empleados', label: 'Empleados', active: false },
   { id: 'finiquitos', label: 'Finiquitos', active: false },
   { id: 'api-publica', label: 'API', active: false },
+  { id: 'crm', label: 'CRM', active: true },
 ];
 
 // ─── Main SidePanel component ───────────────────────────────────────
