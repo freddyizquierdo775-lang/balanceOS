@@ -1,113 +1,192 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  clientes, contabilidad, facturacion, nomina, imss,
+  repse, pld, finiquitos, cfdi, impuestos, empleados,
+  tesoreria, estadosFinancieros, alertasEfos, crm,
+} from '../api';
 
-// ─── Mock data ──────────────────────────────────────────────────────
+// ─── Custom hook: fetch sidepanel data per module ────────────────────
+function useSidePanelData(page) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-const recentClients = [
-  { id: 1, name: 'Corporativo Sosa S.A.', rfc: 'SOS230501ABC', status: 'activo', type: 'empresa' },
-  { id: 2, name: 'Juan Pérez López', rfc: 'PELJ850312XYZ', status: 'pendiente', type: 'persona' },
-  { id: 3, name: 'Distribuidora del Norte', rfc: 'DNO120405DEF', status: 'activo', type: 'empresa' },
-  { id: 4, name: 'María Hernández Ruiz', rfc: 'HERM780920GHI', status: 'revision', type: 'persona' },
-  { id: 5, name: 'TechSolutions México', rfc: 'TSM990101JKL', status: 'activo', type: 'empresa' },
-];
+  useEffect(() => {
+    let cancelled = false;
 
-const catalogoCuentas = [
-  { clave: '1000', nombre: 'Activo', tipo: 'activo' },
-  { clave: '2000', nombre: 'Pasivo', tipo: 'pasivo' },
-  { clave: '3000', nombre: 'Capital', tipo: 'capital' },
-  { clave: '4000', nombre: 'Ingresos', tipo: 'ingresos' },
-  { clave: '5000', nombre: 'Gastos', tipo: 'gastos' },
-];
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      setData(null);
+      try {
+        let result;
+        switch (page) {
+          case 'clientes': {
+            const res = await clientes.listar();
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'contabilidad': {
+            const res = await contabilidad.listarCuentas();
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'facturacion': {
+            const res = await facturacion.listarFacturas('?limit=5');
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'nomina': {
+            const res = await nomina.listarPeriodos();
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'imss': {
+            const res = await imss.listarAltas('?estatus=pendiente&limit=8');
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'repse': {
+            const res = await repse.listarRegistros('?limit=5');
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'pld': {
+            // Fetch clients first, then their latest PLD summaries
+            const cliList = await clientes.listar();
+            const clients = Array.isArray(cliList) ? cliList.slice(0, 8) : [];
+            const summaries = await Promise.all(
+              clients.map(async (c) => {
+                try {
+                  return await pld.resumenCliente(c.id);
+                } catch {
+                  return null;
+                }
+              })
+            );
+            result = summaries
+              .map((s, i) => s ? { ...s, _cliente_nombre: clients[i]?.razon_social || clients[i]?.rfc || `Cliente ${clients[i]?.id}` } : null)
+              .filter(Boolean)
+              .slice(0, 8);
+            break;
+          }
+          case 'finiquitos': {
+            const res = await finiquitos.listar('');
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'cfdi': {
+            const res = await cfdi.listarRecibos('');
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'impuestos': {
+            const res = await impuestos.listarDeclaraciones('?limit=8');
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'empleados': {
+            const res = await empleados.listar();
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'tesoreria': {
+            const res = await tesoreria.listarCuentas(null);
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'estados-financieros': {
+            // Requires mes/anio; fetch current month balance
+            const now = new Date();
+            const mes = now.getMonth() + 1;
+            const anio = now.getFullYear();
+            try {
+              const res = await estadosFinancieros.balanceGeneral(mes, anio);
+              result = res || null; // single object, not array
+            } catch {
+              result = null;
+            }
+            break;
+          }
+          case 'alertas-efos': {
+            const res = await alertasEfos.listarAlertas();
+            result = Array.isArray(res) ? res.slice(0, 8) : [];
+            break;
+          }
+          case 'crm': {
+            const res = await crm.listarSeguimientos('?limit=5');
+            result = Array.isArray(res) ? res.slice(0, 5) : [];
+            break;
+          }
+          case 'api-publica':
+          case 'dashboard':
+          default:
+            result = null; // static content
+        }
+        if (!cancelled) {
+          setData(result);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || 'Error al cargar datos');
+          setLoading(false);
+        }
+      }
+    }
 
-const facturasRecientes = [
-  { folio: 'F-4582', cliente: 'Corporativo Sosa', monto: '$48,200.00', fecha: '12/06/2026' },
-  { folio: 'F-4581', cliente: 'Juan Pérez López', monto: '$3,850.00', fecha: '11/06/2026' },
-  { folio: 'F-4580', cliente: 'Distribuidora del Norte', monto: '$127,500.00', fecha: '10/06/2026' },
-];
+    // Only fetch for pages that need API data
+    if (['api-publica', 'dashboard'].includes(page)) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+    } else {
+      fetchData();
+    }
 
-const periodosNomina = [
-  { id: 'Q-12', nombre: 'Quincenal 12', estado: 'activo', inicio: '01/06/2026', fin: '15/06/2026' },
-  { id: 'S-24', nombre: 'Semanal 24', estado: 'activo', inicio: '08/06/2026', fin: '14/06/2026' },
-];
+    return () => { cancelled = true; };
+  }, [page]);
 
-const trabajadoresIMSS = [
-  { nombre: 'Carlos Mendoza Ruiz', nss: '1234 85 6789 0', alta: '2023-01-15' },
-  { nombre: 'Ana Laura Sánchez', nss: '5678 92 0123 5', alta: '2023-03-01' },
-  { nombre: 'Roberto Díaz Gómez', nss: '9012 78 3456 2', alta: '2024-06-10' },
-  { nombre: 'Patricia López V.', nss: '3456 01 7890 8', alta: '2025-02-20' },
-];
+  return { data, loading, error };
+}
 
-const registrosREPSE = [
-  { folio: 'REP-2026-0142', empresa: 'Corporativo Sosa', estatus: 'vigente', vence: '2027-04-15' },
-  { folio: 'REP-2026-0089', empresa: 'Distribuidora del Norte', estatus: 'vigente', vence: '2026-08-22' },
-  { folio: 'REP-2025-0345', empresa: 'TechSolutions México', estatus: 'por-renovar', vence: '2026-07-30' },
-];
+// ─── Global search hook ──────────────────────────────────────────────
+function useSearch(query) {
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-const evaluacionesPLD = [
-  { cliente: 'Corporativo Sosa', riesgo: 'Medio', score: 62 },
-  { cliente: 'Juan Pérez López', riesgo: 'Bajo', score: 28 },
-  { cliente: 'Distribuidora del Norte', riesgo: 'Alto', score: 81 },
-  { cliente: 'Proveedor Externo XYZ', riesgo: 'Medio', score: 55 },
-];
+  useEffect(() => {
+    if (!query || query.trim().length < 2) {
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await crm.buscar(query);
+        if (!cancelled) {
+          setResults(res);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
+      }
+    }, 400); // debounce
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
 
-const finiquitosRecientes = [
-  { empleado: 'Luis Fernando Torres', fecha: '05/06/2026', monto: '$32,500.00', motivo: 'Renuncia voluntaria' },
-  { empleado: 'María José Rivera', fecha: '01/06/2026', monto: '$58,200.00', motivo: 'Despido justificado' },
-  { empleado: 'Oscar Daniel Cruz', fecha: '28/05/2026', monto: '$21,800.00', motivo: 'Término de contrato' },
-];
-
-const cfdisRecientes = [
-  { uuid: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', fecha: '13/06/2026', tipo: 'Ingreso', monto: '$48,200.00' },
-  { uuid: 'b2c3d4e5-f6a7-8901-bcde-f12345678901', fecha: '12/06/2026', tipo: 'Ingreso', monto: '$127,500.00' },
-  { uuid: 'c3d4e5f6-a7b8-9012-cdef-123456789012', fecha: '11/06/2026', tipo: 'Egreso', monto: '$15,300.00' },
-];
-
-const vencimientosImpuestos = [
-  { declaracion: 'IVA Mensual', periodo: 'Mayo 2026', vence: '17/06/2026', diasRestantes: 3 },
-  { declaracion: 'ISR Retenciones', periodo: 'Mayo 2026', vence: '17/06/2026', diasRestantes: 3 },
-  { declaracion: 'DIOT', periodo: 'Mayo 2026', vence: '30/06/2026', diasRestantes: 16 },
-];
-
-const empleadosActivos = [
-  { nombre: 'Carlos Mendoza Ruiz', puesto: 'Contador General', area: 'Contabilidad' },
-  { nombre: 'Ana Laura Sánchez', puesto: 'Auxiliar Nómina', area: 'RH' },
-  { nombre: 'Roberto Díaz Gómez', puesto: 'Desarrollador Sr.', area: 'TI' },
-  { nombre: 'Patricia López V.', puesto: 'Gestor Fiscal', area: 'Impuestos' },
-];
-
-const cuentasTesoreria = [
-  { banco: 'BBVA', cuenta: '****7823', saldo: '$1,245,600.00', tipo: 'Inversión' },
-  { banco: 'Santander', cuenta: '****4512', saldo: '$328,900.00', tipo: 'Corriente' },
-  { banco: 'Banorte', cuenta: '****1098', saldo: '$87,300.00', tipo: 'Nómina' },
-];
-
-const periodosFinancieros = [
-  { tipo: 'Mensual', periodo: 'Junio 2026', estado: 'abierto' },
-  { tipo: 'Trimestral', periodo: 'Q2 2026', estado: 'abierto' },
-  { tipo: 'Anual', periodo: 'Ejercicio 2026', estado: 'abierto' },
-];
-
-const alertasEFOS = [
-  { tipo: 'Coincidencia', descripcion: 'EFOS detectado en proveedores', proveedores: 2, severidad: 'alta' },
-  { tipo: 'Alerta', descripcion: 'Revisión pendiente Q1 2026', proveedores: 0, severidad: 'media' },
-  { tipo: 'Coincidencia', descripcion: 'Socio vinculado a lista negra', proveedores: 1, severidad: 'alta' },
-];
-
-const endpointsAPI = [
-  { metodo: 'GET', ruta: '/api/v1/clientes', descripcion: 'Listar clientes' },
-  { metodo: 'POST', ruta: '/api/v1/facturas', descripcion: 'Crear factura' },
-  { metodo: 'GET', ruta: '/api/v1/contabilidad/polizas', descripcion: 'Listar pólizas' },
-  { metodo: 'POST', ruta: '/api/v1/nomina/calcular', descripcion: 'Calcular nómina' },
-  { metodo: 'GET', ruta: '/api/v1/cfdi/status', descripcion: 'Estado CFDI' },
-];
-
-const accesosRapidos = [
-  { id: 'clientes', label: 'Clientes', icon: 'users' },
-  { id: 'contabilidad', label: 'Contabilidad', icon: 'book' },
-  { id: 'facturacion', label: 'Facturación', icon: 'receipt' },
-  { id: 'nomina', label: 'Nómina', icon: 'dollar' },
-  { id: 'impuestos', label: 'Impuestos', icon: 'calc' },
-  { id: 'cfdi', label: 'CFDI', icon: 'file-check' },
-];
+  return { results, loading, error };
+}
 
 // ─── Status indicator dot colors ────────────────────────────────────
 const statusDot = {
@@ -133,6 +212,23 @@ const typeIcons = {
     </svg>
   ),
 };
+
+// ─── Skeleton loading component ─────────────────────────────────────
+function Skeleton({ rows = 3 }) {
+  return (
+    <div className="flex flex-col gap-0.5 animate-pulse">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-2.5 px-2 py-1.5">
+          <div className="w-4 h-4 rounded bg-[#262626] flex-shrink-0" />
+          <div className="flex-1 space-y-1">
+            <div className="h-3 rounded bg-[#262626] w-3/4" />
+            <div className="h-2 rounded bg-[#1A1A1A] w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ─── Section title component ────────────────────────────────────────
 function SectionTitle({ title, badge }) {
@@ -185,357 +281,511 @@ function severityDot(severidad) {
   return colors[severidad] || 'bg-[#71717A]';
 }
 
+// ─── Helper: format currency ────────────────────────────────────────
+function formatCurrency(amount) {
+  if (amount == null) return '$0.00';
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return String(amount);
+  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ─── Helper: format date ────────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '';
+  try {
+    const date = new Date(d);
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch {
+    return String(d).substring(0, 10);
+  }
+}
+
+// ─── Helper: truncate UUID ───────────────────────────────────────────
+function truncateUuid(uuid) {
+  if (!uuid) return '';
+  return uuid.length > 20 ? uuid.substring(0, 20) + '...' : uuid;
+}
+
+// ─── No data placeholder ─────────────────────────────────────────────
+function NoData() {
+  return <p className="text-[11px] text-[#71717A] italic px-2">Sin datos disponibles</p>;
+}
+
+// ─── Error placeholder ───────────────────────────────────────────────
+function ErrorMsg({ message }) {
+  return (
+    <div className="px-2 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+      <p className="text-[10px] text-red-400">{message || 'Error al cargar'}</p>
+    </div>
+  );
+}
+
 // ─── Contextual content per module ──────────────────────────────────
 function ContextualContent({ page, searchQuery, setPage }) {
-  // ── Clientes ──────────────────────────────────────
-  if (page === 'clientes') {
-    const filtered = recentClients.filter((c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.rfc.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const { data, loading, error } = useSidePanelData(page);
+  const { results: searchResults, loading: searchLoading } = useSearch(searchQuery);
+
+  // ── Global search results (overrides module content) ────────────
+  if (searchQuery && searchQuery.trim().length >= 2) {
     return (
       <div>
-        <SectionTitle title="Clientes recientes" badge={filtered.length} />
-        <div className="flex flex-col gap-0.5">
-          {filtered.map((client, i) => (
-            <button
-              key={client.id}
-              onClick={() => setPage?.('clientes')}
-              className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer hover:bg-[#1A1A1A] ${page === 'clientes' && i === 0 ? 'bg-[#1A1A1A]' : ''}`}
-            >
-              <div className="text-[#A1A1AA] flex-shrink-0">
-                {typeIcons[client.type] || typeIcons.empresa}
+        <SectionTitle title={`Resultados: "${searchQuery}"`} badge={searchResults && !searchLoading ? (searchResults.total || searchResults.length || 0) : null} />
+        {searchLoading ? (
+          <Skeleton rows={4} />
+        ) : !searchResults ? (
+          <NoData />
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {(Array.isArray(searchResults) ? searchResults : searchResults.items || []).slice(0, 8).map((item, i) => (
+              <div
+                key={item.id || i}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+                onClick={() => {
+                  if (item.tipo === 'cliente' || item.tipo === 'clientes') setPage?.('clientes');
+                  else if (item.tipo === 'factura' || item.tipo === 'facturacion') setPage?.('facturacion');
+                  else if (item.tipo === 'empleado' || item.tipo === 'empleados') setPage?.('empleados');
+                }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-[#71717A] flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{item.nombre || item.razon_social || item.label || item.descripcion || 'Sin nombre'}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{item.tipo || item.rfc || item.entidad || ''}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{client.name}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{client.rfc}</p>
-              </div>
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot[client.status] || 'bg-[#71717A]'}`} />
-            </button>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Loading state ───────────────────────────────────
+  if (loading) {
+    return (
+      <div>
+        <SectionTitle title="Cargando..." />
+        <Skeleton rows={4} />
+      </div>
+    );
+  }
+
+  // ── Error state ─────────────────────────────────────
+  if (error) {
+    return (
+      <div>
+        <SectionTitle title="Error" />
+        <ErrorMsg message={error} />
+      </div>
+    );
+  }
+
+  // ── Clientes ──────────────────────────────────────
+  if (page === 'clientes') {
+    const list = Array.isArray(data) ? data : [];
+    return (
+      <div>
+        <SectionTitle title="Clientes recientes" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((client, i) => (
+              <button
+                key={client.id}
+                onClick={() => setPage?.('clientes')}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer hover:bg-[#1A1A1A]"
+              >
+                <div className="text-[#A1A1AA] flex-shrink-0">
+                  {typeIcons[client.tipo_persona === 'moral' ? 'empresa' : 'persona'] || typeIcons.empresa}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{client.razon_social || client.nombre}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{client.rfc}</p>
+                </div>
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot[client.estatus] || 'bg-[#71717A]'}`} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Contabilidad ──────────────────────────────────
   if (page === 'contabilidad') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Catálogo rápido" badge={catalogoCuentas.length} />
-        <div className="flex flex-col gap-0.5">
-          {catalogoCuentas.map((cuenta) => (
-            <div
-              key={cuenta.clave}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <span className="text-[10px] font-mono font-semibold text-[#A1A1AA] bg-[#262626] px-1.5 py-0.5 rounded w-12 text-center flex-shrink-0">
-                {cuenta.clave}
-              </span>
-              <span className="text-[12px] font-medium text-white truncate">{cuenta.nombre}</span>
-            </div>
-          ))}
-        </div>
+        <SectionTitle title="Catálogo rápido" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((cuenta) => (
+              <div
+                key={cuenta.id || cuenta.clave || cuenta.codigo}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <span className="text-[10px] font-mono font-semibold text-[#A1A1AA] bg-[#262626] px-1.5 py-0.5 rounded w-12 text-center flex-shrink-0">
+                  {cuenta.clave || cuenta.codigo || cuenta.id}
+                </span>
+                <span className="text-[12px] font-medium text-white truncate">{cuenta.nombre || cuenta.descripcion}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Facturación ───────────────────────────────────
   if (page === 'facturacion') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Facturas recientes" badge={facturasRecientes.length} />
-        <div className="flex flex-col gap-0.5">
-          {facturasRecientes.map((fac) => (
-            <div
-              key={fac.folio}
-              className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{fac.folio}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5 truncate">{fac.cliente}</p>
+        <SectionTitle title="Facturas recientes" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((fac) => (
+              <div
+                key={fac.id || fac.folio}
+                className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{fac.folio || `F-${fac.id}`}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5 truncate">{fac.razon_social || fac.cliente || 'Sin cliente'}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[12px] font-semibold text-white">{formatCurrency(fac.total || fac.monto)}</p>
+                  <p className="text-[10px] text-[#A1A1AA]">{formatDate(fac.fecha || fac.fecha_emision)}</p>
+                </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-[12px] font-semibold text-white">{fac.monto}</p>
-                <p className="text-[10px] text-[#A1A1AA]">{fac.fecha}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Nómina ────────────────────────────────────────
   if (page === 'nomina') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Períodos activos" badge={periodosNomina.length} />
-        <div className="flex flex-col gap-0.5">
-          {periodosNomina.map((per) => (
-            <div
-              key={per.id}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${per.estado === 'activo' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{per.nombre}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{per.inicio} → {per.fin}</p>
+        <SectionTitle title="Períodos activos" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((per) => (
+              <div
+                key={per.id}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${per.estado === 'activo' || per.estatus === 'activo' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{per.nombre || `Período ${per.id}`}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{formatDate(per.fecha_inicio || per.inicio)} → {formatDate(per.fecha_fin || per.fin)}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── IMSS ──────────────────────────────────────────
   if (page === 'imss') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Trabajadores" badge={trabajadoresIMSS.length} />
-        <div className="flex flex-col gap-0.5">
-          {trabajadoresIMSS.map((t) => (
-            <div
-              key={t.nss}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="w-7 h-7 rounded-full bg-[#262626] flex items-center justify-center text-[10px] font-semibold text-[#D4D4D8] flex-shrink-0">
-                {t.nombre.charAt(0)}
+        <SectionTitle title="Altas pendientes" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#262626] flex items-center justify-center text-[10px] font-semibold text-[#D4D4D8] flex-shrink-0">
+                  {(t.nombre_completo || t.nombre || 'T').charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{t.nombre_completo || t.nombre}</p>
+                  <p className="text-[10px] text-[#A1A1AA] font-mono mt-0.5">NSS {t.nss}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{t.nombre}</p>
-                <p className="text-[10px] text-[#A1A1AA] font-mono mt-0.5">NSS {t.nss}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── REPSE ─────────────────────────────────────────
   if (page === 'repse') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Registros REPSE" badge={registrosREPSE.length} />
-        <div className="flex flex-col gap-0.5">
-          {registrosREPSE.map((r) => (
-            <div
-              key={r.folio}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{r.folio}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5 truncate">{r.empresa}</p>
+        <SectionTitle title="Registros REPSE" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{r.folio || `REP-${r.id}`}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5 truncate">{r.razon_social || r.empresa || 'Sin empresa'}</p>
+                </div>
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${r.estatus === 'vigente' || r.estado === 'vigente' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                  {r.estatus === 'vigente' || r.estado === 'vigente' ? 'Vigente' : 'Por renovar'}
+                </span>
               </div>
-              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${r.estatus === 'vigente' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                {r.estatus === 'vigente' ? 'Vigente' : 'Por renovar'}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── PLD ───────────────────────────────────────────
   if (page === 'pld') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Evaluaciones PLD" badge={evaluacionesPLD.length} />
-        <div className="flex flex-col gap-0.5">
-          {evaluacionesPLD.map((e) => (
-            <div
-              key={e.cliente}
-              className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <span className="text-[12px] font-medium text-white truncate">{e.cliente}</span>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${riskBadge(e.riesgo)}`}>
-                {e.riesgo} • {e.score}
-              </span>
-            </div>
-          ))}
-        </div>
+        <SectionTitle title="Evaluaciones PLD" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((e, i) => (
+              <div
+                key={e.cliente_id || i}
+                className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <span className="text-[12px] font-medium text-white truncate">{e._cliente_nombre || `Cliente ${e.cliente_id}`}</span>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${riskBadge(e.riesgo || e.nivel_riesgo)}`}>
+                  {e.riesgo || e.nivel_riesgo || 'N/A'} {e.score != null ? `• ${e.score}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Finiquitos ────────────────────────────────────
   if (page === 'finiquitos') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Recientes" badge={finiquitosRecientes.length} />
-        <div className="flex flex-col gap-0.5">
-          {finiquitosRecientes.map((f) => (
-            <div
-              key={f.empleado}
-              className="px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-[12px] font-medium text-white truncate">{f.empleado}</p>
-                <span className="text-[11px] font-semibold text-white flex-shrink-0 ml-2">{f.monto}</span>
+        <SectionTitle title="Recientes" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((f) => (
+              <div
+                key={f.id}
+                className="px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-medium text-white truncate">{f.nombre_empleado || f.empleado || `Trabajador ${f.empleado_id}`}</p>
+                  <span className="text-[11px] font-semibold text-white flex-shrink-0 ml-2">{formatCurrency(f.total || f.monto)}</span>
+                </div>
+                <div className="flex items-center justify-between mt-0.5">
+                  <p className="text-[10px] text-[#A1A1AA] truncate">{f.motivo || 'Sin motivo'}</p>
+                  <span className="text-[10px] text-[#A1A1AA] flex-shrink-0 ml-2">{formatDate(f.fecha_baja || f.fecha)}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between mt-0.5">
-                <p className="text-[10px] text-[#A1A1AA] truncate">{f.motivo}</p>
-                <span className="text-[10px] text-[#A1A1AA] flex-shrink-0 ml-2">{f.fecha}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── CFDI ──────────────────────────────────────────
   if (page === 'cfdi') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="CFDI recientes" badge={cfdisRecientes.length} />
-        <div className="flex flex-col gap-0.5">
-          {cfdisRecientes.map((c) => (
-            <div
-              key={c.uuid}
-              className="px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-medium px-1 py-0.5 rounded ${c.tipo === 'Ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                  {c.tipo}
-                </span>
-                <span className="text-[11px] font-semibold text-white">{c.monto}</span>
+        <SectionTitle title="CFDI recientes" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((c) => (
+              <div
+                key={c.id}
+                className="px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-medium px-1 py-0.5 rounded ${c.tipo === 'Ingreso' || c.tipo === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                    {c.tipo || 'Ingreso'}
+                  </span>
+                  <span className="text-[11px] font-semibold text-white">{formatCurrency(c.total || c.monto)}</span>
+                </div>
+                <p className="text-[9px] text-[#A1A1AA] font-mono mt-1 truncate">{truncateUuid(c.uuid || c.id)}</p>
+                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{formatDate(c.fecha || c.fecha_timbrado)}</p>
               </div>
-              <p className="text-[9px] text-[#A1A1AA] font-mono mt-1 truncate">{c.uuid.substring(0, 20)}...</p>
-              <p className="text-[10px] text-[#A1A1AA] mt-0.5">{c.fecha}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Impuestos ─────────────────────────────────────
   if (page === 'impuestos') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Próximos vencimientos" badge={vencimientosImpuestos.length} />
-        <div className="flex flex-col gap-0.5">
-          {vencimientosImpuestos.map((v) => (
-            <div
-              key={v.declaracion}
-              className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{v.declaracion}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{v.periodo} → {v.vence}</p>
+        <SectionTitle title="Declaraciones" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{v.tipo || 'Declaración'}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{v.periodo_mes}/{v.periodo_anio}</p>
+                </div>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2 ${v.estatus === 'pendiente' ? 'bg-amber-500/10 text-amber-400' : v.estatus === 'presentada' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#52525B] text-[#A1A1AA]'}`}>
+                  {v.estatus || 'pendiente'}
+                </span>
               </div>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2 ${v.diasRestantes <= 3 ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                {v.diasRestantes}d
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Empleados ─────────────────────────────────────
   if (page === 'empleados') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Empleados activos" badge={empleadosActivos.length} />
-        <div className="flex flex-col gap-0.5">
-          {empleadosActivos.map((e) => (
-            <div
-              key={e.nombre}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="w-7 h-7 rounded-full bg-[#262626] flex items-center justify-center text-[10px] font-semibold text-[#D4D4D8] flex-shrink-0">
-                {e.nombre.charAt(0)}
+        <SectionTitle title="Empleados activos" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((e) => (
+              <div
+                key={e.id}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#262626] flex items-center justify-center text-[10px] font-semibold text-[#D4D4D8] flex-shrink-0">
+                  {(e.nombre_completo || e.nombre || 'E').charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{e.nombre_completo || e.nombre}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">{e.puesto || ''}{e.area ? ` · ${e.area}` : ''}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{e.nombre}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{e.puesto} · {e.area}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Tesorería ─────────────────────────────────────
   if (page === 'tesoreria') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Cuentas bancarias" badge={cuentasTesoreria.length} />
-        <div className="flex flex-col gap-0.5">
-          {cuentasTesoreria.map((c) => (
-            <div
-              key={c.cuenta}
-              className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{c.banco}</p>
-                <p className="text-[10px] text-[#A1A1AA] font-mono mt-0.5">{c.cuenta} · {c.tipo}</p>
+        <SectionTitle title="Cuentas bancarias" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{c.banco || c.nombre}</p>
+                  <p className="text-[10px] text-[#A1A1AA] font-mono mt-0.5">{c.numero_cuenta || c.cuenta || `****${String(c.id).slice(-4)}`}{c.tipo ? ` · ${c.tipo}` : ''}</p>
+                </div>
+                <span className="text-[12px] font-semibold text-white flex-shrink-0 ml-2">{formatCurrency(c.saldo)}</span>
               </div>
-              <span className="text-[12px] font-semibold text-white flex-shrink-0 ml-2">{c.saldo}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Estados Financieros ───────────────────────────
   if (page === 'estados-financieros') {
+    const balance = data;
+    if (!balance) {
+      return (
+        <div>
+          <SectionTitle title="Balance General" />
+          <NoData />
+        </div>
+      );
+    }
+    // Extract accounts from balance response
+    const cuentas = balance.cuentas || balance.activo || [];
+    const items = Array.isArray(cuentas) ? cuentas.slice(0, 6) : [];
     return (
       <div>
-        <SectionTitle title="Períodos" badge={periodosFinancieros.length} />
-        <div className="flex flex-col gap-0.5">
-          {periodosFinancieros.map((p) => (
-            <div
-              key={p.tipo}
-              className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                <span className="text-[12px] font-medium text-white truncate">{p.periodo}</span>
+        <SectionTitle title="Balance General" badge={items.length > 0 ? items.length : null} />
+        {items.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {items.map((c, i) => (
+              <div
+                key={c.clave || c.codigo || i}
+                className="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <span className="text-[12px] font-medium text-white truncate">{c.nombre || c.concepto || `Cuenta ${c.clave}`}</span>
+                </div>
+                <span className="text-[11px] font-semibold text-white flex-shrink-0 ml-2">{formatCurrency(c.saldo)}</span>
               </div>
-              <span className="text-[10px] text-[#A1A1AA] flex-shrink-0 ml-2">{p.tipo}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Alertas EFOS ──────────────────────────────────
   if (page === 'alertas-efos') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="Alertas activas" badge={alertasEFOS.length} />
-        <div className="flex flex-col gap-0.5">
-          {alertasEFOS.map((a) => (
-            <div
-              key={a.descripcion}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
-            >
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${severityDot(a.severidad)}`} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-white truncate">{a.descripcion}</p>
-                <p className="text-[10px] text-[#A1A1AA] mt-0.5">
-                  {a.proveedores > 0 ? `${a.proveedores} proveedor(es) afectado(s)` : 'Sin proveedores aún'}
-                </p>
+        <SectionTitle title="Alertas activas" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? <NoData /> : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${severityDot(a.severidad)}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-white truncate">{a.descripcion || a.tipo || 'Alerta'}</p>
+                  <p className="text-[10px] text-[#A1A1AA] mt-0.5">
+                    {a.proveedores_afectados != null
+                      ? `${a.proveedores_afectados} proveedor(es)`
+                      : a.estatus || 'Pendiente'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── API Pública ───────────────────────────────────
   if (page === 'api-publica') {
+    const endpointsAPI = [
+      { metodo: 'GET', ruta: '/api/v1/clientes', descripcion: 'Listar clientes' },
+      { metodo: 'POST', ruta: '/api/v1/facturas', descripcion: 'Crear factura' },
+      { metodo: 'GET', ruta: '/api/v1/contabilidad/polizas', descripcion: 'Listar pólizas' },
+      { metodo: 'POST', ruta: '/api/v1/nomina/calcular', descripcion: 'Calcular nómina' },
+      { metodo: 'GET', ruta: '/api/v1/cfdi/status', descripcion: 'Estado CFDI' },
+    ];
     return (
       <div>
         <SectionTitle title="Endpoints" badge={endpointsAPI.length} />
@@ -559,20 +809,45 @@ function ContextualContent({ page, searchQuery, setPage }) {
     );
   }
 
-  // ── CRM ────────────────────────────────────────────
+  // ── CRM ───────────────────────────────────────────
   if (page === 'crm') {
+    const list = Array.isArray(data) ? data : [];
     return (
       <div>
-        <SectionTitle title="CRM" />
-        <p className="text-[11px] text-[#A1A1AA]">Seguimientos, notas y timeline</p>
-        <button onClick={() => setPage?.('crm')} className="mt-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[#1A1A1A] text-[11px] text-[#D4D4D8] transition-colors">
-          Ver timeline completo →
-        </button>
+        <SectionTitle title="Seguimientos" badge={list.length > 0 ? list.length : null} />
+        {list.length === 0 ? (
+          <>
+            <p className="text-[11px] text-[#A1A1AA]">Seguimientos, notas y timeline</p>
+            <button onClick={() => setPage?.('crm')} className="mt-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[#1A1A1A] text-[11px] text-[#D4D4D8] transition-colors">
+              Ver timeline completo →
+            </button>
+          </>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {list.map((s) => (
+              <div
+                key={s.id}
+                className="px-2 py-1.5 rounded-lg cursor-pointer hover:bg-[#1A1A1A] transition-all duration-150"
+              >
+                <p className="text-[12px] font-medium text-white truncate">{s.titulo || s.asunto || 'Seguimiento'}</p>
+                <p className="text-[10px] text-[#A1A1AA] mt-0.5">{formatDate(s.fecha || s.fecha_creacion)}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   // ── Dashboard (default) ──────────────────────────
+  const accesosRapidos = [
+    { id: 'clientes', label: 'Clientes', icon: 'users' },
+    { id: 'contabilidad', label: 'Contabilidad', icon: 'book' },
+    { id: 'facturacion', label: 'Facturación', icon: 'receipt' },
+    { id: 'nomina', label: 'Nómina', icon: 'dollar' },
+    { id: 'impuestos', label: 'Impuestos', icon: 'calc' },
+    { id: 'cfdi', label: 'CFDI', icon: 'file-check' },
+  ];
   return (
     <div>
       <SectionTitle title="Accesos rápidos" badge={accesosRapidos.length} />

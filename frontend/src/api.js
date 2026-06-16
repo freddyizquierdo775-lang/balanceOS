@@ -228,3 +228,9 @@ export const crm = {
   // Búsqueda global
   buscar: (q) => api(`/crm/buscar?q=${encodeURIComponent(q)}`),
 };
+
+export const dashboard = {
+  kpis: () => api('/dashboard/kpis'),
+  actividad: (limit = 10) => api(`/dashboard/actividad?limit=${limit}`),
+  graficos: () => api('/dashboard/graficos'),
+};

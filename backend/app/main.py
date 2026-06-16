@@ -12,11 +12,21 @@ import os.path
 
 from app.database import init_db
 from app.routers import auth, clientes, documentos, imss, alertas, empleados, nomina, repse, pld, finiquitos, cfdi, portal
-from app.routers import contabilidad, impuestos, facturacion, tesoreria, estados_financieros, api_publica, alertas_efos, crm
+from app.routers import contabilidad, impuestos, facturacion, tesoreria, estados_financieros, api_publica, alertas_efos, crm, dashboard
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    # Seed automático si la BD está vacía (primer deploy)
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("seed_module", os.path.join(os.path.dirname(__file__), "..", "seed.py"))
+        if spec and spec.loader:
+            seed_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(seed_module)
+            await seed_module.seed()
+    except Exception:
+        pass  # seed no disponible, o ya ejecutado — no es crítico
     yield
 
 app = FastAPI(
@@ -53,6 +63,7 @@ app.include_router(estados_financieros.router)
 app.include_router(api_publica.router)
 app.include_router(alertas_efos.router)
 app.include_router(crm.router)
+app.include_router(dashboard.router)
 
 
 # ─── Health endpoint ──────────────────────────────
@@ -95,6 +106,7 @@ if os.path.isdir(FRONTEND_DIR):
                                   "estados-financieros/", "api/",
                                   "alertas-efos/",
                                   "crm/",
+                                  "dashboard/",
                                   "health")):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
 

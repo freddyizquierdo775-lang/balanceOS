@@ -2,7 +2,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import DeclarativeBase
 from .config import DATABASE_URL
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+# SQLite necesita check_same_thread=False para funcionar con async
+if "sqlite" in DATABASE_URL:
+    engine = create_async_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+else:
+    engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 class Base(DeclarativeBase):
