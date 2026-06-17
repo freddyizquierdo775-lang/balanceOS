@@ -1,19 +1,24 @@
-# Railway / Nixpacks build configuration for Balance OS
-# Backend: FastAPI (Python 3.11) at ./backend/
-# Frontend: Vite (Node.js) at ./frontend/
+# Balance OS — Railway/Nixpacks build config
+# 
+# Nixpacks auto-detects Python at backend/app/ which breaks the build.
+# We override the provider to use backend/ as the app directory.
+
+[providers.python]
+appDir = "."
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "python311"]
+nixPkgs = ["python311", "nodejs_22"]
 
 [phases.install]
 cmds = [
-    "cd backend && pip install -r requirements.txt",
+    "pip install -r backend/requirements.txt",
     "cd frontend && npm install",
 ]
 
 [phases.build]
 cmds = [
     "cd frontend && npm run build",
+    "mkdir -p backend/static",
     "cp -r frontend/dist/* backend/static/",
 ]
 
