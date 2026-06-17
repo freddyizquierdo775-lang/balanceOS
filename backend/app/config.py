@@ -4,6 +4,11 @@ import secrets
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./balance_os.db")
 
+# ── Finkok PAC ────────────────────────────────────
+FINKOK_USERNAME = os.getenv("FINKOK_USERNAME", "")       # RFC del emisor
+FINKOK_PASSWORD = os.getenv("FINKOK_PASSWORD", "")       # Contraseña Finkok
+FINKOK_SANDBOX = os.getenv("FINKOK_SANDBOX", "true").lower() == "true"
+
 # Railway provee DATABASE_URL en formato postgres:// o postgresql://
 # asyncpg requiere postgresql+asyncpg://
 if DATABASE_URL.startswith("postgres://"):

@@ -17,6 +17,7 @@ from app.models import (
 from app.schemas.cfdi import (
     CsdCertificadoCreate, CsdCertificadoResponse,
     CfdiReciboResponse, CfdiTimbrarRequest, CfdiTimbrarResponse,
+    CfdiCancelarRequest,
 )
 from app.cfdi.generador import (
     generar_cfdi_nomina, guardar_xml,
@@ -140,12 +141,18 @@ async def pac_status(
 ):
     """Devuelve el estado de la conexión PAC."""
     cfg = PacConfig.cargar()
-    return {
+    status = {
         "provider": cfg.provider,
         "configured": bool(cfg.api_key and cfg.provider != "mock"),
         "endpoint": cfg.endpoint or "N/A",
         "mock_mode": cfg.provider == "mock",
     }
+    # Info adicional para Finkok
+    if cfg.provider == "finkok":
+        status["sandbox"] = cfg.sandbox
+        status["username"] = os.getenv("FINKOK_USERNAME", "")[:4] + "***" if os.getenv("FINKOK_USERNAME") else "N/A"
+        status["has_credentials"] = bool(os.getenv("FINKOK_USERNAME") and os.getenv("FINKOK_PASSWORD"))
+    return status
 
 
 # ─── Timbrado ─────────────────────────────────────
@@ -293,3 +300,117 @@ async def obtener_cfdi_recibo(
     if not cfdi:
         raise HTTPException(status_code=404, detail="No tiene CFDI asociado")
     return cfdi
+
+
+# ─── Consulta de CFDI ──────────────────────────────
+
+@router.get("/consultar/{uuid}")
+async def consultar_cfdi(
+    uuid: str,
+    rfc_emisor: Optional[str] = None,
+    usuario: dict = Depends(get_usuario),
+):
+    """Consulta el estatus de un CFDI timbrado en el PAC.
+
+    Si el PAC soporta consulta (FinkokAdapter, etc.), devuelve el estatus actual.
+    De lo contrario, retorna 501 Not Implemented.
+    """
+    pac = get_pac_adapter()
+    if not hasattr(pac, 'consultar'):
+        raise HTTPException(
+            status_code=501,
+            detail=f"El PAC actual ({type(pac).__name__}) no soporta consulta de CFDI.",
+        )
+
+    try:
+        resultado = pac.consultar(uuid, rfc_emisor=rfc_emisor or "")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.error("Error consultando CFDI %s: %s", uuid, e)
+        raise HTTPException(status_code=500, detail=f"Error consultando CFDI: {e}")
+
+    return {
+        "uuid": uuid,
+        **resultado,
+    }
+
+
+# ─── Cancelación de CFDI ──────────────────────────
+
+@router.post("/cancelar")
+async def cancelar_cfdi(
+    data: CfdiCancelarRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario),
+):
+    """Cancela un CFDI por UUID vía el PAC configurado.
+
+    Requiere el UUID y RFC del emisor. Opcionalmente puede incluir
+    el motivo de cancelación.
+
+    Busca el CFDI en la base de datos y llama al método cancelar del PAC.
+    """
+    pac = get_pac_adapter()
+
+    # Verificar que el CFDI existe en BD
+    result = await db.execute(
+        select(CfdiRecibo).where(CfdiRecibo.uuid == data.uuid)
+    )
+    cfdi = result.scalar_one_or_none()
+
+    if not cfdi:
+        raise HTTPException(
+            status_code=404,
+            detail=f"CFDI con UUID {data.uuid} no encontrado en el sistema.",
+        )
+
+    # Obtener CSD activo para leer .cer y .key
+    csd_result = await db.execute(
+        select(CsdCertificado).where(CsdCertificado.activo == True).limit(1)
+    )
+    csd = csd_result.scalar_one_or_none()
+
+    csd_pem = ""
+    llave_pem = ""
+    if csd:
+        if csd.certificado_path and os.path.exists(csd.certificado_path):
+            with open(csd.certificado_path) as f:
+                csd_pem = f.read()
+        if csd.llave_path and os.path.exists(csd.llave_path):
+            with open(csd.llave_path) as f:
+                llave_pem = f.read()
+
+    try:
+        resultado = pac.cancelar(
+            uuid=data.uuid,
+            rfc_emisor=data.rfc_emisor,
+            csd_pem=csd_pem,
+            llave_pem=llave_pem,
+            contrasena=csd.contrasena or "" if csd else "",
+        )
+    except NotImplementedError:
+        raise HTTPException(
+            status_code=501,
+            detail=f"El PAC actual ({type(pac).__name__}) no soporta cancelación.",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.error("Error cancelando CFDI %s: %s", data.uuid, e)
+        raise HTTPException(status_code=500, detail=f"Error cancelando CFDI: {e}")
+
+    # Actualizar estatus en BD si la cancelación fue exitosa
+    if resultado.get("success"):
+        cfdi.estatus = EstatusCFDI.CANCELADO
+        await db.commit()
+        logger.info("CFDI %s cancelado exitosamente.", data.uuid)
+
+    return {
+        "uuid": data.uuid,
+        **resultado,
+    }

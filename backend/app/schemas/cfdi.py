@@ -53,3 +53,10 @@ class CfdiTimbrarResponse(BaseModel):
     cfdi: CfdiReciboResponse
     uuid: str
     xml_preview: str  # primeros 500 chars
+
+
+class CfdiCancelarRequest(BaseModel):
+    """Solicitud de cancelación de CFDI."""
+    uuid: str
+    rfc_emisor: str
+    motivo: Optional[str] = None  # motivo de cancelación (opcional)

@@ -127,6 +127,9 @@ export const cfdi = {
   timbrar: (reciboId) => api('/cfdi/timbrar', { method: 'POST', body: JSON.stringify({ recibo_id: reciboId }) }),
   listarRecibos: (estatus = '') => api(`/cfdi/recibos${estatus ? `?estatus=${estatus}` : ''}`),
   obtenerPorRecibo: (reciboId) => api(`/cfdi/recibos/${reciboId}`),
+  pacStatus: () => api('/cfdi/pac-status'),
+  consultar: (uuid, rfc_emisor = '') => api(`/cfdi/consultar/${uuid}${rfc_emisor ? `?rfc_emisor=${encodeURIComponent(rfc_emisor)}` : ''}`),
+  cancelar: (data) => api('/cfdi/cancelar', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 export const empleados = {
