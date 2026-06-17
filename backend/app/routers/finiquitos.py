@@ -1,6 +1,7 @@
 """Balance OS — Router de Finiquitos/Liquidaciones"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from typing import List, Optional
@@ -24,6 +25,7 @@ from app.nomina.calculo import (
 )
 from app.services.event_engine import emitir_evento
 from app.routers.auth import verificar_token
+from app.pdf.finiquito import generar_pdf_finiquito
 
 router = APIRouter(prefix="/finiquitos", tags=["finiquitos"])
 
@@ -267,3 +269,34 @@ async def finiquitos_por_empleado(
         .order_by(Finiquito.created_at.desc())
     )
     return result.scalars().all()
+
+
+# ─── PDF ───────────────────────────────────────────
+
+@router.get("/{finiquito_id}/pdf")
+async def descargar_pdf_finiquito(
+    finiquito_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario),
+):
+    """Descarga el finiquito en PDF."""
+    from sqlalchemy.orm import selectinload
+
+    result = await db.execute(
+        select(Finiquito)
+        .options(selectinload(Finiquito.empleado))
+        .where(Finiquito.id == finiquito_id)
+    )
+    f = result.scalar_one_or_none()
+    if not f:
+        raise HTTPException(status_code=404, detail="Finiquito no encontrado")
+
+    pdf_bytes = generar_pdf_finiquito(f, f.empleado)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                f"attachment; filename=finiquito_{finiquito_id}.pdf"
+        },
+    )

@@ -523,6 +523,7 @@ export default function Facturacion({ usuario }) {
                     <th className="text-left py-3 px-4 text-[#A1A1AA] font-semibold">Fecha</th>
                     <th className="text-right py-3 px-4 text-[#A1A1AA] font-semibold">Total</th>
                     <th className="text-center py-3 px-4 text-[#A1A1AA] font-semibold">Estatus</th>
+                    <th className="py-3 px-4 w-12"></th>
                     <th className="py-3 px-4 w-20"></th>
                   </tr>
                 </thead>
@@ -538,6 +539,13 @@ export default function Facturacion({ usuario }) {
                         <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${ESTATUS_FACTURA[f.estatus] || 'bg-slate-100 text-[#A1A1AA]'}`}>
                           {ESTATUS_LABEL[f.estatus] || f.estatus}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <a href={facturacion.descargarPdfUrl(f.id)}
+                           title="Descargar PDF"
+                           className="text-[10px] text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2 py-1 rounded-lg transition-all inline-block">
+                          PDF
+                        </a>
                       </td>
                       <td className="py-3 px-4">
                         {f.estatus === 'activa' && (

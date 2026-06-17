@@ -466,6 +466,7 @@ export default function FINIQUITOS({ usuario }) {
                     <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Percepciones</th>
                     <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Deducciones</th>
                     <th className="text-right py-3 px-4 text-[#A1A1AA] font-medium">Neto</th>
+                    <th className="py-3 px-2 w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -491,6 +492,13 @@ export default function FINIQUITOS({ usuario }) {
                       <td className="text-right py-3 px-2 text-white font-semibold">{fmt(f.total_percepciones)}</td>
                       <td className="text-right py-3 px-2 text-red-400">{fmt(f.total_deducciones)}</td>
                       <td className="text-right py-3 px-4 text-emerald-400 font-bold">{fmt(f.neto)}</td>
+                      <td className="py-3 px-2 text-center">
+                        <a href={finiquitos.descargarPdfUrl(f.id)}
+                           title="Descargar PDF"
+                           className="text-[10px] text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2 py-1 rounded-lg transition-all inline-block">
+                          PDF
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

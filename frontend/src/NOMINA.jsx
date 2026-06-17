@@ -288,6 +288,7 @@ export default function NOMINA({ usuario }) {
                     <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">ISR</th>
                     <th className="text-right py-3 px-2 text-[#A1A1AA] font-medium">Subsidio</th>
                     <th className="text-right py-3 px-4 text-[#A1A1AA] font-medium">Neto</th>
+                    <th className="py-3 px-2 w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,6 +304,13 @@ export default function NOMINA({ usuario }) {
                       <td className="text-right py-3 px-2 text-[#D4D4D8]">{fmt(r.isr_neto)}</td>
                       <td className="text-right py-3 px-2 text-[#A1A1AA]">{fmt(r.subsidio_al_empleo)}</td>
                       <td className="text-right py-3 px-4 text-white font-bold">{fmt(r.neto)}</td>
+                      <td className="py-3 px-2 text-center">
+                        <a href={nomina.descargarPdfUrl(r.id)}
+                           title="Descargar PDF"
+                           className="text-[10px] text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2 py-1 rounded-lg transition-all inline-block">
+                          PDF
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

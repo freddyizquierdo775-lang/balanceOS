@@ -86,6 +86,7 @@ export const nomina = {
   calcularPeriodo: (id) => api(`/nomina/periodos/${id}/calcular`, { method: 'POST' }),
   listarRecibos: (periodoId = '') => api(`/nomina/recibos${periodoId ? `?periodo_id=${periodoId}` : ''}`),
   obtenerRecibo: (id) => api(`/nomina/recibos/${id}`),
+  descargarPdfUrl: (reciboId) => `${API_BASE}/nomina/recibos/${reciboId}/pdf`,
 };
 
 export const repse = {
@@ -119,6 +120,7 @@ export const finiquitos = {
   porEmpleado: (eid) => api(`/finiquitos/empleado/${eid}`),
   buscarTrabajador: (q) => api(`/finiquitos/buscar-trabajador?q=${encodeURIComponent(q)}`),
   datosTrabajador: (eid, fechaBaja = '') => api(`/finiquitos/trabajador/${eid}/datos${fechaBaja ? `?fecha_baja=${fechaBaja}` : ''}`),
+  descargarPdfUrl: (finiquitoId) => `${API_BASE}/finiquitos/${finiquitoId}/pdf`,
 };
 
 export const cfdi = {
@@ -176,6 +178,7 @@ export const facturacion = {
   crearFactura: (data) => api('/facturacion/facturas', { method: 'POST', body: JSON.stringify(data) }),
   obtenerFactura: (id) => api(`/facturacion/facturas/${id}`),
   cancelarFactura: (id) => api(`/facturacion/facturas/${id}/cancelar`, { method: 'PUT' }),
+  descargarPdfUrl: (facturaId) => `${API_BASE}/facturacion/facturas/${facturaId}/pdf`,
   listarComplementos: () => api('/facturacion/complementos-pago'),
   crearComplemento: (data) => api('/facturacion/complementos-pago', { method: 'POST', body: JSON.stringify(data) }),
 };

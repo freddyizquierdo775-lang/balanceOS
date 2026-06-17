@@ -1,16 +1,18 @@
 """Balance OS — Router de Nómina (Períodos + Recibos + Cálculo)"""
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List
 
 from app.database import get_db
-from app.models import PeriodoNomina, Recibo, Empleado
+from app.models import PeriodoNomina, Recibo, Empleado, CfdiRecibo
 from app.schemas.nomina import PeriodoCreate, PeriodoResponse, PeriodoDetalleResponse, ReciboResponse
 from app.routers.auth import verificar_token
 from app.nomina.calculo import procesar_periodo
+from app.pdf.nomina import generar_pdf_nomina
 
 router = APIRouter(prefix="/nomina", tags=["nomina"])
 
@@ -130,3 +132,39 @@ async def obtener_recibo(
     if not r:
         raise HTTPException(status_code=404, detail="Recibo no encontrado")
     return r
+
+
+# ─── PDF ───────────────────────────────────────────
+
+@router.get("/recibos/{recibo_id}/pdf")
+async def descargar_pdf_nomina(
+    recibo_id: int,
+    db: AsyncSession = Depends(get_db),
+    usuario: dict = Depends(get_usuario),
+):
+    """Descarga el recibo de nómina en PDF."""
+    # Cargar recibo con relaciones
+    result = await db.execute(
+        select(Recibo)
+        .options(selectinload(Recibo.periodo), selectinload(Recibo.empleado))
+        .where(Recibo.id == recibo_id)
+    )
+    recibo = result.scalar_one_or_none()
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo no encontrado")
+
+    # Buscar CFDI asociado (opcional)
+    cfdi_result = await db.execute(
+        select(CfdiRecibo).where(CfdiRecibo.recibo_id == recibo_id)
+    )
+    cfdi = cfdi_result.scalar_one_or_none()
+
+    pdf_bytes = generar_pdf_nomina(recibo, recibo.empleado, cfdi, recibo.periodo)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                f"attachment; filename=recibo_nomina_{recibo_id}.pdf"
+        },
+    )

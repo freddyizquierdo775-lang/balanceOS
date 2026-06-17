@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.responses import PlainTextResponse, FileResponse
+from fastapi.responses import PlainTextResponse, FileResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
@@ -20,6 +20,7 @@ from app.schemas.facturacion import (
 from app.routers.auth import verificar_token
 from app.pac import get_pac_adapter
 from app.cfdi.generador_xml import generar_xml_ingreso, guardar_xml_ingreso
+from app.pdf.factura import generar_pdf_factura
 
 logger = logging.getLogger(__name__)
 
@@ -376,25 +377,41 @@ async def descargar_pdf_factura(
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
 ):
-    """Descarga la representación impresa (PDF) de un CFDI de ingreso.
-    
-    Placeholder: en producción se generaría vía PAC o renderizado local.
-    """
+    """Descarga la representación impresa (PDF) de un CFDI de ingreso."""
+    # Cargar factura con conceptos e impuestos
     result = await db.execute(
         select(CfdiIngreso).where(CfdiIngreso.id == factura_id)
     )
     factura = result.scalar_one_or_none()
     if not factura:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Factura no encontrada",
+        )
 
-    # Placeholder: devolver un texto indicando que el PDF no está disponible aún
-    # En producción: solicitar representación al PAC o generar PDF desde XML/XSLT
-    return {
-        "detail": "Representación PDF no disponible en modo placeholder",
-        "factura_id": factura_id,
-        "uuid": factura.uuid,
-        "mensaje": "La generación de PDF requiere integración con el PAC o renderizador XSL-FO/XSLT (SAT).",
-    }
+    # Cargar conceptos
+    conc_result = await db.execute(
+        select(CfdiIngresoConcepto)
+        .where(CfdiIngresoConcepto.cfdi_id == factura_id)
+    )
+    conceptos = conc_result.scalars().all()
+
+    # Cargar impuestos
+    imp_result = await db.execute(
+        select(CfdiIngresoImpuesto)
+        .where(CfdiIngresoImpuesto.cfdi_id == factura_id)
+    )
+    impuestos_list = imp_result.scalars().all()
+
+    pdf_bytes = generar_pdf_factura(factura, conceptos, impuestos_list)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                f"attachment; filename=factura_{factura_id}.pdf"
+        },
+    )
 
 
 # ─── Complementos de Pago ─────────────────────────
