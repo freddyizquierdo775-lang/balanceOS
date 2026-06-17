@@ -43,6 +43,11 @@ export const clientes = {
   stats: () => api('/clientes/stats'),
   vencimientos: (dias = 90) => api(`/clientes/vencimientos?dias=${dias}`),
   exportarCsvUrl: () => `${API_BASE}/clientes/exportar/csv`,
+  importarCsv: (file) => {
+    const form = new FormData();
+    form.append('archivo', file);
+    return api('/clientes/importar/csv', { method: 'POST', body: form });
+  },
 };
 
 export const documentos = {
@@ -140,6 +145,11 @@ export const empleados = {
   crear: (data) => api('/empleados/', { method: 'POST', body: JSON.stringify(data) }),
   actualizar: (id, data) => api(`/empleados/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   eliminar: (id) => api(`/empleados/${id}`, { method: 'DELETE' }),
+  importarCsv: (file) => {
+    const form = new FormData();
+    form.append('archivo', file);
+    return api('/empleados/importar/csv', { method: 'POST', body: form });
+  },
 };
 
 export const contabilidad = {

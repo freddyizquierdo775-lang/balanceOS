@@ -1,10 +1,12 @@
 """
 Balance OS — Router de Clientes
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, func
 from typing import List, Optional
+from fastapi.responses import StreamingResponse
+import csv, io
 
 from app.database import get_db
 from app.models import Cliente, Usuario, EstatusCliente, RegimenFiscal
@@ -169,9 +171,6 @@ async def exportar_csv(
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Exporta clientes a CSV."""
-    from fastapi.responses import StreamingResponse
-    import csv, io
-
     # Misma lógica de filtros que listar + multi-tenancy
     query = select(Cliente).where(Cliente.despacho_id == despacho_id)
     if usuario.get("rol") != "admin":
@@ -207,6 +206,121 @@ async def exportar_csv(
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=clientes.csv"},
     )
+
+
+# ─── Importar CSV ────────────────────────────────
+
+CSV_CLIENTES_HEADERS = {
+    "rfc": ["rfc", "RFC"],
+    "razon_social": ["razon social", "razon_social", "razón social", "nombre", "cliente"],
+    "regimen_fiscal": ["regimen fiscal", "regimen_fiscal", "régimen fiscal", "regimen"],
+    "tipo_persona": ["tipo persona", "tipo_persona", "persona"],
+    "email": ["email", "correo", "mail"],
+    "telefono": ["telefono", "teléfono", "telefono", "tel"],
+    "direccion": ["direccion", "dirección", "domicilio"],
+}
+
+
+def _normalize_header(h: str) -> str:
+    return h.strip().lower().replace("'", "").replace('"', "")
+
+
+def _map_csv_row(row: dict) -> dict:
+    """Mapea fila CSV a campos de Cliente. Retorna dict con campos válidos."""
+    mapped = {}
+    for field, aliases in CSV_CLIENTES_HEADERS.items():
+        for alias in aliases:
+            if alias in row:
+                val = row[alias].strip()
+                if val:
+                    mapped[field] = val
+                break
+    return mapped
+
+
+@router.post("/importar/csv")
+async def importar_csv_clientes(
+    archivo: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: dict = Depends(get_usuario_actual),
+):
+    """Importa clientes desde archivo CSV.
+    
+    Columnas aceptadas: RFC, Razon Social, Regimen Fiscal, Tipo Persona, Email, Telefono, Direccion.
+    Retorna resumen de importación con conteo de éxitos y errores.
+    """
+    if not archivo.filename or not archivo.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Solo se aceptan archivos .csv")
+
+    contenido = await archivo.read()
+    try:
+        texto = contenido.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        texto = contenido.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(texto))
+    if not reader.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV vacío o sin encabezados")
+
+    # Normalizar encabezados
+    headers = {_normalize_header(h): h for h in reader.fieldnames}
+    regimenes_validos = [r.value for r in RegimenFiscal]
+
+    importados = 0
+    errores = []
+
+    for i, row in enumerate(reader, start=2):  # fila 2+ (1=headers)
+        try:
+            # Normalizar keys del row
+            norm_row = {_normalize_header(k): v for k, v in row.items() if k}
+            mapped = _map_csv_row(norm_row)
+
+            if "rfc" not in mapped or not mapped["rfc"]:
+                errores.append({"fila": i, "error": "RFC requerido"})
+                continue
+            if "razon_social" not in mapped or not mapped["razon_social"]:
+                errores.append({"fila": i, "error": "Razon Social requerida"})
+                continue
+
+            rfc = mapped["rfc"].upper().strip()
+            regimen = mapped.get("regimen_fiscal", "607").strip()
+            if regimen not in regimenes_validos:
+                regimen = "607"  # default: PM General
+
+            # Validar RFC duplicado
+            existente = await db.execute(
+                select(Cliente).where(Cliente.rfc == rfc, Cliente.despacho_id == despacho_id)
+            )
+            if existente.scalar_one_or_none():
+                errores.append({"fila": i, "rfc": rfc, "error": "RFC duplicado en este despacho"})
+                continue
+
+            cliente = Cliente(
+                rfc=rfc,
+                razon_social=mapped["razon_social"].strip(),
+                regimen_fiscal=regimen,
+                tipo_persona=mapped.get("tipo_persona", "fisica").strip().lower(),
+                email=mapped.get("email", "").strip() or None,
+                telefono=mapped.get("telefono", "").strip() or None,
+                direccion=mapped.get("direccion", "").strip() or None,
+                asesor_id=usuario.get("id"),
+                despacho_id=despacho_id,
+            )
+            db.add(cliente)
+            importados += 1
+
+        except Exception as e:
+            errores.append({"fila": i, "error": str(e)})
+
+    await db.commit()
+
+    return {
+        "mensaje": f"Importación completada: {importados} clientes importados, {len(errores)} errores",
+        "importados": importados,
+        "errores": errores,
+        "total_filas": i - 1 if reader.line_num else 0,
+    }
 
 
 @router.get("/", response_model=List[ClienteResponse])
