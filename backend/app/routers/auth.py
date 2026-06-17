@@ -12,9 +12,10 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.models import Usuario
+from app.models import Usuario, Despacho
 from app.schemas import LoginRequest, TokenResponse, UsuarioCreate, UsuarioResponse
 from app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.services.email_service import send_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
@@ -180,3 +181,78 @@ async def actualizar_usuario(
     await db.commit()
     await db.refresh(target)
     return target
+
+
+# ─── Recuperación de contraseña ──────────────────
+
+RESET_TOKEN_EXPIRE_MINUTES = 15
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Envía email con link para restablecer contraseña."""
+    result = await db.execute(select(Usuario).where(Usuario.email == data.email))
+    usuario = result.scalar_one_or_none()
+
+    # Siempre respondemos éxito para no revelar si el email existe
+    if not usuario:
+        return {"mensaje": "Si el email está registrado, recibirás un link para restablecer tu contraseña."}
+
+    # Generar token de reset (15 min)
+    reset_token = create_token({
+        "sub": str(usuario.id),
+        "tipo": "reset_password",
+        "exp": datetime.utcnow() + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES),
+    })
+
+    # Enviar email
+    reset_link = f"https://balanceos.com/reset-password?token={reset_token}"
+    try:
+        await send_email(
+            to_email=usuario.email,
+            subject="Restablece tu contraseña — Balance OS",
+            template_name="reset_password",
+            context={
+                "nombre": usuario.nombre,
+                "reset_link": reset_link,
+                "minutos": RESET_TOKEN_EXPIRE_MINUTES,
+            },
+        )
+    except Exception:
+        pass  # Email falló, pero el token es válido
+
+    return {"mensaje": "Si el email está registrado, recibirás un link para restablecer tu contraseña."}
+
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Restablece contraseña usando token de reset."""
+    try:
+        payload = jwt.decode(data.token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("tipo") != "reset_password":
+            raise HTTPException(status_code=400, detail="Token inválido")
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+
+    result = await db.execute(select(Usuario).where(Usuario.id == user_id))
+    usuario = result.scalar_one_or_none()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.password_hash = hash_password(data.new_password)
+    await db.commit()
+
+    return {"mensaje": "Contraseña actualizada correctamente. Ya puedes iniciar sesión."}

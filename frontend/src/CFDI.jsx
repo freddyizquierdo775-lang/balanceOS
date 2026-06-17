@@ -17,6 +17,10 @@ export default function CFDI({ usuario }) {
   const [recibosPeriodo, setRecibosPeriodo] = useState([]);
   const [timbrarMsg, setTimbrarMsg] = useState('');
   const [error, setError] = useState('');
+  const [cancelUuid, setCancelUuid] = useState('');
+  const [cancelRfc, setCancelRfc] = useState('');
+  const [cancelMsg, setCancelMsg] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const cargarTodo = useCallback(async () => {
     try {
@@ -47,6 +51,21 @@ export default function CFDI({ usuario }) {
         setRecibosPeriodo(data.recibos || []);
       }
     } catch (e) { setError(e.message); }
+  };
+
+  const cancelarCfdi = async (e) => {
+    e.preventDefault();
+    setCancelLoading(true);
+    setCancelMsg('');
+    setError('');
+    try {
+      const r = await cfdi.cancelar({ uuid: cancelUuid, rfc_emisor: cancelRfc });
+      setCancelMsg(`✅ CFDI ${r.uuid} cancelado: ${r.estatus || 'ok'}`);
+      setCancelUuid('');
+      setCancelRfc('');
+      await cargarTodo();
+    } catch (e) { setError(e.message); }
+    setCancelLoading(false);
   };
 
   const getCfdiStatus = (reciboId) => {
@@ -205,7 +224,30 @@ export default function CFDI({ usuario }) {
       )}
 
       <div className="mt-6 text-[11px] text-[#A1A1AA] text-center">
-        CFDI 4.0 · Nómina · PAC mock (desarrollo) · Conectar PAC real para timbrado oficial
+        CFDI 4.0 · Nómina · PAC Finkok · Timbrado oficial
+      </div>
+
+      {/* Cancelación */}
+      <div className="mt-6 p-4 rounded-xl border border-[#262626] bg-[#141414]">
+        <h3 className="text-sm font-semibold text-white mb-3">Cancelar CFDI</h3>
+        {cancelMsg && (
+          <div className="bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-xs rounded-lg p-2 mb-3">{cancelMsg}</div>
+        )}
+        <form onSubmit={cancelarCfdi} className="flex gap-2">
+          <input type="text" placeholder="UUID del CFDI" value={cancelUuid}
+            onChange={e => setCancelUuid(e.target.value)} required
+            className="flex-1 bg-[#1A1A1A] border border-[#262626] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#10B981] placeholder:text-[#A1A1AA]"
+          />
+          <input type="text" placeholder="RFC Emisor" value={cancelRfc}
+            onChange={e => setCancelRfc(e.target.value.toUpperCase())} required maxLength={13}
+            className="w-36 bg-[#1A1A1A] border border-[#262626] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#10B981] placeholder:text-[#A1A1AA]"
+          />
+          <button type="submit" disabled={cancelLoading}
+            className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50"
+          >
+            {cancelLoading ? '...' : 'Cancelar'}
+          </button>
+        </form>
       </div>
       </div>
     </div>
