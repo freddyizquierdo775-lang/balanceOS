@@ -1,0 +1,21 @@
+# Railway / Nixpacks build configuration for Balance OS
+# Backend: FastAPI (Python 3.11) at ./backend/
+# Frontend: Vite (Node.js) at ./frontend/
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "python311"]
+
+[phases.install]
+cmds = [
+    "cd backend && pip install -r requirements.txt",
+    "cd frontend && npm install",
+]
+
+[phases.build]
+cmds = [
+    "cd frontend && npm run build",
+    "cp -r frontend/dist/* backend/static/",
+]
+
+[start]
+cmd = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
