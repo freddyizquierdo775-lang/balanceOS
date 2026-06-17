@@ -11,6 +11,7 @@ from app.models import Cliente, Usuario, Empleado, Documento
 from app.models.crm import Seguimiento, Nota
 from app.models.eventos import Evento
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.schemas.crm import (
     SeguimientoCreate,
     SeguimientoUpdate,
@@ -43,6 +44,7 @@ async def listar_seguimientos(
     estado: Optional[str] = Query(None, description="Filtrar por estado (pendiente, en_proceso, completado, cancelado)"),
     tipo: Optional[str] = Query(None, description="Filtrar por tipo (general, imss, fiscal, nomina, juridico)"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Lista seguimientos con filtros opcionales."""
@@ -68,6 +70,7 @@ async def listar_seguimientos(
 async def crear_seguimiento(
     data: SeguimientoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Crea un nuevo seguimiento."""
@@ -98,6 +101,7 @@ async def actualizar_seguimiento(
     seguimiento_id: int,
     data: SeguimientoUpdate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Actualiza un seguimiento (estado, titulo, etc.)."""
@@ -127,6 +131,7 @@ async def actualizar_seguimiento(
 async def listar_notas(
     cliente_id: Optional[int] = Query(None, description="Filtrar por cliente"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Lista notas con filtro opcional por cliente."""
@@ -148,6 +153,7 @@ async def listar_notas(
 async def crear_nota(
     data: NotaCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Crea una nueva nota."""
@@ -180,6 +186,7 @@ async def consultar_timeline(
     entidad: Optional[str] = Query(None, description="Filtrar por tipo de entidad (cliente, nomina, factura, etc.)"),
     limit: int = Query(50, ge=1, le=200, description="Máximo de eventos a retornar"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Consulta el timeline de eventos. Puede filtrarse por cliente y tipo de entidad.
@@ -216,6 +223,7 @@ async def consultar_timeline(
 async def buscar_global(
     q: str = Query(..., min_length=2, description="Término de búsqueda (mínimo 2 caracteres)"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     """Búsqueda global: busca en clientes, empleados y documentos."""

@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import Empleado, TipoContrato, TipoJornada, EstatusEmpleado
 from app.schemas.empleado import EmpleadoCreate, EmpleadoUpdate, EmpleadoResponse
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/empleados", tags=["empleados"])
 
@@ -23,8 +24,9 @@ async def listar_empleados(
     activo: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
+    despacho_id: int = Depends(get_despacho_id),
 ):
-    query = select(Empleado)
+    query = select(Empleado).where(Empleado.despacho_id == despacho_id)
 
     if q:
         search = f"%{q}%"
@@ -50,8 +52,11 @@ async def obtener_empleado(
     empleado_id: int,
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
+    despacho_id: int = Depends(get_despacho_id),
 ):
-    result = await db.execute(select(Empleado).where(Empleado.id == empleado_id))
+    result = await db.execute(
+        select(Empleado).where(Empleado.id == empleado_id, Empleado.despacho_id == despacho_id)
+    )
     emp = result.scalar_one_or_none()
     if not emp:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
@@ -63,9 +68,12 @@ async def crear_empleado(
     data: EmpleadoCreate,
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
+    despacho_id: int = Depends(get_despacho_id),
 ):
-    # Validar RFC duplicado
-    existente = await db.execute(select(Empleado).where(Empleado.rfc == data.rfc))
+    # Validar RFC duplicado (dentro del mismo despacho)
+    existente = await db.execute(
+        select(Empleado).where(Empleado.rfc == data.rfc, Empleado.despacho_id == despacho_id)
+    )
     if existente.scalar_one_or_none():
         raise HTTPException(status_code=409, detail=f"Ya existe un empleado con RFC {data.rfc}")
 
@@ -79,7 +87,7 @@ async def crear_empleado(
     if data.tipo_jornada not in valores_jornada:
         raise HTTPException(status_code=400, detail=f"Tipo jornada invalido. Opciones: {', '.join(valores_jornada)}")
 
-    emp = Empleado(**data.model_dump())
+    emp = Empleado(**data.model_dump(), despacho_id=despacho_id)
     db.add(emp)
     await db.commit()
     await db.refresh(emp)
@@ -92,8 +100,11 @@ async def actualizar_empleado(
     data: EmpleadoUpdate,
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
+    despacho_id: int = Depends(get_despacho_id),
 ):
-    result = await db.execute(select(Empleado).where(Empleado.id == empleado_id))
+    result = await db.execute(
+        select(Empleado).where(Empleado.id == empleado_id, Empleado.despacho_id == despacho_id)
+    )
     emp = result.scalar_one_or_none()
     if not emp:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
@@ -111,8 +122,11 @@ async def eliminar_empleado(
     empleado_id: int,
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
+    despacho_id: int = Depends(get_despacho_id),
 ):
-    result = await db.execute(select(Empleado).where(Empleado.id == empleado_id))
+    result = await db.execute(
+        select(Empleado).where(Empleado.id == empleado_id, Empleado.despacho_id == despacho_id)
+    )
     emp = result.scalar_one_or_none()
     if not emp:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")

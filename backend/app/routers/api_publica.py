@@ -8,6 +8,7 @@ from sqlalchemy import select
 from typing import List, Optional
 
 from app.database import get_db
+from app.dependencies import get_despacho_id
 from app.models import Cliente
 
 router = APIRouter(prefix="/api/v1", tags=["api-publica"])
@@ -28,6 +29,7 @@ async def verificar_api_key(api_key: str = Query(..., alias="api_key")):
 @router.get("/clientes", response_model=List[dict])
 async def listar_clientes_publicos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     _: bool = Depends(verificar_api_key),
 ):
     """Lista pública de clientes (solo datos básicos)."""
@@ -50,6 +52,7 @@ async def listar_clientes_publicos(
 async def consultar_cliente_por_rfc(
     rfc: str,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     _: bool = Depends(verificar_api_key),
 ):
     """Consulta un cliente por RFC (solo datos básicos)."""
@@ -72,6 +75,7 @@ async def consultar_cliente_por_rfc(
 async def recibir_webhook(
     payload: dict,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     _: bool = Depends(verificar_api_key),
 ):
     """Recibe un callback/webhook externo."""

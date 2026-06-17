@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Enum as SAEnum, Boolean, Numeric, Date, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
+from app.models.despacho import Despacho  # noqa: F401
 import enum
 
 # ─── Enums ────────────────────────────────────────
@@ -46,9 +47,11 @@ class Usuario(Base):
     rol = Column(SAEnum(RolUsuario), default=RolUsuario.ASESOR)
     telefono = Column(String(20))
     activo = Column(Integer, default=1)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    despacho = relationship("Despacho", backref="usuarios")
     clientes = relationship("Cliente", back_populates="asesor")
 
 class Cliente(Base):
@@ -78,6 +81,7 @@ class Cliente(Base):
     fiel_vencimiento = Column(DateTime, nullable=True)
 
     # Asignación
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     asesor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     asesor = relationship("Usuario", back_populates="clientes")
 
@@ -94,6 +98,7 @@ class Documento(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     nombre = Column(String(255), nullable=False)
     tipo = Column(String(50))  # constancia, opinion, declaracion, cfdi, contrato, otro
     archivo_path = Column(String(500))
@@ -131,6 +136,7 @@ class Empleado(Base):
     id = Column(Integer, primary_key=True, index=True)
     rfc = Column(String(13), unique=True, nullable=False, index=True)
     curp = Column(String(18), unique=True, nullable=False)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     nombre = Column(String(100), nullable=False)
     apellidos = Column(String(200), nullable=False)
 
@@ -163,6 +169,7 @@ class PeriodoNomina(Base):
     __tablename__ = "periodos_nomina"
 
     id = Column(Integer, primary_key=True, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     nombre = Column(String(100), nullable=False)
     fecha_inicio = Column(DateTime, nullable=False)
     fecha_fin = Column(DateTime, nullable=False)
@@ -182,6 +189,7 @@ class Recibo(Base):
     id = Column(Integer, primary_key=True, index=True)
     periodo_id = Column(Integer, ForeignKey("periodos_nomina.id"), nullable=False)
     empleado_id = Column(Integer, ForeignKey("empleados.id"), nullable=False)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
 
     salario_diario = Column(Numeric(12, 2), nullable=False)
     dias_trabajados = Column(Integer, nullable=False, default=15)
@@ -229,6 +237,7 @@ class RepseRegistro(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     numero_registro = Column(String(50), unique=True, nullable=False)
     fecha_registro = Column(DateTime, nullable=False)
     fecha_vencimiento = Column(DateTime, nullable=False)
@@ -249,6 +258,7 @@ class RepsePersonal(Base):
     id = Column(Integer, primary_key=True, index=True)
     registro_id = Column(Integer, ForeignKey("repse_registros.id"), nullable=False, index=True)
     empleado_id = Column(Integer, ForeignKey("empleados.id"), nullable=False)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     tipo = Column(SAEnum(TipoPersonalRepse), nullable=False)
     fecha_inicio = Column(DateTime, nullable=False, default=datetime.utcnow)
     fecha_fin = Column(DateTime, nullable=True)
@@ -264,6 +274,7 @@ class RepseAviso(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     registro_id = Column(Integer, ForeignKey("repse_registros.id"), nullable=False, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     periodo = Column(String(7), nullable=False)  # "2026-Q1", "2026-Q2", ...
     total_personal = Column(Integer, nullable=False)
     administrativos = Column(Integer, nullable=False)
@@ -297,6 +308,7 @@ class PldCuestionario(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     fecha_aplicacion = Column(DateTime, default=datetime.utcnow)
 
     # Factores de riesgo
@@ -325,6 +337,7 @@ class PldDocumento(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     tipo = Column(String(50), nullable=False)  # identificacion, comprobante_domicilio, acta_constitutiva, poder_notarial, etc.
     archivo_path = Column(String(500))
     verificado = Column(Boolean, default=False)
@@ -348,6 +361,7 @@ class Finiquito(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     empleado_id = Column(Integer, ForeignKey("empleados.id"), nullable=False, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     fecha_baja = Column(DateTime, nullable=False)
     tipo = Column(SAEnum(TipoFiniquito), nullable=False)
     causa = Column(Text)
@@ -389,6 +403,7 @@ class CfdiRecibo(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     recibo_id = Column(Integer, ForeignKey("recibos.id"), nullable=False, unique=True, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     uuid = Column(String(36), unique=True, nullable=True)
     xml_path = Column(String(500))
     estatus = Column(SAEnum(EstatusCFDI), default=EstatusCFDI.PENDIENTE)
@@ -410,6 +425,7 @@ class CsdCertificado(Base):
     __tablename__ = "csd_certificados"
 
     id = Column(Integer, primary_key=True, index=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     alias = Column(String(50), unique=True, nullable=False)
     rfc_emisor = Column(String(13), nullable=False)
     regimen_fiscal = Column(String(3), nullable=False, default="607")

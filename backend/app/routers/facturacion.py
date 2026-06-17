@@ -18,6 +18,7 @@ from app.schemas.facturacion import (
     CfdiIngresoResponse, ComplementoPagoCreate,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.pac import get_pac_adapter
 from app.cfdi.generador_xml import generar_xml_ingreso, guardar_xml_ingreso
 from app.pdf.factura import generar_pdf_factura
@@ -66,6 +67,7 @@ def _calcular_impuestos(subtotal: Decimal, conceptos: list) -> dict:
 async def crear_factura(
     data: FacturaCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea un CFDI de ingreso: genera XML 4.0, timbra vía PAC y guarda."""
@@ -227,6 +229,7 @@ async def listar_facturas(
     cliente_id: Optional[int] = Query(None),
     estatus: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista los CFDI de ingreso con filtros opcionales."""
@@ -244,6 +247,7 @@ async def listar_facturas(
 async def obtener_factura(
     factura_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Obtiene un CFDI de ingreso con conceptos e impuestos."""
@@ -260,6 +264,7 @@ async def obtener_factura(
 async def cancelar_factura(
     factura_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Cambia el estatus de un CFDI a cancelado."""
@@ -281,6 +286,7 @@ async def cancelar_factura(
 async def descargar_xml_factura(
     factura_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Descarga el XML timbrado de un CFDI de ingreso."""
@@ -375,6 +381,7 @@ async def descargar_xml_factura(
 async def descargar_pdf_factura(
     factura_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Descarga la representación impresa (PDF) de un CFDI de ingreso."""
@@ -421,6 +428,7 @@ async def descargar_pdf_factura(
 async def crear_complemento_pago(
     data: ComplementoPagoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea un complemento de pago."""
@@ -459,6 +467,7 @@ async def crear_complemento_pago(
 @router.get("/complementos-pago", response_model=List[dict])
 async def listar_complementos_pago(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista los complementos de pago."""

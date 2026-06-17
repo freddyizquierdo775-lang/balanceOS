@@ -16,6 +16,7 @@ from app.schemas.contabilidad import (
     BalanzaResponse, CuentaSaldo,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.utils.contabilidad import obtener_saldos_periodo
 
 router = APIRouter(prefix="/contabilidad", tags=["contabilidad"])
@@ -32,6 +33,7 @@ def get_usuario_actual(token: dict = Depends(verificar_token)) -> dict:
 async def listar_cuentas(
     arbol: Optional[bool] = Query(False, description="Incluir estructura jerárquica"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista el catálogo de cuentas contables."""
@@ -46,6 +48,7 @@ async def listar_cuentas(
 async def crear_cuenta(
     data: CuentaContableCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea una nueva cuenta contable."""
@@ -78,6 +81,7 @@ async def editar_cuenta(
     cuenta_id: int,
     data: CuentaContableUpdate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Edita una cuenta contable."""
@@ -101,6 +105,7 @@ async def editar_cuenta(
 async def desactivar_cuenta(
     cuenta_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Desactiva una cuenta contable (borrado lógico)."""
@@ -123,6 +128,7 @@ async def desactivar_cuenta(
 async def crear_poliza(
     data: PolizaCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea una póliza con sus detalles contables."""
@@ -168,6 +174,7 @@ async def listar_polizas(
     periodo_mes: Optional[int] = Query(None),
     periodo_anio: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista las pólizas con filtros opcionales."""
@@ -187,6 +194,7 @@ async def listar_polizas(
 async def obtener_poliza(
     poliza_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Obtiene una póliza con sus detalles."""
@@ -203,6 +211,7 @@ async def obtener_poliza(
 async def eliminar_poliza(
     poliza_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Elimina una póliza y sus detalles (borrado físico)."""
@@ -226,6 +235,7 @@ async def calcular_balanza(
     mes: int = Query(..., alias="mes"),
     anio: int = Query(..., alias="anio"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Calcula la balanza de comprobación para un período (cargos/abonos por cuenta)."""

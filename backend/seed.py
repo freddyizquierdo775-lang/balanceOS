@@ -1,4 +1,5 @@
-"""Seed de datos demo para Balance OS.
+"""
+Seed de datos demo para Balance OS — Multi-tenancy v2.
 
 Idempotente: solo ejecuta si la BD está vacía (sin usuarios).
 Soporta SQLite (desarrollo local) y PostgreSQL (Railway producción).
@@ -9,15 +10,68 @@ from datetime import datetime
 
 from app.database import async_session, init_db, engine
 from app.models import (
-    Usuario, Cliente, Empleado, CuentaContable,
+    Usuario, Cliente, Empleado, CuentaContable, Despacho,
     RegimenFiscal, TipoPersona, EstatusCliente, RolUsuario,
     NaturalezaCuenta, TipoCuenta,
 )
+from app.models import (
+    PeriodoNomina, Recibo, CfdiRecibo, CsdCertificado,
+    Finiquito, RepseRegistro, RepsePersonal, RepseAviso,
+    PldCuestionario, PldDocumento, Documento, Evento,
+)
+from app.models.facturacion import (
+    CfdiIngreso, CfdiIngresoConcepto, CfdiIngresoImpuesto,
+    CfdiComplementoPago, CfdiPagoDetalle,
+)
+from app.models.impuestos import (
+    Declaracion, DeclaracionConcepto, ConfiguracionDiot,
+    EstimuloFiscal, ClienteEstimulo,
+)
+from app.models.tesoreria import (
+    CuentaBancaria, MovimientoBancario, ConciliacionBancaria,
+    ListaEfos, AlertaEfos,
+)
+from app.models.crm import Seguimiento, Nota
+from app.models.imss_seguimiento import ImssAlta, ImssBaja, ImssTramite
 import bcrypt as _bcrypt
 
 
 def _hash(password: str) -> str:
     return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
+
+
+# Modelos tenant a los que se asignará despacho_id
+TENANT_MODELS = [
+    Cliente, Documento, Empleado, PeriodoNomina, Recibo,
+    CfdiRecibo, CsdCertificado, Finiquito,
+    RepseRegistro, RepsePersonal, RepseAviso,
+    PldCuestionario, PldDocumento,
+    CfdiIngreso, CfdiIngresoConcepto, CfdiIngresoImpuesto,
+    CfdiComplementoPago, CfdiPagoDetalle,
+    Declaracion, DeclaracionConcepto, ConfiguracionDiot,
+    EstimuloFiscal, ClienteEstimulo,
+    CuentaBancaria, MovimientoBancario, ConciliacionBancaria,
+    ListaEfos, AlertaEfos,
+    Seguimiento, Nota,
+    ImssAlta, ImssBaja, ImssTramite,
+    Evento,
+]
+
+
+async def migrar_despacho_id(db, despacho_id: int):
+    """Asigna despacho_id a todos los registros existentes en modelos tenant."""
+    from sqlalchemy import update
+    total = 0
+    for model in TENANT_MODELS:
+        stmt = (
+            update(model)
+            .where(model.despacho_id == None)  # noqa: E711
+            .values(despacho_id=despacho_id)
+        )
+        result = await db.execute(stmt)
+        total += result.rowcount
+    if total > 0:
+        print(f"  ✓ {total} registros migrados al despacho default")
 
 
 async def seed() -> bool:
@@ -27,10 +81,45 @@ async def seed() -> bool:
     async with async_session() as db:
         # Verificar si ya hay usuarios (seed ya ejecutado)
         from sqlalchemy import select, func
+
         result = await db.execute(select(func.count()).select_from(Usuario))
-        if result.scalar() > 0:
-            print("✅ Datos ya existen, seed omitido.")
+        count_usuarios = result.scalar()
+        if count_usuarios > 0:
+            print("✅ Datos ya existen.")
+
+            # ── Migración multi-tenancy: asignar despacho_id si es necesario ──
+            result = await db.execute(select(Despacho).limit(1))
+            despacho = result.scalar_one_or_none()
+            if not despacho:
+                print("  → Creando despacho default para datos existentes...")
+                despacho = Despacho(nombre="default", plan="enterprise")
+                db.add(despacho)
+                await db.flush()
+            else:
+                print("  → Despacho default ya existe.")
+
+            # Asignar despacho_id a usuarios sin despacho
+            from sqlalchemy import update as sql_update
+            users_updated = await db.execute(
+                sql_update(Usuario)
+                .where(Usuario.despacho_id == None)  # noqa: E711
+                .values(despacho_id=despacho.id)
+            )
+            if users_updated.rowcount > 0:
+                print(f"  ✓ {users_updated.rowcount} usuarios asignados al despacho default")
+
+            # Migrar todos los datos tenant existentes
+            await migrar_despacho_id(db, despacho.id)
+
+            await db.commit()
+            print("  ✓ Migración multi-tenancy completada.")
             return False
+
+        # ─── Crear despacho default ──────────────────
+        despacho = Despacho(nombre="default", plan="enterprise")
+        db.add(despacho)
+        await db.flush()
+        print("  ✓ Despacho default creado")
 
         # ─── 1. Admin ─────────────────────────────────────
         admin = Usuario(
@@ -39,6 +128,7 @@ async def seed() -> bool:
             password_hash=_hash("Admin123!"),
             rol=RolUsuario.ADMIN,
             activo=1,
+            despacho_id=despacho.id,
         )
         db.add(admin)
         await db.flush()
@@ -83,6 +173,7 @@ async def seed() -> bool:
                 telefono=cd["telefono"],
                 estatus=EstatusCliente.ACTIVO,
                 asesor_id=admin.id,
+                despacho_id=despacho.id,
             )
             db.add(cliente)
             clientes_creados.append(cliente)
@@ -125,6 +216,7 @@ async def seed() -> bool:
                 curp=ed["curp"],
                 salario_diario=ed["salario_diario"],
                 fecha_ingreso=datetime.strptime(ed["fecha_ingreso"], "%Y-%m-%d"),
+                despacho_id=despacho.id,
             )
             db.add(emp)
         await db.flush()
@@ -149,12 +241,12 @@ async def seed() -> bool:
             {"codigo": "5200", "nombre": "Gastos de Venta", "tipo": TipoCuenta.GASTOS, "nivel": 2, "naturaleza": NaturalezaCuenta.DEUDORA, "acepta_movimientos": True},
         ]
         for c in cuentas:
-            db.add(CuentaContable(**c))
+            db.add(CuentaContable(**c, despacho_id=despacho.id))
         await db.flush()
         print(f"  ✓ {len(cuentas)} cuentas contables creadas")
 
         await db.commit()
-        print(f"✅ Seed completado: 1 admin, {len(clientes_creados)} clientes, "
+        print(f"✅ Seed completado: 1 despacho, 1 admin, {len(clientes_creados)} clientes, "
               f"{len(empleados_data)} empleados, {len(cuentas)} cuentas contables")
         print(f"   Login: admin@balanceos.com / Admin123!")
         return True

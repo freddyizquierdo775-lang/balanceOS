@@ -10,6 +10,7 @@ from sqlalchemy import select, func
 
 from app.database import get_db
 from app.routers.auth import verificar_usuario_actual
+from app.dependencies import get_despacho_id
 from app.imss.types import DatosTrabajador, ResultadoCuotas
 from app.imss import calcular_cuotas, calcular_factor_integracion
 from app.imss.rates import RIESGO_CLASE
@@ -104,6 +105,7 @@ async def listar_altas(
     cliente_id: Optional[int] = Query(None),
     estatus: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Lista solicitudes de alta. Filtrables por cliente_id y/o estatus."""
@@ -126,6 +128,7 @@ async def crear_alta(
     tipo_movimiento: str = Body("alta"),
     notas: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Crea una nueva solicitud de alta IMSS."""
@@ -168,6 +171,7 @@ async def actualizar_alta(
     notas: Optional[str] = Body(None),
     fecha_efectiva: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Actualiza el estatus de una solicitud de alta. También permite subir acuse."""
@@ -209,6 +213,7 @@ async def listar_bajas(
     cliente_id: Optional[int] = Query(None),
     estatus: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Lista solicitudes de baja. Filtrables por cliente_id y/o estatus."""
@@ -230,6 +235,7 @@ async def crear_baja(
     motivo: str = Body("renuncia"),
     notas: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Crea una nueva solicitud de baja IMSS."""
@@ -271,6 +277,7 @@ async def actualizar_baja(
     notas: Optional[str] = Body(None),
     fecha_baja: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Actualiza el estatus de una solicitud de baja."""
@@ -313,6 +320,7 @@ async def listar_tramites(
     tipo: Optional[str] = Query(None),
     estatus: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Lista trámites IMSS. Filtrables por cliente_id, tipo y/o estatus."""
@@ -335,6 +343,7 @@ async def crear_tramite(
     descripcion: Optional[str] = Body(None),
     notas: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Crea un nuevo trámite ante el IMSS."""
@@ -373,6 +382,7 @@ async def actualizar_tramite(
     notas: Optional[str] = Body(None),
     fecha_resolucion: Optional[str] = Body(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """Actualiza el estatus de un trámite IMSS."""
@@ -415,6 +425,7 @@ async def actualizar_tramite(
 async def resumen_imss(
     cliente_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: Usuario = Depends(verificar_usuario_actual),
 ):
     """KPIs: total de altas pendientes, bajas pendientes y trámites activos."""

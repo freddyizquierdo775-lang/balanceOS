@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse
 import os.path
 
 from app.database import init_db
+from app.models import Despacho  # noqa: F401 — necesario para create_all multi-tenancy
 from app.routers import auth, clientes, documentos, imss, alertas, empleados, nomina, repse, pld, finiquitos, cfdi, portal
 from app.routers import contabilidad, impuestos, facturacion, tesoreria, estados_financieros, api_publica, alertas_efos, crm, dashboard
 from app.routers import stripe, email

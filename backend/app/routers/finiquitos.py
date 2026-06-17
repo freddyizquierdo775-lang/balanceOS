@@ -25,6 +25,7 @@ from app.nomina.calculo import (
 )
 from app.services.event_engine import emitir_evento
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.pdf.finiquito import generar_pdf_finiquito
 
 router = APIRouter(prefix="/finiquitos", tags=["finiquitos"])
@@ -40,6 +41,7 @@ async def get_usuario(token: dict = Depends(verificar_token)) -> dict:
 async def buscar_trabajador(
     q: str = Query(..., min_length=1, description="Texto de búsqueda (nombre, RFC o CURP)"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Busca trabajadores por nombre, RFC o CURP."""
@@ -71,6 +73,7 @@ async def datos_trabajador(
         None, description="Fecha de baja para calcular proporcionales"
     ),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Devuelve datos completos del trabajador con cálculos proporcionales."""
@@ -119,6 +122,7 @@ async def datos_trabajador(
 async def preview_finiquito(
     data: FiniquitoCalcularRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Calcula finiquito sin guardar (preview)."""
@@ -148,6 +152,7 @@ async def preview_finiquito(
 async def calcular_y_guardar(
     data: FiniquitoCalcularRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Calcula finiquito y lo guarda en DB."""
@@ -218,6 +223,7 @@ async def calcular_y_guardar(
 async def listar_finiquitos(
     cliente_id: Optional[int] = Query(None, description="Filtrar por cliente"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Lista finiquitos calculados, opcionalmente filtrados por cliente."""
@@ -246,6 +252,7 @@ async def listar_finiquitos(
 async def obtener_finiquito(
     finiquito_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(select(Finiquito).where(Finiquito.id == finiquito_id))
@@ -261,6 +268,7 @@ async def obtener_finiquito(
 async def finiquitos_por_empleado(
     empleado_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -277,6 +285,7 @@ async def finiquitos_por_empleado(
 async def descargar_pdf_finiquito(
     finiquito_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Descarga el finiquito en PDF."""

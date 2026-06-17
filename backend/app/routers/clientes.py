@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models import Cliente, Usuario, EstatusCliente, RegimenFiscal
 from app.schemas import ClienteCreate, ClienteUpdate, ClienteResponse
 from app.routers.auth import verificar_token, verificar_usuario_actual
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -24,6 +25,9 @@ async def verificar_propiedad_o_admin(cliente_id: int, usuario: dict, db: AsyncS
     cliente = result.scalar_one_or_none()
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    # Multi-tenancy: verificar despacho del usuario
+    if usuario.get("despacho_id") and cliente.despacho_id != usuario.get("despacho_id"):
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
     # Admin puede modificar cualquier cliente
     if usuario.get("rol") == "admin":
         return cliente
@@ -34,15 +38,19 @@ async def verificar_propiedad_o_admin(cliente_id: int, usuario: dict, db: AsyncS
 
 
 @router.get("/stats")
-async def obtener_stats(db: AsyncSession = Depends(get_db), usuario: dict = Depends(get_usuario_actual)):
+async def obtener_stats(
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: dict = Depends(get_usuario_actual),
+):
     """Retorna estadisticas de clientes para el dashboard."""
     # Filtro base por permisos de usuario
     filter_cond = None
     if usuario.get("rol") != "admin":
         filter_cond = (Cliente.asesor_id == usuario["id"])
 
-    # Total (con filtro si aplica)
-    total_query = select(func.count()).select_from(Cliente)
+    # Total (con filtro si aplica) + multi-tenancy
+    total_query = select(func.count()).select_from(Cliente).where(Cliente.despacho_id == despacho_id)
     if filter_cond is not None:
         total_query = total_query.where(filter_cond)
     result = await db.execute(total_query)
@@ -51,7 +59,10 @@ async def obtener_stats(db: AsyncSession = Depends(get_db), usuario: dict = Depe
     # Por estatus
     stats = {"total": total}
     for estatus in EstatusCliente:
-        q = select(func.count()).select_from(Cliente).where(Cliente.estatus == estatus.value)
+        q = select(func.count()).select_from(Cliente).where(
+            Cliente.estatus == estatus.value,
+            Cliente.despacho_id == despacho_id,
+        )
         if filter_cond is not None:
             q = q.where(filter_cond)
         result = await db.execute(q)
@@ -64,11 +75,11 @@ async def obtener_stats(db: AsyncSession = Depends(get_db), usuario: dict = Depe
 async def obtener_vencimientos(
     dias: int = Query(90, description="Días hacia adelante para buscar vencimientos"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Retorna clientes con vencimientos próximos (FIEL, REPSE, PLD)."""
     from datetime import datetime, timedelta
-    from sqlalchemy import or_
 
     ahora = datetime.utcnow()
     limite = ahora + timedelta(days=dias)
@@ -78,13 +89,14 @@ async def obtener_vencimientos(
     if usuario.get("rol") != "admin":
         filter_cond = (Cliente.asesor_id == usuario["id"])
 
-    # Construir query base
+    # Construir query base con multi-tenancy
     query = select(Cliente).where(
         or_(
             Cliente.fiel_vencimiento.isnot(None),
             Cliente.repse_vencimiento.isnot(None),
             Cliente.pld_vencimiento.isnot(None),
-        )
+        ),
+        Cliente.despacho_id == despacho_id,
     )
 
     if filter_cond is not None:
@@ -153,14 +165,15 @@ async def obtener_vencimientos(
 @router.get("/exportar/csv")
 async def exportar_csv(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Exporta clientes a CSV."""
     from fastapi.responses import StreamingResponse
     import csv, io
 
-    # Misma lógica de filtros que listar
-    query = select(Cliente)
+    # Misma lógica de filtros que listar + multi-tenancy
+    query = select(Cliente).where(Cliente.despacho_id == despacho_id)
     if usuario.get("rol") != "admin":
         query = query.where(Cliente.asesor_id == usuario["id"])
     query = query.order_by(Cliente.razon_social)
@@ -202,9 +215,10 @@ async def listar_clientes(
     asesor_id: Optional[int] = None,
     q: Optional[str] = Query(None, description="Busqueda por RFC, razon social, email o telefono"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
-    query = select(Cliente)
+    query = select(Cliente).where(Cliente.despacho_id == despacho_id)
 
     # Filtro por asesor: si no es admin, solo ve sus clientes
     if usuario.get("rol") != "admin":
@@ -234,19 +248,31 @@ async def listar_clientes(
 
 
 @router.get("/{cliente_id}", response_model=ClienteResponse)
-async def obtener_cliente(cliente_id: int, db: AsyncSession = Depends(get_db), usuario: dict = Depends(get_usuario_actual)):
+async def obtener_cliente(
+    cliente_id: int,
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: dict = Depends(get_usuario_actual),
+):
     return await verificar_propiedad_o_admin(cliente_id, usuario, db)
 
 
 @router.post("/", response_model=ClienteResponse, status_code=201)
-async def crear_cliente(data: ClienteCreate, db: AsyncSession = Depends(get_db), usuario: dict = Depends(get_usuario_actual)):
+async def crear_cliente(
+    data: ClienteCreate,
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: dict = Depends(get_usuario_actual),
+):
     # Validar regimen_fiscal
     valores_validos = [r.value for r in RegimenFiscal]
     if data.regimen_fiscal not in valores_validos:
         raise HTTPException(status_code=400, detail=f"Regimen fiscal invalido. Opciones: {', '.join(valores_validos)}")
 
-    # Validar RFC duplicado
-    existente = await db.execute(select(Cliente).where(Cliente.rfc == data.rfc))
+    # Validar RFC duplicado (dentro del mismo despacho)
+    existente = await db.execute(
+        select(Cliente).where(Cliente.rfc == data.rfc, Cliente.despacho_id == despacho_id)
+    )
     if existente.scalar_one_or_none():
         raise HTTPException(status_code=409, detail=f"Ya existe un cliente con RFC {data.rfc}")
 
@@ -265,6 +291,7 @@ async def crear_cliente(data: ClienteCreate, db: AsyncSession = Depends(get_db),
         pld_vencimiento=data.pld_vencimiento,
         fiel_vencimiento=data.fiel_vencimiento,
         asesor_id=usuario.get("id"),
+        despacho_id=despacho_id,
     )
     db.add(cliente)
     await db.commit()
@@ -277,6 +304,7 @@ async def actualizar_cliente(
     cliente_id: int,
     data: ClienteUpdate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     cliente = await verificar_propiedad_o_admin(cliente_id, usuario, db)
@@ -295,7 +323,9 @@ async def actualizar_cliente(
 
     # Validar RFC duplicado si se cambia
     if data.rfc is not None and data.rfc != cliente.rfc:
-        existente = await db.execute(select(Cliente).where(Cliente.rfc == data.rfc))
+        existente = await db.execute(
+            select(Cliente).where(Cliente.rfc == data.rfc, Cliente.despacho_id == despacho_id)
+        )
         if existente.scalar_one_or_none():
             raise HTTPException(status_code=409, detail=f"Ya existe otro cliente con RFC {data.rfc}")
 
@@ -310,6 +340,7 @@ async def actualizar_cliente(
 async def eliminar_cliente(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     cliente = await verificar_propiedad_o_admin(cliente_id, usuario, db)

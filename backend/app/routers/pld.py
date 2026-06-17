@@ -16,6 +16,7 @@ from app.schemas.pld import (
     PldClienteResumen,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/pld", tags=["pld"])
 
@@ -116,6 +117,7 @@ def calcular_riesgo(data: PldCuestionarioCreate) -> tuple[Decimal, NivelRiesgo, 
 async def crear_cuestionario(
     data: PldCuestionarioCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     # Validar cliente
@@ -150,6 +152,7 @@ async def crear_cuestionario(
 async def listar_cuestionarios(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -164,6 +167,7 @@ async def listar_cuestionarios(
 async def ultimo_cuestionario(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -185,6 +189,7 @@ async def ultimo_cuestionario(
 async def crear_documento(
     data: PldDocumentoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     doc = PldDocumento(**data.model_dump())
@@ -198,6 +203,7 @@ async def crear_documento(
 async def listar_documentos(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -212,6 +218,7 @@ async def listar_documentos(
 async def verificar_documento(
     doc_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     from datetime import datetime
@@ -233,6 +240,7 @@ async def verificar_documento(
 async def resumen_cliente(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     cliente = await db.execute(select(Cliente).where(Cliente.id == cliente_id))

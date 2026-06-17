@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models import ListaEfos, AlertaEfos, Cliente
 from app.schemas.tesoreria import ListaEfosCreate, AlertaEfosResponse, VerificacionEfosResponse
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/alertas-efos", tags=["alertas-efos"])
 
@@ -26,6 +27,7 @@ def get_usuario_actual(token: dict = Depends(verificar_token)) -> dict:
 async def subir_rfc_lista(
     data: ListaEfosCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Agrega un RFC a una lista negra (69, 69-B, definitivos, sentencias)."""
@@ -49,6 +51,7 @@ async def subir_rfc_lista(
 @router.get("/listas", response_model=List[dict])
 async def listar_listas_efos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista los RFCs en listas negras."""
@@ -74,6 +77,7 @@ async def listar_listas_efos(
 @router.post("/actualizar", response_model=dict)
 async def actualizar_desde_sat(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -103,6 +107,7 @@ async def cargar_csv_lista(
     tipo_lista: str = Query(..., description="69, 69-B, definitivos, sentencias"),
     contenido: str = Query(..., description="Contenido CSV con RFCs"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -137,6 +142,7 @@ async def cargar_csv_lista(
 @router.post("/seed", response_model=dict)
 async def seed_listas_efos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Siembra datos de prueba en la tabla listas_efos (RFCs 69-B del SAT)."""
@@ -199,6 +205,7 @@ async def _check_rfc_in_listas(rfc: str, db: AsyncSession):
 @router.post("/verificar/todos", response_model=dict)
 async def verificar_todos_los_clientes(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Verifica TODOS los clientes activos contra las listas EFOS."""
@@ -233,6 +240,7 @@ async def verificar_todos_los_clientes(
 async def verificar_cliente_en_listas(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Verifica si el RFC de un cliente está en las listas negras y genera alerta."""
@@ -290,6 +298,7 @@ async def verificar_cliente_en_listas(
 @router.get("/alertas", response_model=List[AlertaEfosResponse])
 async def listar_alertas_efos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista las alertas EFOS generadas."""
@@ -303,6 +312,7 @@ async def listar_alertas_efos(
 async def resolver_alerta(
     alerta_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Marca una alerta EFOS como resuelta."""

@@ -6,6 +6,7 @@ from sqlalchemy import select, func
 from app.database import get_db
 from app.models import Cliente, Empleado, Evento
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -13,6 +14,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 @router.get("/kpis")
 async def get_kpis(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     # Clientes activos
@@ -47,6 +49,7 @@ async def get_kpis(
 async def get_actividad(
     limit: int = 10,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     result = await db.execute(
@@ -68,6 +71,7 @@ async def get_actividad(
 @router.get("/graficos")
 async def get_graficos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(verificar_token),
 ):
     # Distribución de clientes por régimen

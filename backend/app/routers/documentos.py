@@ -14,6 +14,7 @@ from app.database import get_db
 from app.models import Documento, Cliente
 from app.schemas import DocumentoResponse
 from app.routers.auth import verificar_token, verificar_usuario_actual
+from app.dependencies import get_despacho_id
 from app.routers.clientes import verificar_propiedad_o_admin
 
 router = APIRouter(prefix="/documentos", tags=["documentos"])
@@ -39,6 +40,7 @@ async def listar_documentos(
     cliente_id: int,
     tipo: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista los documentos de un cliente (con filtro opcional por tipo)."""
@@ -61,6 +63,7 @@ async def subir_documento(
     tipo: str = Form("otro"),
     notas: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Sube un archivo asociado a un cliente."""
@@ -109,6 +112,7 @@ async def subir_documento(
 async def descargar_documento(
     doc_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Descarga un archivo por ID (primero verifica acceso al cliente)."""
@@ -135,6 +139,7 @@ async def descargar_documento(
 async def eliminar_documento(
     doc_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Elimina un documento (archivo + registro DB)."""

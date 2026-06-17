@@ -23,6 +23,7 @@ from app.schemas.impuestos import (
     CalculoCompletoRequest, CalculoCompletoResponse, ImpuestoDesglose,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def get_usuario_actual(token: dict = Depends(verificar_token)) -> dict:
 async def crear_declaracion(
     data: DeclaracionCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea una declaración de impuestos con sus conceptos."""
@@ -74,6 +76,7 @@ async def crear_declaracion(
 async def listar_declaraciones(
     cliente_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista las declaraciones, opcionalmente filtradas por cliente."""
@@ -89,6 +92,7 @@ async def listar_declaraciones(
 async def obtener_declaracion(
     declaracion_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Obtiene una declaración con sus conceptos."""
@@ -152,6 +156,7 @@ def _buscar_bracket(utilidad: Decimal):
 async def calcular_impuestos(
     data: CalculoImpuestosRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Calcula IVA e ISR basado en ingresos y deducciones con tarifa progresiva LISR Art. 152."""
@@ -262,6 +267,7 @@ async def generar_diot(
     mes: int = Query(...),
     anio: int = Query(...),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera la DIOT (Declaración Informativa de Operaciones con Terceros).
@@ -448,6 +454,7 @@ ESTIMULOS_SEED = [
 @router.post("/seed-estimulos", response_model=List[EstimuloFiscalResponse], status_code=status.HTTP_201_CREATED)
 async def seed_estimulos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Inserta los estímulos fiscales seed en la base de datos (idempotente: no duplica)."""
@@ -484,6 +491,7 @@ async def seed_estimulos(
 async def listar_estimulos(
     activo: Optional[bool] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista todos los estímulos fiscales disponibles."""
@@ -499,6 +507,7 @@ async def listar_estimulos(
 async def crear_estimulo(
     data: EstimuloFiscalCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea un nuevo estímulo fiscal."""
@@ -522,6 +531,7 @@ async def actualizar_estimulo(
     estimulo_id: int,
     data: EstimuloFiscalCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Actualiza un estímulo fiscal existente."""
@@ -549,6 +559,7 @@ async def actualizar_estimulo(
 async def eliminar_estimulo(
     estimulo_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Elimina un estímulo fiscal (soft-delete: lo desactiva)."""
@@ -571,6 +582,7 @@ async def eliminar_estimulo(
 async def listar_estimulos_cliente(
     cliente_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Lista los estímulos fiscales asignados a un cliente."""
@@ -588,6 +600,7 @@ async def asignar_estimulo_cliente(
     cliente_id: int,
     data: ClienteEstimuloCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Asigna un estímulo fiscal a un cliente."""
@@ -627,6 +640,7 @@ async def quitar_estimulo_cliente(
     cliente_id: int,
     estimulo_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Quita un estímulo fiscal de un cliente (soft-delete)."""
@@ -660,6 +674,7 @@ TASA_ISN_DEFAULT = Decimal("0.03")   # 3% estatal típico
 async def calcular_impuestos_completo(
     data: CalculoCompletoRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Calcula todos los impuestos aplicables con estímulos fiscales.

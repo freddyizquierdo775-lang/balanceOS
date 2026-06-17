@@ -21,6 +21,8 @@ class Evento(Base):
     descripcion = Column(Text, nullable=True)
     metadata_json = Column(JSON, nullable=True)  # datos extra
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    despacho_id = Column(Integer, ForeignKey("despachos.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     usuario = relationship("Usuario")
+    despacho = relationship("Despacho")

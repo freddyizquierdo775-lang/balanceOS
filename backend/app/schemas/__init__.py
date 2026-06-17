@@ -31,6 +31,7 @@ class UsuarioResponse(BaseModel):
     rol: str
     telefono: Optional[str] = None
     activo: int
+    despacho_id: Optional[int] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

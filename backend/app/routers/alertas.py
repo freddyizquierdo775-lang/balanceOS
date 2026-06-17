@@ -10,6 +10,7 @@ from typing import List
 from app.database import get_db
 from app.models import Cliente
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/alertas", tags=["alertas"])
 
@@ -34,6 +35,7 @@ def build_alerta(tipo: str, label: str, cliente, vencimiento) -> dict:
 @router.get("/")
 async def obtener_alertas(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Retorna vencimientos agrupados: vencidos, próximos 30, 60 y 90 días."""

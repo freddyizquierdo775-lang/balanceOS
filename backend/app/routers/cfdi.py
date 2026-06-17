@@ -25,6 +25,7 @@ from app.cfdi.generador import (
 from app.cfdi.pac_adapter import PacAdapter, PacConfig, MockAdapter
 from app.pac import get_pac_adapter
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ async def get_usuario(token: dict = Depends(verificar_token)) -> dict:
 async def registrar_csd(
     data: CsdCertificadoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     # Si es el primero, activarlo automáticamente
@@ -60,6 +62,7 @@ async def registrar_csd(
 @router.get("/csd", response_model=List[CsdCertificadoResponse])
 async def listar_csd(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -74,6 +77,7 @@ async def subir_csd(
     certificado: UploadFile = File(None, description="Archivo .cer"),
     llave: UploadFile = File(None, description="Archivo .key"),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Sube archivos .cer y .key para un certificado CSD."""
@@ -114,6 +118,7 @@ async def subir_csd(
 async def activar_csd(
     csd_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Activa un CSD y desactiva los demás."""
@@ -162,6 +167,7 @@ async def pac_status(
 async def timbrar_recibo(
     data: CfdiTimbrarRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Timbra un CFDI de nómina vía PAC (real o mock)."""
@@ -278,6 +284,7 @@ async def timbrar_recibo(
 async def listar_cfdi_recibos(
     estatus: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     query = select(CfdiRecibo).order_by(CfdiRecibo.created_at.desc())
@@ -291,6 +298,7 @@ async def listar_cfdi_recibos(
 async def obtener_cfdi_recibo(
     recibo_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -344,6 +352,7 @@ async def consultar_cfdi(
 async def cancelar_cfdi(
     data: CfdiCancelarRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     """Cancela un CFDI por UUID vía el PAC configurado.

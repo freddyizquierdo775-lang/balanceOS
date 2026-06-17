@@ -20,6 +20,7 @@ from app.schemas.repse import (
     RepseStats,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 
 router = APIRouter(prefix="/repse", tags=["repse"])
 
@@ -35,6 +36,7 @@ async def get_usuario(token: dict = Depends(verificar_token)) -> dict:
 async def crear_registro(
     data: RepseRegistroCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     # Validar cliente existe
@@ -68,6 +70,7 @@ async def listar_registros(
     cliente_id: Optional[int] = None,
     estatus: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     query = select(RepseRegistro).options(
@@ -87,6 +90,7 @@ async def listar_registros(
 async def obtener_registro(
     registro_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     return await _cargar_completo(registro_id, db)
@@ -97,6 +101,7 @@ async def actualizar_registro(
     registro_id: int,
     data: RepseRegistroUpdate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(select(RepseRegistro).where(RepseRegistro.id == registro_id))
@@ -115,6 +120,7 @@ async def actualizar_registro(
 async def eliminar_registro(
     registro_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -134,6 +140,7 @@ async def eliminar_registro(
 async def asignar_personal(
     data: RepsePersonalCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     asignacion = RepsePersonal(**data.model_dump())
@@ -147,6 +154,7 @@ async def asignar_personal(
 async def listar_personal(
     registro_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -176,6 +184,7 @@ async def actualizar_personal(
     personal_id: int,
     data: RepsePersonalUpdate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(select(RepsePersonal).where(RepsePersonal.id == personal_id))
@@ -196,6 +205,7 @@ async def actualizar_personal(
 async def crear_aviso(
     data: RepseAvisoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     # Calcular porcentaje de personal especializado
@@ -219,6 +229,7 @@ async def crear_aviso(
 async def listar_avisos(
     registro_id: int,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     result = await db.execute(
@@ -235,6 +246,7 @@ async def listar_avisos(
 @router.get("/stats", response_model=RepseStats)
 async def obtener_stats(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario),
 ):
     total = await db.execute(select(func.count(RepseRegistro.id)))

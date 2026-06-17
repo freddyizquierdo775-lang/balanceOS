@@ -70,9 +70,36 @@ async def registro(data: UsuarioCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Usuario).where(Usuario.email == data.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email ya registrado")
-    # El primer usuario registrado se convierte en admin automáticamente
+
+    # ── Multi-tenancy: asignar despacho ──
+    # Determinar si es el primer usuario del sistema (para crear despacho default)
     result_count = await db.execute(select(Usuario).limit(1))
     primer_usuario = result_count.scalar_one_or_none() is None
+
+    if primer_usuario:
+        # Crear despacho default automáticamente
+        despacho = Despacho(nombre="default", plan="enterprise")
+        db.add(despacho)
+        await db.flush()
+    else:
+        # Buscar un despacho existente (intentar por dominio del email)
+        dominio = data.email.split("@")[-1] if "@" in data.email else None
+        despacho = None
+        if dominio:
+            despacho_result = await db.execute(
+                select(Despacho).where(Despacho.email.ilike(f"%@{dominio}"))
+            )
+            despacho = despacho_result.scalar_one_or_none()
+        # Fallback: usar el despacho default
+        if not despacho:
+            despacho_result = await db.execute(
+                select(Despacho).where(Despacho.nombre == "default")
+            )
+            despacho = despacho_result.scalar_one_or_none()
+        if not despacho:
+            raise HTTPException(status_code=500, detail="No se pudo asignar despacho. Contacte al administrador.")
+
+    # El primer usuario registrado se convierte en admin automáticamente
     rol_final = "admin" if primer_usuario else data.rol
 
     usuario = Usuario(
@@ -81,6 +108,7 @@ async def registro(data: UsuarioCreate, db: AsyncSession = Depends(get_db)):
         password_hash=hash_password(data.password),
         rol=rol_final,
         telefono=data.telefono,
+        despacho_id=despacho.id,
     )
     db.add(usuario)
     await db.commit()

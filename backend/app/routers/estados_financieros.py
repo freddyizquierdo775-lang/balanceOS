@@ -16,6 +16,7 @@ from app.schemas.estados_financieros import (
     CategoriaBalance, ActivoNested, PasivoNested, CapitalNested,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.utils.contabilidad import obtener_saldos_periodo
 
 router = APIRouter(prefix="/estados-financieros", tags=["estados-financieros"])
@@ -41,6 +42,7 @@ async def balance_general(
     mes: int = Query(...),
     anio: int = Query(...),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el balance general desde la balanza (activo = pasivo + capital)."""
@@ -145,6 +147,7 @@ async def estado_resultados(
     mes: int = Query(...),
     anio: int = Query(...),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el estado de resultados (ingresos - costos - gastos)."""
@@ -219,6 +222,7 @@ async def flujo_efectivo(
     mes: int = Query(...),
     anio: int = Query(...),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Genera el flujo de efectivo simplificado."""

@@ -9,6 +9,7 @@ from typing import List
 from app.database import get_db
 from app.models import Cliente, Documento, Recibo, PeriodoNomina, RolUsuario
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.schemas import ClienteResponse
 from app.schemas.nomina import ReciboResponse
 
@@ -23,6 +24,7 @@ async def get_cliente_data(token: dict = Depends(verificar_token)):
 @router.get("/mi-perfil", response_model=ClienteResponse)
 async def mi_perfil(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_cliente_data),
 ):
     """Devuelve la info del cliente asociado al usuario."""
@@ -42,6 +44,7 @@ async def mi_perfil(
 @router.get("/mis-recibos", response_model=List[ReciboResponse])
 async def mis_recibos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_cliente_data),
 ):
     """Devuelve los recibos de nómina del cliente."""
@@ -58,6 +61,7 @@ async def mis_recibos(
 @router.get("/mis-documentos", response_model=List)
 async def mis_documentos(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_cliente_data),
 ):
     """Devuelve los documentos del cliente."""

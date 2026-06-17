@@ -20,6 +20,7 @@ from app.schemas.tesoreria import (
     ClienteResumenResponse, ResumenResponse,
 )
 from app.routers.auth import verificar_token
+from app.dependencies import get_despacho_id
 from app.services.event_engine import emitir_evento
 
 router = APIRouter(prefix="/tesoreria", tags=["tesoreria"])
@@ -35,6 +36,7 @@ def get_usuario_actual(token: dict = Depends(verificar_token)) -> dict:
 @router.get("/clientes", response_model=List[ClienteResumenResponse])
 async def listar_clientes_tesoreria(
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -93,6 +95,7 @@ async def listar_clientes_tesoreria(
 async def resumen_tesoreria(
     cliente_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -155,6 +158,7 @@ async def resumen_tesoreria(
 async def crear_cuenta_bancaria(
     data: CuentaBancariaCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Crea una nueva cuenta bancaria."""
@@ -192,6 +196,7 @@ async def crear_cuenta_bancaria(
 async def listar_cuentas_bancarias(
     cliente_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -214,6 +219,7 @@ async def listar_cuentas_bancarias(
 async def registrar_movimiento(
     data: MovimientoCreate,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Registra un movimiento bancario y actualiza el saldo de la cuenta."""
@@ -272,6 +278,7 @@ async def listar_movimientos(
     cuenta_id: Optional[int] = Query(None),
     limite: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """
@@ -307,6 +314,7 @@ async def listar_movimientos(
 async def conciliar_cuenta(
     data: ConciliacionRequest,
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Realiza la conciliación bancaria de una cuenta para un período."""
@@ -373,6 +381,7 @@ async def estado_cuenta(
     mes: int = Query(...),
     anio: int = Query(...),
     db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
 ):
     """Obtiene el estado de cuenta con movimientos y saldos del período."""
