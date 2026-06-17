@@ -20,6 +20,7 @@ import Impuestos from './Impuestos';
 import Facturacion from './Facturacion';
 import CRM from './CRM';
 import Pricing from './Pricing';
+import Onboarding from './Onboarding';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
 import NavRail from './components/NavRail';
@@ -100,6 +101,9 @@ export default function App() {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return localStorage.getItem('onboarding_completed') !== 'true';
+  });
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   // ─── Apply theme class to <html> ──────────────
@@ -129,6 +133,11 @@ export default function App() {
 
   if (usuario.rol === 'cliente') {
     return <PortalCliente usuario={usuario} cerrarSesion={cerrarSesion} />;
+  }
+
+  // Onboarding wizard for first-time users
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => setShowOnboarding(false)} theme={theme} />;
   }
 
   const rolLabel = { admin: 'Admin', asesor: 'Asesor', juridico: 'Jurídico' };
