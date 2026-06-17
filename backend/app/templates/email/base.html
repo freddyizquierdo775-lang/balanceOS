@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Balance OS{% endblock %}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0A0A0A;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #E5E7EB;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .card {
+      background-color: #141414;
+      border-radius: 12px;
+      padding: 32px 24px;
+    }
+    .header {
+      text-align: center;
+      padding-bottom: 24px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #10B981;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #6B7280;
+      margin-top: 4px;
+    }
+    .content {
+      line-height: 1.6;
+    }
+    .content p {
+      margin: 0 0 12px 0;
+    }
+    .content a {
+      color: #10B981;
+      text-decoration: none;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #10B981;
+      color: #0A0A0A;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 16px 0;
+    }
+    .footer {
+      text-align: center;
+      padding-top: 24px;
+      font-size: 12px;
+      color: #6B7280;
+    }
+    @media (max-width: 480px) {
+      .container { padding: 16px 8px; }
+      .card { padding: 24px 16px; }
+      .header h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <h1>Balance OS</h1>
+        <div class="subtitle">Sistema integral de gestión</div>
+      </div>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+    <div class="footer">
+      &copy; 2025 Balance OS. Todos los derechos reservados.
+    </div>
+  </div>
+</body>
+</html>

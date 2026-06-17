@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import KpiCard from './components/KpiCard';
-import { dashboard as dashboardApi } from './api';
+import { dashboard as dashboardApi, stripe as stripeApi } from './api';
 
 // ─── KPI Card with icon (extends KpiCard style) ──────────────────────
 function KpiCardIcon({ titulo, valor, icono, loading, className = '' }) {
@@ -115,6 +115,8 @@ export default function Dashboard({ usuario }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [animar, setAnimar] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [subLoading, setSubLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
@@ -129,6 +131,16 @@ export default function Dashboard({ usuario }) {
         setKpis(kpisData);
         setActividad(actividadData);
         setGraficos(graficosData);
+
+        // Fetch subscription (independiente, no bloquea)
+        try {
+          const subData = await stripeApi.subscription();
+          setSubscription(subData);
+        } catch (subErr) {
+          console.error('Subscription fetch error:', subErr);
+        } finally {
+          setSubLoading(false);
+        }
       } catch (err) {
         console.error('Dashboard fetch error:', err);
         setError(err.message || 'Error al cargar los datos');
@@ -227,6 +239,91 @@ export default function Dashboard({ usuario }) {
             />
           </div>
         </div>
+
+        {/* ─── Suscripción ─────────────────────────── */}
+        {!subLoading && (
+          <div
+            className={`mb-6 transition-all duration-500 delay-[350ms] ${
+              animar ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+          >
+            {subscription && subscription.active ? (
+              <div className="bg-[#141414] rounded-2xl p-5 border border-[#262626] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Plan {subscription.plan?.nombre || 'Activo'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          subscription.status === 'active' ? 'bg-[#10B981]/20 text-[#10B981]' :
+                          subscription.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
+                          subscription.status === 'past_due' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-[#262626] text-[#A1A1AA]'
+                        }`}>
+                          {subscription.status === 'active' ? 'Activo' :
+                           subscription.status === 'trialing' ? 'Prueba' :
+                           subscription.status === 'past_due' ? 'Pago Pendiente' :
+                           subscription.status}
+                        </span>
+                        {subscription.current_period_end && (
+                          <span className="text-[11px] text-[#71717A]">
+                            Renueva: {new Date(subscription.current_period_end).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const data = await stripeApi.portal();
+                          if (data.url) window.location.href = data.url;
+                        } catch (err) {
+                          console.error('Portal error:', err);
+                        }
+                      }}
+                      className="px-4 py-2 text-xs font-semibold text-white bg-white/[0.08] hover:bg-white/[0.14] border border-[#333333] rounded-xl transition-all duration-200"
+                    >
+                      Gestionar Suscripción
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#141414] rounded-2xl p-5 border border-[#10B981]/20 bg-gradient-to-r from-[#10B981]/5 to-transparent">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Sin plan activo</p>
+                      <p className="text-xs text-[#A1A1AA] mt-0.5">
+                        Activa un plan para desbloquear todas las funcionalidades.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="px-4 py-2 text-xs font-bold text-[#0A0A0A] bg-[#10B981] hover:bg-[#059669] rounded-xl transition-all duration-200 active:scale-[0.98]"
+                  >
+                    Activa tu Plan
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Activity + Distribution row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

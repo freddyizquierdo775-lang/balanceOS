@@ -234,3 +234,11 @@ export const dashboard = {
   actividad: (limit = 10) => api(`/dashboard/actividad?limit=${limit}`),
   graficos: () => api('/dashboard/graficos'),
 };
+
+export const stripe = {
+  plans: () => api('/stripe/plans'),
+  createCheckout: (planId) => api('/stripe/create-checkout', { method: 'POST', body: JSON.stringify({ plan_id: planId }) }),
+  subscription: () => api('/stripe/subscription'),
+  portal: () => api('/stripe/portal'),
+  cancel: () => api('/stripe/cancel', { method: 'POST' }),
+};

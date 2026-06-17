@@ -19,6 +19,7 @@ import Contabilidad from './Contabilidad';
 import Impuestos from './Impuestos';
 import Facturacion from './Facturacion';
 import CRM from './CRM';
+import Pricing from './Pricing';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
 import NavRail from './components/NavRail';
@@ -79,6 +80,7 @@ const PAGE_TITLES = {
   'crm': 'CRM',
   'usuarios': 'Usuarios',
   'module-settings': 'Módulos',
+  'pricing': 'Planes',
 };
 
 export default function App() {
@@ -158,6 +160,7 @@ export default function App() {
       case 'impuestos': return wrap(<Impuestos usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
       case 'facturacion': return wrap(<Facturacion usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
       case 'crm': return wrap(<CRM usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
+      case 'pricing': return wrap(<Pricing usuario={usuario} />);
       default: return wrap(<Clientes usuario={usuario} subPage={subPage} setSubPage={setSubPage} />);
     }
   };

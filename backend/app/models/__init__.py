@@ -430,3 +430,4 @@ from app.models.tesoreria import *  # noqa: F401, F403
 from app.models.eventos import *  # noqa: F401, F403
 from app.models.crm import *  # noqa: F401, F403
 from app.models.imss_seguimiento import *  # noqa: F401, F403
+from app.models.stripe_models import *  # noqa: F401, F403

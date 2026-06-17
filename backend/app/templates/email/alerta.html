@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<p>{{ mensaje }}</p>
+
+{% if timestamp %}
+<p style="color: #6B7280; font-size: 12px; margin-top: 24px;">
+  {{ timestamp }}
+</p>
+{% endif %}
+
+<p>— El equipo de Balance OS</p>
+{% endblock %}

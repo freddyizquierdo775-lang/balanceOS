@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Factura {{ folio }} emitida{% endblock %}
+{% block content %}
+<p>Hola <strong>{{ cliente|default('Cliente') }}</strong>,</p>
+
+<p>
+  Te informamos que se ha emitido la siguiente factura:
+</p>
+
+<div style="background-color: #1A1A1A; border-radius: 8px; padding: 16px; margin: 16px 0;">
+  <p style="margin: 4px 0;"><strong>Folio:</strong> {{ folio }}</p>
+  <p style="margin: 4px 0;"><strong>Cliente:</strong> {{ cliente }}</p>
+  <p style="margin: 4px 0;"><strong>Total:</strong> {{ total }}</p>
+  <p style="margin: 4px 0;"><strong>Fecha:</strong> {{ fecha }}</p>
+</div>
+
+<p>
+  Puedes descargar tu factura desde el siguiente enlace:
+</p>
+
+<p style="text-align: center;">
+  <a href="{{ descarga_url|default('#') }}" class="btn">Descargar factura</a>
+</p>
+
+<p>Gracias por tu preferencia.</p>
+
+<p>— El equipo de Balance OS</p>
+{% endblock %}

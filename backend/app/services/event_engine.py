@@ -11,6 +11,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# ─── Email integration ────────────────────────────
+
+try:
+    from app.services.email_service import send_email
+except ImportError:
+    send_email = None
+    logger.warning("email_service no disponible — notificaciones por email deshabilitadas")
+
 # ─── Listeners (extensibles) ───────────────────────
 
 _listeners: list = []
@@ -22,6 +30,48 @@ def registrar_listener(listener):
     La función debe ser async y recibir el objeto Evento ya persistido.
     """
     _listeners.append(listener)
+
+
+# ─── Email automático ─────────────────────────────
+
+async def _enviar_email_evento(evento):
+    """Envía email automático según el tipo de evento, si el servicio está disponible."""
+    if send_email is None:
+        return
+
+    try:
+        metadata = evento.metadata_json or {}
+
+        # Usuario registrado → welcome
+        if evento.entidad == "usuario" and evento.accion == "registrado":
+            to_email = metadata.get("email")
+            if to_email:
+                await send_email(
+                    to_email=to_email,
+                    subject="¡Bienvenido a Balance OS!",
+                    template_name="welcome.html",
+                    context={"nombre": metadata.get("nombre", "Usuario")},
+                )
+
+        # Factura emitida → factura
+        elif evento.entidad == "factura" and evento.accion == "emitida":
+            to_email = metadata.get("email")
+            if to_email:
+                await send_email(
+                    to_email=to_email,
+                    subject=f"Factura {metadata.get('folio', 'N/A')} emitida",
+                    template_name="factura.html",
+                    context={
+                        "folio": metadata.get("folio", "N/A"),
+                        "cliente": metadata.get("cliente", "Cliente"),
+                        "total": metadata.get("total", "$0.00"),
+                        "fecha": metadata.get("fecha", ""),
+                        "descarga_url": metadata.get("descarga_url", "#"),
+                    },
+                )
+
+    except Exception as e:
+        logger.warning(f"Error al enviar email automático para evento {evento.id}: {e}")
 
 
 # ─── Emisión ───────────────────────────────────────
@@ -64,6 +114,9 @@ async def emitir_evento(
             )
             session.add(evento)
             await session.commit()
+
+        # ─── Email automático ──────────────────────────
+        await _enviar_email_evento(evento)
 
         # Notificar listeners (fire-and-forget, no bloquea al emisor)
         for listener in _listeners:

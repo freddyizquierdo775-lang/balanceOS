@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}¡Bienvenido a Balance OS!{% endblock %}
+{% block content %}
+<p>¡Hola <strong>{{ nombre }}</strong>!</p>
+
+<p>
+  Te damos la bienvenida a <strong>Balance OS</strong>, la plataforma integral para
+  la gestión de tu empresa. Desde aquí podrás administrar clientes, empleados,
+  nómina, facturación, finiquitos, IMSS, REPSE y mucho más.
+</p>
+
+<p>
+  Para comenzar, solo necesitas iniciar sesión con tus credenciales:
+</p>
+
+<p style="text-align: center;">
+  <a href="{{ login_url|default('https://app.balanceos.com/login') }}" class="btn">Iniciar sesión</a>
+</p>
+
+<p>
+  Si tienes alguna duda, nuestro equipo de soporte está listo para ayudarte.
+</p>
+
+<p>— El equipo de Balance OS</p>
+{% endblock %}
