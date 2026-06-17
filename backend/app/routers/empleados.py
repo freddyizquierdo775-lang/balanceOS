@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models import Empleado, TipoContrato, TipoJornada, EstatusEmpleado
 from app.schemas.empleado import EmpleadoCreate, EmpleadoUpdate, EmpleadoResponse
 from app.routers.auth import verificar_token
-from app.dependencies import get_despacho_id
+from app.dependencies import get_despacho_id, check_plan_limit_empleados
 
 router = APIRouter(prefix="/empleados", tags=["empleados"])
 
@@ -70,6 +70,7 @@ async def crear_empleado(
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario_actual),
     despacho_id: int = Depends(get_despacho_id),
+    _plan_ok = Depends(check_plan_limit_empleados),
 ):
     # Validar RFC duplicado (dentro del mismo despacho)
     existente = await db.execute(

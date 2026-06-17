@@ -12,7 +12,7 @@ from app.database import get_db
 from app.models import Cliente, Usuario, EstatusCliente, RegimenFiscal
 from app.schemas import ClienteCreate, ClienteUpdate, ClienteResponse
 from app.routers.auth import verificar_token, verificar_usuario_actual
-from app.dependencies import get_despacho_id
+from app.dependencies import get_despacho_id, check_plan_limit_clientes, get_plan_usage
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -71,6 +71,14 @@ async def obtener_stats(
         stats[estatus.value] = result.scalar() or 0
 
     return stats
+
+
+@router.get("/plan-usage")
+async def plan_usage(
+    usage: dict = Depends(get_plan_usage),
+):
+    """Uso actual del plan vs límites contratados."""
+    return usage
 
 
 @router.get("/vencimientos")
@@ -377,6 +385,7 @@ async def crear_cliente(
     db: AsyncSession = Depends(get_db),
     despacho_id: int = Depends(get_despacho_id),
     usuario: dict = Depends(get_usuario_actual),
+    _plan_ok: Despacho = Depends(check_plan_limit_clientes),
 ):
     # Validar regimen_fiscal
     valores_validos = [r.value for r in RegimenFiscal]

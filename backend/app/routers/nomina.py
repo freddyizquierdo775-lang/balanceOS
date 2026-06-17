@@ -11,7 +11,7 @@ from app.database import get_db
 from app.models import PeriodoNomina, Recibo, Empleado, CfdiRecibo
 from app.schemas.nomina import PeriodoCreate, PeriodoResponse, PeriodoDetalleResponse, ReciboResponse
 from app.routers.auth import verificar_token
-from app.dependencies import get_despacho_id
+from app.dependencies import get_despacho_id, check_plan_limit_nominas
 from app.nomina.calculo import procesar_periodo
 from app.pdf.nomina import generar_pdf_nomina
 
@@ -83,6 +83,7 @@ async def calcular_periodo(
     db: AsyncSession = Depends(get_db),
     usuario: dict = Depends(get_usuario),
     despacho_id: int = Depends(get_despacho_id),
+    _plan_ok = Depends(check_plan_limit_nominas),
 ):
     """Ejecuta el cálculo de nómina para un período: crea recibos para todos los empleados activos."""
     result = await db.execute(

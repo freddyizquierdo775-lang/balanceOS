@@ -249,6 +249,7 @@ export const dashboard = {
   kpis: () => api('/dashboard/kpis'),
   actividad: (limit = 10) => api(`/dashboard/actividad?limit=${limit}`),
   graficos: () => api('/dashboard/graficos'),
+  planUsage: () => api('/clientes/plan-usage'),
 };
 
 export const stripe = {
