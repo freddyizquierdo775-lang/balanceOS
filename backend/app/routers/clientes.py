@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 import csv, io
 
 from app.database import get_db
-from app.models import Cliente, Usuario, EstatusCliente, RegimenFiscal
+from app.models import Cliente, Usuario, EstatusCliente, RegimenFiscal, Despacho
 from app.schemas import ClienteCreate, ClienteUpdate, ClienteResponse
 from app.routers.auth import verificar_token, verificar_usuario_actual
 from app.dependencies import get_despacho_id, check_plan_limit_clientes, get_plan_usage
