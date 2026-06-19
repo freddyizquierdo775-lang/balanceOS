@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import KpiCard from './components/KpiCard';
-import { dashboard as dashboardApi, stripe as stripeApi } from './api';
+import { dashboard as dashboardApi, stripe as stripeApi, imss } from './api';
 
 // ─── KPI Card with icon (extends KpiCard style) ──────────────────────
 function KpiCardIcon({ titulo, valor, icono, loading, className = '' }) {
@@ -117,20 +117,23 @@ export default function Dashboard({ usuario }) {
   const [animar, setAnimar] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [imssAlerts, setImssAlerts] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
         setError(null);
-        const [kpisData, actividadData, graficosData] = await Promise.all([
+        const [kpisData, actividadData, graficosData, imssData] = await Promise.all([
           dashboardApi.kpis(),
           dashboardApi.actividad(10),
           dashboardApi.graficos(),
+          imss.resumen().catch(() => null),
         ]);
         setKpis(kpisData);
         setActividad(actividadData);
         setGraficos(graficosData);
+        setImssAlerts(imssData);
 
         // Fetch subscription (independiente, no bloquea)
         try {
@@ -492,6 +495,32 @@ export default function Dashboard({ usuario }) {
                 Pendiente de integración con motor de impuestos
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Alerts IMSS */}
+        {imssAlerts && (imssAlerts.total_empleados_sin_alta > 0 || imssAlerts.total_riesgos_vencidos > 0) && (
+          <div className="mt-4 space-y-2">
+            {imssAlerts.total_empleados_sin_alta > 0 && (
+              <a href="#/imss/altas"
+                className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 hover:bg-red-500/15 transition-all cursor-pointer">
+                <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 text-lg">⬆️</div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{imssAlerts.total_empleados_sin_alta} empleados sin alta IMSS</p>
+                  <p className="text-xs text-[#A1A1AA]">Pendientes de registrar ante el IMSS</p>
+                </div>
+              </a>
+            )}
+            {imssAlerts.total_riesgos_vencidos > 0 && (
+              <a href="#/imss/seguimiento"
+                className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 hover:bg-amber-500/15 transition-all cursor-pointer">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 text-lg">⚠️</div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{imssAlerts.total_riesgos_vencidos} riesgos de trabajo sin calificar (+30 días)</p>
+                  <p className="text-xs text-[#A1A1AA]">Requieren atención urgente</p>
+                </div>
+              </a>
+            )}
           </div>
         )}
       </div>

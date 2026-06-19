@@ -16,10 +16,12 @@ from app.imss import calcular_cuotas, calcular_factor_integracion
 from app.imss.rates import RIESGO_CLASE
 from app.models import (
     Usuario, Empleado, Cliente,
-    ImssAlta, ImssBaja, ImssTramite,
+    ImssAlta, ImssBaja, ImssTramite, RiesgoTrabajo,
     TipoMovimiento, EstatusTramite, MotivoBaja, TipoTramite,
 )
 from app.services.event_engine import emitir_evento
+import os
+from pathlib import Path
 
 router = APIRouter(prefix="/imss", tags=["imss"])
 
@@ -97,6 +99,196 @@ async def listar_riesgos(
 
 
 # ═══════════════════════════════════════════════════
+# Riesgos de Trabajo — Seguimiento de Calificación
+# ═══════════════════════════════════════════════════
+
+ESTATUS_RIESGO = ["pendiente", "en_calificacion", "calificado", "rechazado"]
+
+RIESGO_UPLOAD_DIR = Path("./storage/imss_riesgos")
+ALLOWED_EXT = {".pdf", ".jpg", ".jpeg", ".png"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+@router.get("/riesgos-trabajo")
+async def listar_riesgos_trabajo(
+    cliente_id: Optional[int] = Query(None),
+    empleado_id: Optional[int] = Query(None),
+    estatus: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Lista riesgos de trabajo. Filtrables por cliente, empleado y/o estatus."""
+    q = select(RiesgoTrabajo)
+    if cliente_id:
+        q = q.where(RiesgoTrabajo.cliente_id == cliente_id)
+    if empleado_id:
+        q = q.where(RiesgoTrabajo.empleado_id == empleado_id)
+    if estatus:
+        q = q.where(RiesgoTrabajo.estatus == estatus)
+    q = q.order_by(RiesgoTrabajo.created_at.desc())
+    result = await db.execute(q)
+    return result.scalars().all()
+
+
+@router.post("/riesgos-trabajo", status_code=201)
+async def crear_riesgo_trabajo(
+    empleado_id: int = Form(...),
+    cliente_id: int = Form(...),
+    tipo_riesgo: str = Form("accidente"),
+    descripcion: Optional[str] = Form(None),
+    notas: Optional[str] = Form(None),
+    documento_inicial: Optional[UploadFile] = File(None),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Crea un nuevo riesgo de trabajo con opción de subir documento inicial."""
+    if not await _cliente_existe(db, cliente_id):
+        raise HTTPException(404, "Cliente no encontrado")
+    if not await _empleado_existe(db, empleado_id):
+        raise HTTPException(404, "Empleado no encontrado")
+
+    doc_path = None
+    if documento_inicial:
+        ext = Path(documento_inicial.filename).suffix.lower()
+        if ext not in ALLOWED_EXT:
+            raise HTTPException(400, f"Extensión no permitida: {ext}")
+        content = await documento_inicial.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(400, "Archivo muy grande. Máximo 10 MB")
+        full_path = RIESGO_UPLOAD_DIR / f"cliente_{cliente_id}" / f"riesgo_inicial_{datetime.utcnow().timestamp()}{ext}"
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(full_path, "wb") as f:
+            f.write(content)
+        doc_path = str(full_path)
+
+    riesgo = RiesgoTrabajo(
+        empleado_id=empleado_id,
+        cliente_id=cliente_id,
+        despacho_id=despacho_id,
+        fecha_reporte=datetime.utcnow(),
+        tipo_riesgo=tipo_riesgo,
+        descripcion=descripcion,
+        estatus="pendiente",
+        documento_inicial_path=doc_path,
+        notas=notas,
+        usuario_id=usuario.id,
+    )
+    db.add(riesgo)
+    await db.commit()
+    await db.refresh(riesgo)
+
+    await emitir_evento(
+        entidad="imss",
+        entidad_id=riesgo.id,
+        accion="riesgo_creado",
+        descripcion=f"Riesgo de trabajo creado para empleado {empleado_id}",
+        usuario_id=usuario.id,
+    )
+    return riesgo
+
+
+@router.patch("/riesgos-trabajo/{riesgo_id}")
+async def actualizar_riesgo_trabajo(
+    riesgo_id: int,
+    estatus: Optional[str] = Body(None),
+    dictamen: Optional[str] = Body(None),
+    notas: Optional[str] = Body(None),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Actualiza estatus de un riesgo de trabajo. Si se califica, registra fecha."""
+    result = await db.execute(select(RiesgoTrabajo).where(RiesgoTrabajo.id == riesgo_id))
+    riesgo = result.scalar_one_or_none()
+    if not riesgo:
+        raise HTTPException(404, "Riesgo de trabajo no encontrado")
+
+    estado_anterior = riesgo.estatus
+
+    if estatus and estatus in ESTATUS_RIESGO:
+        riesgo.estatus = estatus
+        if estatus == "calificado" and not riesgo.fecha_calificacion:
+            riesgo.fecha_calificacion = datetime.utcnow()
+    if dictamen is not None:
+        riesgo.dictamen = dictamen
+    if notas is not None:
+        riesgo.notas = notas
+
+    await db.commit()
+    await db.refresh(riesgo)
+
+    await emitir_evento(
+        entidad="imss",
+        entidad_id=riesgo.id,
+        accion="riesgo_actualizado",
+        estado_anterior=estado_anterior,
+        estado_nuevo=riesgo.estatus,
+        descripcion=f"Riesgo #{riesgo.id} actualizado a {riesgo.estatus}",
+        usuario_id=usuario.id,
+    )
+    return riesgo
+
+
+@router.post("/riesgos-trabajo/{riesgo_id}/documento-calificado")
+async def subir_documento_calificado(
+    riesgo_id: int,
+    archivo: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Sube el documento de dictamen/calificación del IMSS para un riesgo."""
+    result = await db.execute(select(RiesgoTrabajo).where(RiesgoTrabajo.id == riesgo_id))
+    riesgo = result.scalar_one_or_none()
+    if not riesgo:
+        raise HTTPException(404, "Riesgo de trabajo no encontrado")
+
+    ext = Path(archivo.filename).suffix.lower()
+    if ext not in ALLOWED_EXT:
+        raise HTTPException(400, f"Extensión no permitida: {ext}")
+    content = await archivo.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(400, "Archivo muy grande. Máximo 10 MB")
+
+    full_path = RIESGO_UPLOAD_DIR / f"cliente_{riesgo.cliente_id}" / f"riesgo_calificado_{riesgo.id}_{datetime.utcnow().timestamp()}{ext}"
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(full_path, "wb") as f:
+        f.write(content)
+    riesgo.documento_calificado_path = str(full_path)
+    if riesgo.estatus == "pendiente":
+        riesgo.estatus = "en_calificacion"
+
+    await db.commit()
+    await db.refresh(riesgo)
+    return riesgo
+
+
+@router.get("/riesgos-trabajo/{riesgo_id}/documento/{tipo}")
+async def descargar_documento_riesgo(
+    riesgo_id: int,
+    tipo: str,  # "inicial" o "calificado"
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Descarga el documento inicial o calificado de un riesgo de trabajo."""
+    result = await db.execute(select(RiesgoTrabajo).where(RiesgoTrabajo.id == riesgo_id))
+    riesgo = result.scalar_one_or_none()
+    if not riesgo:
+        raise HTTPException(404, "Riesgo no encontrado")
+
+    path = riesgo.documento_inicial_path if tipo == "inicial" else riesgo.documento_calificado_path
+    if not path or not os.path.isfile(path):
+        raise HTTPException(404, "Documento no encontrado")
+
+    from fastapi.responses import FileResponse
+    filename = os.path.basename(path)
+    return FileResponse(path, media_type="application/octet-stream", filename=filename)
+
+
+# ═══════════════════════════════════════════════════
 # Altas IMSS
 # ═══════════════════════════════════════════════════
 
@@ -154,6 +346,13 @@ async def crear_alta(
     await db.commit()
     await db.refresh(alta)
 
+    # Auto-marcar empleado como pendiente de alta
+    empleado_result = await db.execute(select(Empleado).where(Empleado.id == empleado_id))
+    emp = empleado_result.scalar_one_or_none()
+    if emp:
+        emp.estatus_alta = "pendiente"
+        await db.commit()
+
     await emitir_evento(
         entidad="imss",
         entidad_id=alta.id,
@@ -184,6 +383,12 @@ async def actualizar_alta(
 
     if estatus and estatus in TODOS_LOS_ESTATUS:
         alta.estatus = EstatusTramite(estatus)
+        # Si se completa el alta, marcar empleado como completado
+        if estatus == "completado":
+            emp_result = await db.execute(select(Empleado).where(Empleado.id == alta.empleado_id))
+            emp = emp_result.scalar_one_or_none()
+            if emp:
+                emp.estatus_alta = "completado"
     if notas is not None:
         alta.notas = notas
     if fecha_efectiva:
@@ -449,9 +654,273 @@ async def resumen_imss(
         q_tramites = q_tramites.where(ImssTramite.cliente_id == cliente_id)
     total_tramites_activos = (await db.execute(q_tramites)).scalar() or 0
 
+    # Riesgos de trabajo activos
+    q_riesgos_activos = select(func.count(RiesgoTrabajo.id)).where(
+        RiesgoTrabajo.estatus.in_(["pendiente", "en_calificacion"])
+    )
+    if cliente_id:
+        q_riesgos_activos = q_riesgos_activos.where(RiesgoTrabajo.cliente_id == cliente_id)
+    total_riesgos_activos = (await db.execute(q_riesgos_activos)).scalar() or 0
+
+    # Riesgos sin calificar >30 días
+    from datetime import timedelta
+    q_riesgos_vencidos = select(func.count(RiesgoTrabajo.id)).where(
+        RiesgoTrabajo.estatus.in_(["pendiente", "en_calificacion"]),
+        RiesgoTrabajo.fecha_reporte < datetime.utcnow() - timedelta(days=30),
+    )
+    if cliente_id:
+        q_riesgos_vencidos = q_riesgos_vencidos.where(RiesgoTrabajo.cliente_id == cliente_id)
+    total_riesgos_vencidos = (await db.execute(q_riesgos_vencidos)).scalar() or 0
+
+    # Empleados sin alta IMSS
+    q_emp_sin_alta = select(func.count(Empleado.id)).where(Empleado.estatus_alta == "pendiente")
+    if cliente_id:
+        q_emp_sin_alta = q_emp_sin_alta.where(Empleado.id.in_(
+            select(ImssAlta.empleado_id).where(ImssAlta.cliente_id == cliente_id)
+        ))
+    total_sin_alta = (await db.execute(q_emp_sin_alta)).scalar() or 0
+
     return {
         "cliente_id": cliente_id,
         "total_altas_pendientes": total_altas_pendientes,
         "total_bajas_pendientes": total_bajas_pendientes,
         "total_tramites_activos": total_tramites_activos,
+        "total_riesgos_activos": total_riesgos_activos,
+        "total_riesgos_vencidos": total_riesgos_vencidos,
+        "total_empleados_sin_alta": total_sin_alta,
     }
+
+
+# ═══════════════════════════════════════════════════
+# Documentos Oficiales IMSS (AFIL, ST)
+# ═══════════════════════════════════════════════════
+
+from app.pdf.imss.afil_02 import generar_afil02
+from app.pdf.imss.st_7 import generar_st7
+from fastapi.responses import FileResponse as FileResp
+from app.models import DocumentoOficial
+
+DOCS_UPLOAD_DIR = Path("./storage/documentos_oficiales")
+DOCS_ALLOWED_EXT = {".pdf", ".jpg", ".jpeg", ".png"}
+
+
+async def _save_oficial_doc(entidad: str, entidad_id: int, tipo_formato: str,
+                            version: str, archivo_bytes: bytes, extension: str,
+                            despacho_id: int, usuario_id: int, db) -> DocumentoOficial:
+    """Guarda un documento oficial en disco y crea registro en BD."""
+    doc_dir = DOCS_UPLOAD_DIR / entidad / str(entidad_id)
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    filename = f"{tipo_formato}_{version}_{ts}{extension}"
+    full_path = doc_dir / filename
+    with open(full_path, "wb") as f:
+        f.write(archivo_bytes)
+
+    doc = DocumentoOficial(
+        entidad=entidad, entidad_id=entidad_id,
+        despacho_id=despacho_id,
+        tipo_formato=tipo_formato, version=version,
+        archivo_path=str(full_path),
+        usuario_id=usuario_id,
+    )
+    db.add(doc)
+    await db.commit()
+    await db.refresh(doc)
+    return doc
+
+
+@router.post("/altas/{alta_id}/generar-afil02")
+async def generar_afil02_endpoint(
+    alta_id: int,
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Genera PDF del AFIL-02 prellenado para una solicitud de alta."""
+    result = await db.execute(select(ImssAlta).where(ImssAlta.id == alta_id))
+    alta = result.scalar_one_or_none()
+    if not alta:
+        raise HTTPException(404, "Alta no encontrada")
+
+    # Fetch related data
+    emp_r = await db.execute(select(Empleado).where(Empleado.id == alta.empleado_id))
+    empleado = emp_r.scalar_one_or_none()
+    cli_r = await db.execute(select(Cliente).where(Cliente.id == alta.cliente_id))
+    cliente = cli_r.scalar_one_or_none()
+
+    if not empleado or not cliente:
+        raise HTTPException(404, "Empleado o cliente no encontrado")
+
+    pdf_bytes = generar_afil02(
+        empleado={
+            "nombre": empleado.nombre,
+            "apellidos": empleado.apellidos,
+            "rfc": empleado.rfc,
+            "curp": empleado.curp,
+            "fecha_nacimiento": empleado.fecha_nacimiento,
+            "salario_diario": float(empleado.salario_diario or 0),
+        },
+        cliente={
+            "razon_social": cliente.razon_social,
+            "rfc": cliente.rfc,
+            "regimen_fiscal": cliente.regimen_fiscal.value if hasattr(cliente.regimen_fiscal, 'value') else str(cliente.regimen_fiscal or ''),
+        },
+        alta={
+            "id": alta.id,
+            "nss": alta.nss,
+            "fecha_efectiva": alta.fecha_efectiva,
+            "tipo_movimiento": alta.tipo_movimiento.value if hasattr(alta.tipo_movimiento, 'value') else str(alta.tipo_movimiento or 'alta'),
+        },
+    )
+
+    # Save as official document
+    doc = await _save_oficial_doc(
+        entidad="imss_alta", entidad_id=alta.id,
+        tipo_formato="afil-02", version="generado",
+        archivo_bytes=pdf_bytes, extension=".pdf",
+        despacho_id=despacho_id, usuario_id=usuario.id, db=db,
+    )
+
+    await emitir_evento(
+        entidad="imss", entidad_id=alta.id,
+        accion="afil02_generado",
+        descripcion=f"AFIL-02 generado para alta #{alta.id}",
+        usuario_id=usuario.id,
+    )
+
+    return FileResp(
+        path=doc.archivo_path,
+        media_type="application/pdf",
+        filename=f"AFIL02_alta_{alta_id}.pdf",
+    )
+
+
+@router.post("/riesgos-trabajo/{riesgo_id}/generar-st7")
+async def generar_st7_endpoint(
+    riesgo_id: int,
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Genera PDF del ST-7 prellenado para un riesgo de trabajo."""
+    result = await db.execute(select(RiesgoTrabajo).where(RiesgoTrabajo.id == riesgo_id))
+    riesgo = result.scalar_one_or_none()
+    if not riesgo:
+        raise HTTPException(404, "Riesgo de trabajo no encontrado")
+
+    emp_r = await db.execute(select(Empleado).where(Empleado.id == riesgo.empleado_id))
+    empleado = emp_r.scalar_one_or_none()
+    cli_r = await db.execute(select(Cliente).where(Cliente.id == riesgo.cliente_id))
+    cliente = cli_r.scalar_one_or_none()
+
+    if not empleado or not cliente:
+        raise HTTPException(404, "Empleado o cliente no encontrado")
+
+    pdf_bytes = generar_st7(
+        empleado={
+            "nombre": empleado.nombre,
+            "apellidos": empleado.apellidos,
+            "rfc": empleado.rfc,
+            "curp": empleado.curp,
+            "salario_diario": float(empleado.salario_diario or 0),
+        },
+        cliente={
+            "razon_social": cliente.razon_social,
+            "rfc": cliente.rfc,
+        },
+        riesgo={
+            "id": riesgo.id,
+            "tipo_riesgo": riesgo.tipo_riesgo or "otro",
+            "descripcion": riesgo.descripcion,
+            "fecha_reporte": riesgo.fecha_reporte,
+        },
+    )
+
+    doc = await _save_oficial_doc(
+        entidad="riesgo_trabajo", entidad_id=riesgo.id,
+        tipo_formato="st-7", version="generado",
+        archivo_bytes=pdf_bytes, extension=".pdf",
+        despacho_id=despacho_id, usuario_id=usuario.id, db=db,
+    )
+
+    await emitir_evento(
+        entidad="imss", entidad_id=riesgo.id,
+        accion="st7_generado",
+        descripcion=f"ST-7 generado para riesgo #{riesgo.id}",
+        usuario_id=usuario.id,
+    )
+
+    return FileResp(
+        path=doc.archivo_path,
+        media_type="application/pdf",
+        filename=f"ST7_riesgo_{riesgo_id}.pdf",
+    )
+
+
+@router.get("/documentos-oficiales")
+async def listar_documentos_oficiales(
+    entidad: Optional[str] = Query(None),
+    entidad_id: Optional[int] = Query(None),
+    tipo_formato: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Lista documentos oficiales IMSS. Filtrable por entidad, entidad_id y tipo_formato."""
+    q = select(DocumentoOficial).order_by(DocumentoOficial.created_at.desc())
+    if entidad:
+        q = q.where(DocumentoOficial.entidad == entidad)
+    if entidad_id:
+        q = q.where(DocumentoOficial.entidad_id == entidad_id)
+    if tipo_formato:
+        q = q.where(DocumentoOficial.tipo_formato == tipo_formato)
+    result = await db.execute(q)
+    return result.scalars().all()
+
+
+@router.post("/documentos-oficiales/{doc_id}/subir-firmado")
+async def subir_documento_firmado(
+    doc_id: int,
+    archivo: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Sube la versión firmada/escaneada de un documento oficial generado."""
+    result = await db.execute(select(DocumentoOficial).where(DocumentoOficial.id == doc_id))
+    doc_orig = result.scalar_one_or_none()
+    if not doc_orig:
+        raise HTTPException(404, "Documento no encontrado")
+
+    ext = Path(archivo.filename).suffix.lower()
+    if ext not in DOCS_ALLOWED_EXT:
+        raise HTTPException(400, f"Extensión no permitida: {ext}")
+    content = await archivo.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(400, "Archivo muy grande. Máximo 10 MB")
+
+    new_doc = await _save_oficial_doc(
+        entidad=doc_orig.entidad, entidad_id=doc_orig.entidad_id,
+        tipo_formato=doc_orig.tipo_formato, version="firmado",
+        archivo_bytes=content, extension=ext,
+        despacho_id=despacho_id, usuario_id=usuario.id, db=db,
+    )
+    return new_doc
+
+
+@router.get("/documentos-oficiales/{doc_id}/descargar")
+async def descargar_documento_oficial(
+    doc_id: int,
+    db: AsyncSession = Depends(get_db),
+    despacho_id: int = Depends(get_despacho_id),
+    usuario: Usuario = Depends(verificar_usuario_actual),
+):
+    """Descarga un documento oficial por su ID."""
+    result = await db.execute(select(DocumentoOficial).where(DocumentoOficial.id == doc_id))
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(404, "Documento no encontrado")
+    if not doc.archivo_path or not os.path.isfile(doc.archivo_path):
+        raise HTTPException(404, "Archivo no encontrado en disco")
+    filename = os.path.basename(doc.archivo_path)
+    return FileResp(doc.archivo_path, media_type="application/octet-stream", filename=filename)

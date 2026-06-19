@@ -82,6 +82,26 @@ export const imss = {
   listarTramites: (params = '') => api(`/imss/tramites${params}`),
   crearTramite: (data) => api('/imss/tramites', { method: 'POST', body: JSON.stringify(data) }),
   actualizarTramite: (id, data) => api(`/imss/tramites/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  // Riesgos de Trabajo (seguimiento)
+  listarRiesgosTrabajo: (params = '') => api(`/imss/riesgos-trabajo${params}`),
+  crearRiesgoTrabajo: (formData) => api('/imss/riesgos-trabajo', { method: 'POST', body: formData }),
+  actualizarRiesgoTrabajo: (id, data) => api(`/imss/riesgos-trabajo/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  subirDocumentoCalificado: (id, archivo) => {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    return api(`/imss/riesgos-trabajo/${id}/documento-calificado`, { method: 'POST', body: form });
+  },
+  descargarDocumentoUrl: (riesgoId, tipo) => `${API_BASE}/imss/riesgos-trabajo/${riesgoId}/documento/${tipo}`,
+  // Documentos oficiales
+  generarAfil02: (altaId) => api(`/imss/altas/${altaId}/generar-afil02`, { method: 'POST' }),
+  generarSt7: (riesgoId) => api(`/imss/riesgos-trabajo/${riesgoId}/generar-st7`, { method: 'POST' }),
+  listarDocumentosOficiales: (params = '') => api(`/imss/documentos-oficiales${params}`),
+  subirDocumentoFirmado: (docId, archivo) => {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    return api(`/imss/documentos-oficiales/${docId}/subir-firmado`, { method: 'POST', body: form });
+  },
+  descargarDocOficialUrl: (docId) => `${API_BASE}/imss/documentos-oficiales/${docId}/descargar`,
   // Resumen
   resumen: (clienteId = '') => api(`/imss/resumen${clienteId ? `?cliente_id=${clienteId}` : ''}`),
 };

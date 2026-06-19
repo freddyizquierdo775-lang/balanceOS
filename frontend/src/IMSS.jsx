@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { imss } from './api';
+import { imss, API_BASE } from './api';
 import { clientes } from './api';
 import { empleados } from './api';
 
@@ -40,7 +40,7 @@ const TABS = [
   { key: 'altas', label: 'Altas', icon: '⬆️' },
   { key: 'bajas', label: 'Bajas', icon: '⬇️' },
   { key: 'tramites', label: 'Trámites', icon: '📋' },
-  { key: 'riesgos', label: 'Riesgos', icon: '⚠️' },
+  { key: 'seguimiento', label: 'Riesgos', icon: '⚠️' },
   { key: 'resumen', label: 'Resumen', icon: '📊' },
 ];
 
@@ -397,11 +397,29 @@ function TabAltas({ clienteId, setClienteId }) {
                   <td className="py-3 px-4 text-[#D4D4D8] text-xs">{dateFmt(a.fecha_efectiva)}</td>
                   <td className="py-3 px-4 text-[#D4D4D8] text-xs">{dateFmt(a.created_at)}</td>
                   <td className="py-3 px-4">
-                    <select value="" onChange={e => e.target.value && cambiarEstatus(a.id, e.target.value)}
-                      className="bg-[#1A1A1A] border border-[#262626] rounded-lg px-2 py-1 text-xs text-white outline-none">
-                      <option value="">Cambiar...</option>
-                      {ESTATUS_OPTS.filter(o => o.value !== a.estatus).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <select value="" onChange={e => e.target.value && cambiarEstatus(a.id, e.target.value)}
+                        className="bg-[#1A1A1A] border border-[#262626] rounded-lg px-2 py-1 text-xs text-white outline-none">
+                        <option value="">Cambiar...</option>
+                        {ESTATUS_OPTS.filter(o => o.value !== a.estatus).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                      <button onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const resp = await fetch(`${API_BASE}/imss/altas/${a.id}/generar-afil02`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                          });
+                          if (!resp.ok) throw new Error('Error al generar AFIL-02');
+                          const blob = await resp.blob();
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
+                        } catch(e) { alert(e.message); }
+                      }}
+                        className="text-[10px] bg-sky-600 hover:bg-sky-500 text-white rounded-lg px-2 py-1 transition-all">
+                        AFIL-02
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -692,48 +710,250 @@ function TabTramites({ clienteId, setClienteId }) {
   );
 }
 
-// ─── Tab Riesgos ──────────────────────────────────
+// ─── Tab Riesgos de Trabajo (Seguimiento de Calificación) ──
 
-function TabRiesgos() {
-  const [riesgos, setRiesgos] = useState([]);
+const ESTATUS_RIESGO_OPTS = [
+  { value: 'pendiente', label: 'Pendiente', color: 'bg-amber-500/20 text-amber-400' },
+  { value: 'en_calificacion', label: 'En calificación', color: 'bg-sky-500/20 text-sky-400' },
+  { value: 'calificado', label: 'Calificado', color: 'bg-emerald-500/20 text-emerald-400' },
+  { value: 'rechazado', label: 'Rechazado', color: 'bg-red-500/20 text-red-400' },
+];
 
+const TIPOS_RIESGO = [
+  { value: 'accidente', label: 'Accidente' },
+  { value: 'enfermedad', label: 'Enfermedad' },
+  { value: 'trayecto', label: 'Trayecto' },
+  { value: 'otro', label: 'Otro' },
+];
+
+function badgeRiesgoColor(estatus) {
+  const m = ESTATUS_RIESGO_OPTS.find(e => e.value === estatus);
+  return m ? m.color : 'bg-gray-500/20 text-gray-400';
+}
+
+function formatDaysAgo(d) {
+  if (!d) return '—';
+  const diff = Math.floor((new Date() - new Date(d)) / 86400000);
+  if (diff < 1) return 'Hoy';
+  if (diff === 1) return '1 día';
+  return `${diff} días`;
+}
+
+function TabRiesgosTrabajo({ clienteId, setClienteId }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [listaClientes, setListaClientes] = useState([]);
+  const [listaEmpleados, setListaEmpleados] = useState([]);
+  const [filtroEstatus, setFiltroEstatus] = useState('');
+  const [subiendoDoc, setSubiendoDoc] = useState(null);
+
+  const [form, setForm] = useState({ empleado_id: '', tipo_riesgo: 'accidente', descripcion: '', notas: '' });
+  const [archivoInicial, setArchivoInicial] = useState(null);
+
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (clienteId) params.append('cliente_id', clienteId);
+      if (filtroEstatus) params.append('estatus', filtroEstatus);
+      const qs = params.toString();
+      const data = await imss.listarRiesgosTrabajo(qs ? `?${qs}` : '');
+      setItems(data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, [clienteId, filtroEstatus]);
+
+  useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
-    imss.riesgos().then(setRiesgos).catch(() => {});
+    clientes.listar().then(setListaClientes).catch(() => {});
+    empleados.listar().then(setListaEmpleados).catch(() => {});
   }, []);
 
-  const colorMap = {
-    1: 'border-emerald-500/30 bg-emerald-500/5',
-    2: 'border-sky-500/30 bg-sky-500/5',
-    3: 'border-amber-500/30 bg-amber-500/5',
-    4: 'border-orange-500/30 bg-orange-500/5',
-    5: 'border-red-500/30 bg-red-500/5',
+  const guardar = async (e) => {
+    e.preventDefault();
+    try {
+      const fd = new FormData();
+      fd.append('empleado_id', parseInt(form.empleado_id));
+      fd.append('cliente_id', parseInt(clienteId));
+      fd.append('tipo_riesgo', form.tipo_riesgo);
+      fd.append('descripcion', form.descripcion);
+      fd.append('notas', form.notas);
+      if (archivoInicial) fd.append('documento_inicial', archivoInicial);
+      await imss.crearRiesgoTrabajo(fd);
+      setShowForm(false);
+      setForm({ empleado_id: '', tipo_riesgo: 'accidente', descripcion: '', notas: '' });
+      setArchivoInicial(null);
+      cargar();
+    } catch (err) { alert(err.message); }
+  };
+
+  const cambiarEstatus = async (id, nuevoEstatus) => {
+    try {
+      await imss.actualizarRiesgoTrabajo(id, { estatus: nuevoEstatus });
+      cargar();
+    } catch (err) { alert(err.message); }
+  };
+
+  const subirCalificado = async (riesgoId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSubiendoDoc(riesgoId);
+    try {
+      await imss.subirDocumentoCalificado(riesgoId, file);
+      cargar();
+    } catch (err) { alert(err.message); }
+    finally { setSubiendoDoc(null); }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {riesgos.map(r => (
-        <div key={r.clase} className={`bg-[#141414] rounded-2xl p-6 border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)] ${colorMap[r.clase] || 'border-[#262626]'}`}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl">⚠️</span>
-            <h3 className="text-base font-semibold text-white">Clase {r.clase}</h3>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <select value={clienteId} onChange={e => setClienteId(e.target.value)}
+          className="bg-[#1A1A1A] border border-[#262626] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500">
+          <option value="">Todos los clientes</option>
+          {listaClientes.map(c => <option key={c.id} value={c.id}>{c.razon_social || c.rfc}</option>)}
+        </select>
+        <select value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}
+          className="bg-[#1A1A1A] border border-[#262626] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500">
+          <option value="">Todos los estados</option>
+          {ESTATUS_RIESGO_OPTS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+        </select>
+        <button onClick={() => setShowForm(true)}
+          className="bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-xl px-5 py-2.5 transition-all ml-auto">
+          + Nuevo riesgo
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={guardar} className="bg-[#141414] rounded-2xl p-6 border border-[#262626] space-y-4">
+          <h3 className="text-sm font-semibold text-white">Reportar riesgo de trabajo</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] text-[#A1A1AA] uppercase block mb-1">Empleado *</label>
+              <select required value={form.empleado_id} onChange={e => setForm(p => ({ ...p, empleado_id: e.target.value }))}
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-500">
+                <option value="">Seleccionar...</option>
+                {listaEmpleados.map(e => <option key={e.id} value={e.id}>{e.nombre} {e.apellidos} ({e.rfc})</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-[#A1A1AA] uppercase block mb-1">Tipo de riesgo</label>
+              <select value={form.tipo_riesgo} onChange={e => setForm(p => ({ ...p, tipo_riesgo: e.target.value }))}
+                className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-500">
+                {TIPOS_RIESGO.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
           </div>
-          <p className="text-sm text-[#D4D4D8] mb-4">{r.descripcion}</p>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Prima base:</span>
-              <span className="text-white font-semibold">{r.prima_base_pct}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Rango mínimo:</span>
-              <span className="text-emerald-400">{r.prima_min_pct}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Rango máximo:</span>
-              <span className="text-red-400">{r.prima_max_pct}%</span>
-            </div>
+          <div>
+            <label className="text-[10px] text-[#A1A1AA] uppercase block mb-1">Descripción</label>
+            <textarea value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))}
+              className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-500" rows={2} />
           </div>
+          <div>
+            <label className="text-[10px] text-[#A1A1AA] uppercase block mb-1">Documento inicial (ST-7 / aviso)</label>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setArchivoInicial(e.target.files[0])}
+              className="w-full text-sm text-[#A1A1AA] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#1A1A1A] file:text-white hover:file:bg-[#262626]" />
+          </div>
+          <div>
+            <label className="text-[10px] text-[#A1A1AA] uppercase block mb-1">Notas</label>
+            <textarea value={form.notas} onChange={e => setForm(p => ({ ...p, notas: e.target.value }))}
+              className="w-full bg-[#1A1A1A] border border-[#262626] rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-500" rows={2} />
+          </div>
+          <div className="flex gap-3">
+            <button type="submit" disabled={!clienteId || !form.empleado_id}
+              className="bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-xl px-5 py-2.5 disabled:opacity-50">Guardar</button>
+            <button type="button" onClick={() => setShowForm(false)}
+              className="bg-[#262626] hover:bg-[#333] text-white text-sm rounded-xl px-5 py-2.5">Cancelar</button>
+          </div>
+        </form>
+      )}
+
+      <div className="bg-[#141414] rounded-2xl border border-[#262626] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#262626] text-left">
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">ID</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Empleado</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Tipo</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Estatus</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Días</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Docs</th>
+                <th className="py-3 px-4 text-[#A1A1AA] text-xs font-medium">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(r => (
+                <tr key={r.id} className="border-b border-[#1F1F1F] hover:bg-[#1A1A1A]">
+                  <td className="py-3 px-4 text-white font-mono text-xs">#{r.id}</td>
+                  <td className="py-3 px-4 text-white text-xs">ID:{r.empleado_id}</td>
+                  <td className="py-3 px-4 text-[#D4D4D8] capitalize text-xs">{r.tipo_riesgo?.replace('_',' ')}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeRiesgoColor(r.estatus)}`}>
+                      {ESTATUS_RIESGO_OPTS.find(e => e.value === r.estatus)?.label || r.estatus}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-xs" title={new Date(r.fecha_reporte).toLocaleDateString()}>
+                    <span className={r.estatus !== 'calificado' && r.estatus !== 'rechazado' && formatDaysAgo(r.fecha_reporte).includes('días') && parseInt(formatDaysAgo(r.fecha_reporte)) > 30
+                      ? 'text-red-400 font-semibold' : 'text-[#D4D4D8]'}>
+                      {formatDaysAgo(r.fecha_reporte)}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2 text-xs">
+                      {r.documento_inicial_path && (
+                        <a href={imss.descargarDocumentoUrl(r.id, 'inicial')} target="_blank" rel="noopener noreferrer"
+                          className="text-sky-400 hover:text-sky-300 underline">Inicial</a>
+                      )}
+                      {r.documento_calificado_path ? (
+                        <a href={imss.descargarDocumentoUrl(r.id, 'calificado')} target="_blank" rel="noopener noreferrer"
+                          className="text-emerald-400 hover:text-emerald-300 underline">Calif.</a>
+                      ) : r.estatus !== 'calificado' && r.estatus !== 'rechazado' && (
+                        <label className="text-[#A1A1AA] hover:text-white cursor-pointer underline">
+                          {subiendoDoc === r.id ? '...' : 'Subir'}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                            onChange={e => subirCalificado(r.id, e)} />
+                        </label>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      <select value="" onChange={e => e.target.value && cambiarEstatus(r.id, e.target.value)}
+                        className="bg-[#1A1A1A] border border-[#262626] rounded-lg px-2 py-1 text-xs text-white outline-none">
+                        <option value="">Cambiar...</option>
+                        {ESTATUS_RIESGO_OPTS.filter(o => o.value !== r.estatus).map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                      <button onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const resp = await fetch(`${API_BASE}/imss/riesgos-trabajo/${r.id}/generar-st7`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                          });
+                          if (!resp.ok) throw new Error('Error al generar ST-7');
+                          const blob = await resp.blob();
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
+                        } catch(e) { alert(e.message); }
+                      }}
+                        className="text-[10px] bg-amber-600 hover:bg-amber-500 text-white rounded-lg px-2 py-1 transition-all">
+                        ST-7
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && !loading && (
+                <tr><td colSpan={7} className="py-8 text-center text-[#71717A] text-sm">No hay riesgos de trabajo registrados</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -763,21 +983,38 @@ function TabResumen({ clienteId, setClienteId }) {
       </div>
 
       {resumen && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-[#141414] rounded-2xl p-6 border border-amber-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
-            <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Altas pendientes</div>
-            <div className="text-4xl font-extrabold text-amber-400">{resumen.total_altas_pendientes}</div>
-            <div className="text-xs text-[#71717A] mt-1">Solicitudes de alta sin completar</div>
-          </div>
-          <div className="bg-[#141414] rounded-2xl p-6 border border-red-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
-            <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Bajas pendientes</div>
-            <div className="text-4xl font-extrabold text-red-400">{resumen.total_bajas_pendientes}</div>
-            <div className="text-xs text-[#71717A] mt-1">Solicitudes de baja sin completar</div>
-          </div>
-          <div className="bg-[#141414] rounded-2xl p-6 border border-sky-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
-            <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Trámites activos</div>
-            <div className="text-4xl font-extrabold text-sky-400">{resumen.total_tramites_activos}</div>
-            <div className="text-xs text-[#71717A] mt-1">Trámites en proceso o pendientes</div>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-[#141414] rounded-2xl p-6 border border-amber-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Altas pendientes</div>
+              <div className="text-4xl font-extrabold text-amber-400">{resumen.total_altas_pendientes}</div>
+              <div className="text-xs text-[#71717A] mt-1">Solicitudes de alta sin completar</div>
+            </div>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-red-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Bajas pendientes</div>
+              <div className="text-4xl font-extrabold text-red-400">{resumen.total_bajas_pendientes}</div>
+              <div className="text-xs text-[#71717A] mt-1">Solicitudes de baja sin completar</div>
+            </div>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-sky-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Trámites activos</div>
+              <div className="text-4xl font-extrabold text-sky-400">{resumen.total_tramites_activos}</div>
+              <div className="text-xs text-[#71717A] mt-1">Trámites en proceso o pendientes</div>
+            </div>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-amber-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Riesgos activos</div>
+              <div className="text-4xl font-extrabold text-amber-400">{resumen.total_riesgos_activos}</div>
+              <div className="text-xs text-[#71717A] mt-1">Riesgos de trabajo sin calificar</div>
+            </div>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-red-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Riesgos vencidos</div>
+              <div className="text-4xl font-extrabold text-red-400">{resumen.total_riesgos_vencidos}</div>
+              <div className="text-xs text-[#71717A] mt-1">{'>'}30 días sin calificar ⚠️</div>
+            </div>
+            <div className="bg-[#141414] rounded-2xl p-6 border border-amber-500/30 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5)]">
+              <div className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-2">Sin alta IMSS</div>
+              <div className="text-4xl font-extrabold text-amber-400">{resumen.total_empleados_sin_alta}</div>
+              <div className="text-xs text-[#71717A] mt-1">Empleados pendientes de alta</div>
+            </div>
           </div>
         </div>
       )}
@@ -833,7 +1070,7 @@ export default function IMSS({ usuario, subPage, setSubPage }) {
         {tab === 'altas' && <TabAltas clienteId={clienteId} setClienteId={setClienteId} />}
         {tab === 'bajas' && <TabBajas clienteId={clienteId} setClienteId={setClienteId} />}
         {tab === 'tramites' && <TabTramites clienteId={clienteId} setClienteId={setClienteId} />}
-        {tab === 'riesgos' && <TabRiesgos />}
+        {tab === 'seguimiento' && <TabRiesgosTrabajo clienteId={clienteId} setClienteId={setClienteId} />}
         {tab === 'resumen' && <TabResumen clienteId={clienteId} setClienteId={setClienteId} />}
       </div>
     </div>

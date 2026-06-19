@@ -23,6 +23,7 @@ class EmpleadoCreate(BaseModel):
     banco: Optional[str] = None
     cuenta_bancaria: Optional[str] = None
     clabe: Optional[str] = None
+    estatus_alta: Optional[str] = None
 
     @field_validator("rfc")
     @classmethod
@@ -90,6 +91,7 @@ class EmpleadoResponse(BaseModel):
     cuenta_bancaria: Optional[str] = None
     clabe: Optional[str] = None
     activo: bool
+    estatus_alta: str = "pendiente"
     created_at: datetime
     updated_at: datetime
 

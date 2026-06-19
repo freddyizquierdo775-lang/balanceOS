@@ -160,6 +160,7 @@ class Empleado(Base):
 
     # Control
     activo = Column(Boolean, default=True)
+    estatus_alta = Column(String(20), default="pendiente")  # pendiente, completado, n_a
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
